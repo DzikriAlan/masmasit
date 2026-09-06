@@ -99,6 +99,14 @@
 }
 
 @layer utilities {
+  /* Horizontal scroll rows without a visible scrollbar thumb. */
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
   .text-gradient-brand {
     @apply bg-gradient-to-r from-primary via-primary to-accent bg-clip-text text-transparent;
     background-size: 200% auto;

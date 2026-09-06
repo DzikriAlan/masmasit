@@ -385,9 +385,9 @@ export default function HomePage() {
               </Link>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="no-scrollbar flex snap-x gap-4 overflow-x-auto pb-1 lg:grid lg:grid-cols-4 lg:overflow-visible lg:pb-0">
               {talents.length > 0 ? talents.map((tal, i) => (
-                <Link key={tal.id} href={`/talents/${tal.id}`}>
+                <Link key={tal.id} href={`/talents/${tal.id}`} className="w-[78vw] max-w-[280px] shrink-0 snap-start lg:w-auto lg:max-w-none">
                   <Card className={`group h-full glass glass-hover stagger-${i + 1}`}>
                     <CardContent className="p-5">
                       <div className="mb-4 flex justify-center">
@@ -426,7 +426,7 @@ export default function HomePage() {
                 </Link>
               )) : (
                 [...Array(4)].map((_, i) => (
-                  <Card key={i} className={`glass glass-hover stagger-${i + 1}`}>
+                  <Card key={i} className={`w-[78vw] max-w-[280px] shrink-0 snap-start glass glass-hover stagger-${i + 1} lg:w-auto lg:max-w-none`}>
                     <CardContent className="p-5 text-center">
                       <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-primary/10 text-xl font-bold text-primary">
                         {['R', 'S', 'A', 'M'][i]}
@@ -479,11 +479,13 @@ export default function HomePage() {
               {services.map((s, i) => (
                 <Card key={s.title} className={`group glass glass-hover stagger-${i + 1}`}>
                   <CardContent className="p-5">
-                    <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 transition-all duration-300 group-hover:bg-primary group-hover:text-primary-foreground group-hover:scale-110">
-                      <s.icon className="h-5 w-5 text-primary transition-colors group-hover:text-primary-foreground" />
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 transition-all duration-300 group-hover:bg-primary group-hover:text-primary-foreground group-hover:scale-110">
+                        <s.icon className="h-5 w-5 text-primary transition-colors group-hover:text-primary-foreground" />
+                      </div>
+                      <h3 className="font-display text-base font-bold">{s.title}</h3>
                     </div>
-                    <h3 className="mb-1 font-display text-base font-bold">{s.title}</h3>
-                    <p className="text-sm text-muted-foreground">{t(s.en, s.id)}</p>
+                    <p className="mt-2 text-sm text-muted-foreground">{t(s.en, s.id)}</p>
                   </CardContent>
                 </Card>
               ))}
