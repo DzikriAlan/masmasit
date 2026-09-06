@@ -7,6 +7,7 @@ import { Code2, Loader2, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { getCurrentUser, getProfileNameBio } from '@/features/auth/services/authServices';
+import { GoogleGlyph } from '@/features/auth/components/GoogleGlyph';
 import { useAuth } from '@/components/auth-provider';
 import { useLang } from '@/components/language-provider';
 import { Button } from '@/components/ui/button';
@@ -15,13 +16,23 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
 export default function LoginPage() {
-  const { signIn } = useAuth();
+  const { signIn, signInWithGoogle } = useAuth();
   const { t } = useLang();
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  const handleGoogle = async () => {
+    setGoogleLoading(true);
+    const { error } = await signInWithGoogle();
+    if (error) {
+      setGoogleLoading(false);
+      toast.error(error);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,6 +62,14 @@ export default function LoginPage() {
           <CardDescription>{t('Sign in to your masmasit.online account', 'Masuk ke akun masmasit.online Anda')}</CardDescription>
         </CardHeader>
         <CardContent>
+          <Button type="button" variant="outline" className="w-full gap-2" onClick={handleGoogle} disabled={googleLoading || loading}>
+            {googleLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <GoogleGlyph />}
+            {t('Continue with Google', 'Lanjut dengan Google')}
+          </Button>
+          <div className="relative my-4">
+            <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border/60" /></div>
+            <div className="relative flex justify-center text-xs uppercase"><span className="bg-card px-2 text-muted-foreground">{t('or', 'atau')}</span></div>
+          </div>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">{t('Email', 'Email')}</Label>

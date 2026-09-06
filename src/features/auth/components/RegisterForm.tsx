@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Code2, Loader2, Mail, Eye, EyeOff } from 'lucide-react';
+import { GoogleGlyph } from '@/features/auth/components/GoogleGlyph';
 import { useAuth } from '@/components/auth-provider';
 import { useLang } from '@/components/language-provider';
 import { Button } from '@/components/ui/button';
@@ -13,15 +14,25 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { toast } from 'sonner';
 
 export default function RegisterPage() {
-  const { signUp } = useAuth();
+  const { signUp, signInWithGoogle } = useAuth();
   const { t } = useLang();
   const router = useRouter();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [registered, setRegistered] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  const handleGoogle = async () => {
+    setGoogleLoading(true);
+    const { error } = await signInWithGoogle();
+    if (error) {
+      setGoogleLoading(false);
+      toast.error(error);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,6 +72,15 @@ export default function RegisterPage() {
               <Link href="/login"><Button className="w-full">{t('Go to Login', 'Ke Login')}</Button></Link>
             </div>
           ) : (
+          <>
+          <Button type="button" variant="outline" className="w-full gap-2" onClick={handleGoogle} disabled={googleLoading || loading}>
+            {googleLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <GoogleGlyph />}
+            {t('Continue with Google', 'Lanjut dengan Google')}
+          </Button>
+          <div className="relative my-4">
+            <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border/60" /></div>
+            <div className="relative flex justify-center text-xs uppercase"><span className="bg-card px-2 text-muted-foreground">{t('or', 'atau')}</span></div>
+          </div>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="fullName">{t('Full Name', 'Nama Lengkap')}</Label>
@@ -116,6 +136,7 @@ export default function RegisterPage() {
               <Link href="/privacy-policy" className="text-primary hover:underline">{t('Privacy Policy', 'Kebijakan Privasi')}</Link>
             </p>
           </form>
+          </>
           )}
           <p className="mt-4 text-center text-sm text-muted-foreground">
             {t('Already have an account?', 'Sudah punya akun?')}{' '}

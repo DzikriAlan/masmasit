@@ -14,6 +14,7 @@ interface AuthContextValue {
   isEmailVerified: boolean;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: string | null }>;
+  signInWithGoogle: () => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
   resendVerification: () => Promise<{ error: string | null }>;
@@ -106,6 +107,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { error: null };
   };
 
+  const signInWithGoogle = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: typeof window !== 'undefined' ? `${window.location.origin}/dashboard` : undefined,
+        queryParams: { prompt: 'select_account' },
+      },
+    });
+    return { error: error?.message ?? null };
+  };
+
   const signOut = async () => {
     await supabase.auth.signOut();
     setProfile(null);
@@ -121,7 +133,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, session, profile, roles, loading, isEmailVerified, signIn, signUp, signOut, refreshProfile, resendVerification }}
+      value={{ user, session, profile, roles, loading, isEmailVerified, signIn, signUp, signInWithGoogle, signOut, refreshProfile, resendVerification }}
     >
       {children}
     </AuthContext.Provider>
