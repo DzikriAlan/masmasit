@@ -56,8 +56,10 @@ export function NotificationBell() {
     };
     loadNotifications();
 
+    // Unique topic per mount: a fixed name reuses a cached channel, and adding
+    // .on() to one that already called .subscribe() throws in StrictMode / re-renders.
     const channel = supabase
-      .channel('notifications')
+      .channel(`notifications:${user.id}:${Math.random().toString(36).slice(2)}`)
       .on('postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` },
         () => loadNotifications()
