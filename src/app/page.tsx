@@ -309,13 +309,17 @@ export default function HomePage() {
             </div>
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
               {howItWorks.map((step, i) => (
-                <div key={step.en} className={`relative text-center stagger-${i + 1}`}>
-                  <div className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 transition-all duration-300 hover:bg-primary hover:text-primary-foreground hover:scale-110 hover:shadow-lg hover:shadow-primary/20">
-                    <step.icon className="h-6 w-6 text-primary" />
+                <div key={step.en} className={`stagger-${i + 1}`}>
+                  <div className="flex items-center gap-3">
+                    <div className="relative shrink-0">
+                      <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 transition-all duration-300 hover:bg-primary hover:text-primary-foreground hover:scale-110 hover:shadow-lg hover:shadow-primary/20">
+                        <step.icon className="h-6 w-6 text-primary" />
+                      </div>
+                      <div className="pointer-events-none absolute left-1/2 -top-2 -translate-x-1/2 text-5xl font-bold text-primary/[0.06]">{i + 1}</div>
+                    </div>
+                    <h3 className="font-semibold">{t(step.en, step.id)}</h3>
                   </div>
-                  <div className="absolute left-1/2 -translate-x-1/2 -top-2 text-5xl font-bold text-primary/[0.06]">{i + 1}</div>
-                  <h3 className="mb-1.5 font-semibold">{t(step.en, step.id)}</h3>
-                  <p className="text-sm text-muted-foreground">{t(step.desc_en, step.desc_id)}</p>
+                  <p className="mt-2 text-sm text-muted-foreground">{t(step.desc_en, step.desc_id)}</p>
                 </div>
               ))}
             </div>
@@ -355,11 +359,13 @@ export default function HomePage() {
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {features.map((f, i) => (
                 <div key={f.en} className={`glass glass-hover group rounded-xl p-5 stagger-${(i % 6) + 1}`}>
-                  <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 transition-all duration-300 group-hover:bg-primary group-hover:text-primary-foreground group-hover:scale-110">
-                    <f.icon className="h-5 w-5 text-primary transition-colors group-hover:text-primary-foreground" />
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 transition-all duration-300 group-hover:bg-primary group-hover:text-primary-foreground group-hover:scale-110">
+                      <f.icon className="h-5 w-5 text-primary transition-colors group-hover:text-primary-foreground" />
+                    </div>
+                    <h3 className="font-semibold">{t(f.en, f.id)}</h3>
                   </div>
-                  <h3 className="mb-1 font-semibold">{t(f.en, f.id)}</h3>
-                  <p className="text-sm text-muted-foreground">{t(f.desc_en, f.desc_id)}</p>
+                  <p className="mt-2 text-sm text-muted-foreground">{t(f.desc_en, f.desc_id)}</p>
                 </div>
               ))}
             </div>
@@ -367,7 +373,7 @@ export default function HomePage() {
         </section>
 
         {/* TALENT SHOWCASE — ADPList style */}
-        <section className="section-glow py-20 bg-aurora">
+        <section className="section-glow overflow-hidden py-20 bg-aurora">
           <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
             <div className="mb-10 flex items-end justify-between">
               <div>
@@ -495,7 +501,7 @@ export default function HomePage() {
             <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
               {galleryImages.map((img, i) => (
                 <div key={i} className={`group relative overflow-hidden rounded-xl border border-border/40 transition-all duration-300 hover:border-primary/30 ${i === 0 ? 'lg:col-span-2 lg:row-span-2' : ''}`}>
-                  <img src={img.url} alt={t(img.en, img.id)} className={`w-full object-cover transition-transform duration-500 group-hover:scale-110 ${i === 0 ? 'h-56 lg:h-full' : 'h-28 sm:h-40'}`} />
+                  <img src={img.url} alt={t(img.en, img.id)} className={`w-full object-cover transition-transform duration-500 group-hover:scale-110 ${i === 0 ? 'h-28 sm:h-40 lg:h-full' : 'h-28 sm:h-40'}`} />
                   <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
                   <div className="absolute bottom-3 left-3 opacity-0 transition-all duration-300 group-hover:opacity-100 group-hover:translate-y-0 translate-y-2">
                     <span className="text-xs font-medium text-foreground/90">{t(img.en, img.id)}</span>
