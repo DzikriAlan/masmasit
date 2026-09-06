@@ -2,9 +2,18 @@
 
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
-import { usePathname } from 'next/navigation';
-import { Menu, X, Moon, Sun, Code2, Globe, MessageCircle, LayoutDashboard, LogIn, UserPlus, ChevronDown } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { Menu, X, Moon, Sun, Code2, Globe, MessageCircle, LayoutDashboard, LogIn, LogOut, UserPlus, User, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { useTheme } from '@/components/theme-provider';
 import { useAuth } from '@/components/auth-provider';
 import { useLang } from '@/components/language-provider';
@@ -16,8 +25,19 @@ export function Navbar() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const { theme, toggleTheme } = useTheme();
-  const { user, profile } = useAuth();
+  const { user, profile, signOut } = useAuth();
   const { lang, toggleLang, t } = useLang();
+  const router = useRouter();
+
+  const displayName = profile?.full_name || user?.email?.split('@')[0] || '';
+  const initial = (profile?.full_name || user?.email || '?').charAt(0).toUpperCase();
+
+  const handleSignOut = async () => {
+    setOpen(false);
+    await signOut();
+    router.push('/');
+    router.refresh();
+  };
   const pathname = usePathname();
   const isHome = pathname === '/';
 
@@ -98,16 +118,38 @@ export function Navbar() {
             {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </Button>
           {user ? (
-            <Link href="/dashboard">
-              <Button size="sm" className="gap-2 glow-primary">
-                {profile?.avatar_url ? (
-                  <img src={profile.avatar_url} alt="" className="h-5 w-5 rounded-full" />
-                ) : (
-                  <LayoutDashboard className="h-4 w-4" />
-                )}
-                {t('Dashboard', 'Dashboard')}
-              </Button>
-            </Link>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-2 rounded-full border border-border/50 py-1 pl-1 pr-2 text-sm font-medium transition-colors hover:bg-muted">
+                  <Avatar className="h-7 w-7">
+                    {profile?.avatar_url && <AvatarImage src={profile.avatar_url} alt={displayName} />}
+                    <AvatarFallback className="bg-primary/15 text-xs text-primary">{initial}</AvatarFallback>
+                  </Avatar>
+                  <span className="max-w-[120px] truncate">{displayName}</span>
+                  <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel className="flex flex-col">
+                  <span className="truncate">{displayName}</span>
+                  <span className="truncate text-xs font-normal text-muted-foreground">{user.email}</span>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/dashboard"><LayoutDashboard className="mr-2 h-4 w-4" /> {t('Dashboard', 'Dashboard')}</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/profile"><User className="mr-2 h-4 w-4" /> {t('Profile', 'Profil')}</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/pesan"><MessageCircle className="mr-2 h-4 w-4" /> {t('Messages', 'Pesan')}</Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleSignOut} className="text-destructive focus:text-destructive">
+                  <LogOut className="mr-2 h-4 w-4" /> {t('Sign out', 'Keluar')}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           ) : (
             <>
               <Link href="/login">
@@ -158,6 +200,33 @@ export function Navbar() {
               >
                 {t('Messages', 'Pesan')}
               </Link>
+            )}
+            {user && (
+              <Link
+                href="/profile"
+                onClick={() => setOpen(false)}
+                className={cn(
+                  'rounded-md px-3 py-2.5 text-sm font-medium transition-colors hover:bg-muted',
+                  pathname === '/profile' ? 'text-primary bg-primary/5' : 'text-muted-foreground'
+                )}
+              >
+                {t('Profile', 'Profil')}
+              </Link>
+            )}
+            {user && (
+              <div className="mt-2 flex items-center gap-3 rounded-md border border-border/40 px-3 py-2">
+                <Avatar className="h-8 w-8">
+                  {profile?.avatar_url && <AvatarImage src={profile.avatar_url} alt={displayName} />}
+                  <AvatarFallback className="bg-primary/15 text-xs text-primary">{initial}</AvatarFallback>
+                </Avatar>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium">{displayName}</p>
+                  <p className="truncate text-xs text-muted-foreground">{user.email}</p>
+                </div>
+                <Button variant="ghost" size="sm" onClick={handleSignOut} className="gap-1.5 text-destructive">
+                  <LogOut className="h-4 w-4" /> {t('Sign out', 'Keluar')}
+                </Button>
+              </div>
             )}
             <div className="mt-3 flex items-center gap-2 border-t border-border/40 pt-3">
               <GlobalSearch />
