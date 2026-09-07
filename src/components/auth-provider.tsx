@@ -112,8 +112,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       provider: 'google',
       options: {
         // Land on the route handler that exchanges ?code for a session cookie,
-        // then it forwards to the landing page (logged-in view).
-        redirectTo: typeof window !== 'undefined' ? `${window.location.origin}/auth/callback?next=/` : undefined,
+        // then it forwards to the landing page (logged-in view). No query string
+        // so the Supabase redirect-URL allowlist needs only the plain path.
+        redirectTo: typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : undefined,
         queryParams: { prompt: 'select_account' },
       },
     });
