@@ -5,7 +5,18 @@ import { createServerClient } from '@supabase/ssr';
 const protectedPaths = ['/dashboard', '/admin', '/coach', '/pesan', '/profile', '/onboarding'];
 
 export async function middleware(req: NextRequest) {
-  const pathname = req.nextUrl.pathname;
+  const { pathname, searchParams } = req.nextUrl;
+
+  // Supabase drops the user on the Site URL (e.g. /?code=...) when the app's
+  // redirect_to isn't in the allowlist. Forward the code to the exchange route
+  // so login still completes wherever it lands.
+  const code = searchParams.get('code');
+  if (code && pathname !== '/auth/callback') {
+    const url = req.nextUrl.clone();
+    url.pathname = '/auth/callback';
+    url.search = `?code=${code}&next=${encodeURIComponent(pathname === '/' ? '/' : pathname)}`;
+    return NextResponse.redirect(url);
+  }
 
   const isProtected = protectedPaths.some((p) => pathname === p || pathname.startsWith(p + '/'));
   if (!isProtected) return NextResponse.next();
@@ -33,5 +44,7 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/admin/:path*', '/coach/:path*', '/pesan/:path*', '/profile/:path*', '/onboarding/:path*'],
+  // Run on everything except Next internals and static files, so the ?code=
+  // catch above works on any landing path (not just the protected ones).
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)'],
 };
