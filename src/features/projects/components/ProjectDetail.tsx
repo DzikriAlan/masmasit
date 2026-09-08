@@ -1,18 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Wallet, Clock, Loader2, Send, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react';
 import { AppShell } from '@/components/app-shell';
-import type { ProjectDetail, BidWithUser } from '@/features/projects/types/projectsTypes';
-import {
-  getProjectDetail,
-  getProjectBids,
-  postProjectBid,
-  updateBidStatus,
-  updateOtherBidsRejected,
-  updateProjectStatus,
-} from '@/features/projects/services/projectsServices';
+import { API_ERROR_CODE } from '@/shared/lib/apiResponse';
+import { useProjectsDetailControllers } from '@/features/projects/controllers/projectsControllers';
 import { useAuth } from '@/components/auth-provider';
 import { useLang } from '@/components/language-provider';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,87 +16,72 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 
-export default function ProjectDetailPage() {
+export default function ProjectDetail() {
   const params = useParams();
   const router = useRouter();
   const { user } = useAuth();
   const { t } = useLang();
-  const [project, setProject] = useState<ProjectDetail | null>(null);
-  const [bids, setBids] = useState<BidWithUser[]>([]);
-  const [loading, setLoading] = useState(true);
   const [showBid, setShowBid] = useState(false);
   const [bidForm, setBidForm] = useState({ amount: '', proposal: '', eta_days: '' });
-  const [saving, setSaving] = useState(false);
   const [confirmBidId, setConfirmBidId] = useState<string | null>(null);
-  const [hasBid, setHasBid] = useState(false);
 
-  useEffect(() => {
-    (async () => {
-      const id = params.id as string;
-      const { data: p } = await getProjectDetail(id);
-      setProject(p as ProjectDetail | null);
+  const {
+    fetchProjectsDetail,
+    fetchProjectsBids,
+    storeProjectsBid,
+    storeProjectsBidAccepted,
+    changeProjectsStatus,
+  } = useProjectsDetailControllers(params.id as string);
 
-      const { data: b } = await getProjectBids(id);
-      setBids((b as BidWithUser[]) ?? []);
+  const project = fetchProjectsDetail.data ?? null;
+  const bids = fetchProjectsBids.data ?? [];
+  const loading = fetchProjectsDetail.isPending;
+  const saving =
+    storeProjectsBid.isPending ||
+    storeProjectsBidAccepted.isPending ||
+    changeProjectsStatus.isPending;
+  const hasBid = Boolean(user) && bids.some((bid) => bid.user_id === user?.id);
 
-      if (user) {
-        setHasBid((b ?? []).some((bid) => bid.user_id === user.id));
-      }
-      setLoading(false);
-    })();
-  }, [params, user]);
-
-  const handleBid = async () => {
-    if (!user) { router.push('/login'); return; }
-    setSaving(true);
-    const { error } = await postProjectBid({
-      project_id: project!.id,
-      user_id: user.id,
-      amount: parseInt(bidForm.amount),
-      proposal: bidForm.proposal,
-      eta_days: bidForm.eta_days ? parseInt(bidForm.eta_days) : null,
-    });
-    setSaving(false);
-    if (error) {
-      toast.error(error.message.includes('duplicate') ? t('You already bid on this project', 'Anda sudah mengajukan bid untuk proyek ini') : t('Failed to submit bid', 'Gagal mengajukan bid'));
-    } else {
-      toast.success(t('Bid submitted!', 'Bid terkirim!'));
-      setShowBid(false);
-      setHasBid(true);
-      const { data: b } = await getProjectBids(project!.id);
-      setBids((b as BidWithUser[]) ?? []);
+  const saveBid = async () => {
+    if (!user || !project) { router.push('/login'); return; }
+    try {
+      await storeProjectsBid.mutateAsync({
+        project_id: project.id,
+        user_id: user.id,
+        amount: parseInt(bidForm.amount),
+        proposal: bidForm.proposal,
+        eta_days: bidForm.eta_days ? parseInt(bidForm.eta_days) : null,
+      });
+    } catch (error) {
+      const code = error instanceof Error ? error.name : '';
+      toast.error(
+        code === API_ERROR_CODE.CONFLICT
+          ? t('You already bid on this project', 'Anda sudah mengajukan bid untuk proyek ini')
+          : t('Failed to submit bid', 'Gagal mengajukan bid')
+      );
+      return;
     }
+    toast.success(t('Bid submitted!', 'Bid terkirim!'));
+    setShowBid(false);
   };
 
-  const handleAcceptBid = async (bidId: string) => {
-    if (!user || user.id !== project!.user_id) {
+  const saveAcceptedBid = async (bidId: string) => {
+    if (!user || !project || user.id !== project.user_id) {
       toast.error(t('Not authorized', 'Tidak memiliki izin'));
       return;
     }
     setConfirmBidId(null);
-    setSaving(true);
-    const { error: err1 } = await updateBidStatus(bidId, 'accepted');
-    if (err1) {
-      setSaving(false);
-      toast.error(t('Failed to accept bid', 'Gagal menerima bid'));
-      return;
-    }
-    const { error: err2 } = await updateOtherBidsRejected(bidId, project!.id);
-    if (err2) {
-      setSaving(false);
-      toast.error(t('Failed to reject other bids', 'Gagal menolak bid lain'));
-      return;
-    }
-    const { error: err3 } = await updateProjectStatus(project!.id, 'in_progress');
-    setSaving(false);
-    if (err3) {
-      toast.error(t('Failed to update project status', 'Gagal memperbarui status proyek'));
+    try {
+      await storeProjectsBidAccepted.mutateAsync(bidId);
+    } catch (error) {
+      toast.error(
+        error instanceof Error && error.message
+          ? error.message
+          : t('Failed to accept bid', 'Gagal menerima bid')
+      );
       return;
     }
     toast.success(t('Bid accepted! Project is now in progress.', 'Bid diterima! Proyek sekarang berjalan.'));
-    const { data: b } = await getProjectBids(project!.id);
-    setBids((b as BidWithUser[]) ?? []);
-    setProject({ ...project!, status: 'in_progress' });
   };
 
   if (loading) return <AppShell><div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div></AppShell>;
@@ -157,7 +135,7 @@ export default function ProjectDetailPage() {
                   <div className="space-y-2"><Label htmlFor="beta">{t('ETA (days)', 'Estimasi (hari)')}</Label><Input id="beta" type="number" value={bidForm.eta_days} onChange={(e) => setBidForm({ ...bidForm, eta_days: e.target.value })} placeholder="14" /></div>
                 </div>
                 <div className="space-y-2"><Label htmlFor="bprop">{t('Proposal', 'Proposal')}</Label><Textarea id="bprop" value={bidForm.proposal} onChange={(e) => setBidForm({ ...bidForm, proposal: e.target.value })} placeholder={t('Why are you the best fit?', 'Mengapa Anda paling cocok?')} /></div>
-                <Button onClick={handleBid} disabled={saving || !bidForm.amount || !bidForm.proposal} className="gap-2">
+                <Button onClick={saveBid} disabled={saving || !bidForm.amount || !bidForm.proposal} className="gap-2">
                   {saving && <Loader2 className="h-4 w-4 animate-spin" />} {t('Submit Bid', 'Kirim Bid')}
                 </Button>
               </div>
@@ -205,7 +183,7 @@ export default function ProjectDetailPage() {
             <p className="text-sm text-muted-foreground">{t('This will reject all other bids and start the project. This action cannot be undone.', 'Ini akan menolak semua bid lain dan memulai proyek. Tindakan ini tidak bisa dibatalkan.')}</p>
             <div className="mt-4 flex gap-2">
               <Button variant="outline" className="flex-1" onClick={() => setConfirmBidId(null)}>{t('Cancel', 'Batal')}</Button>
-              <Button className="flex-1" onClick={() => handleAcceptBid(confirmBidId)} disabled={saving}>
+              <Button className="flex-1" onClick={() => saveAcceptedBid(confirmBidId)} disabled={saving}>
                 {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {t('Confirm', 'Konfirmasi')}
               </Button>

@@ -1,14 +1,14 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Loader2, Star, MapPin, CalendarClock, Link as LinkIcon, MessageCircle, CreditCard, CheckCircle2, Send } from 'lucide-react';
 import { toast } from 'sonner';
 
-import type { TalentProfile, PayloadPostTalentsBooking } from '@/features/talents/types/talentsTypes';
-import { getTalentProfile, getBookingSettings, postTalentsBooking } from '@/features/talents/services/talentsServices';
-import { PaymentCard } from '@/components/payment-card';
+import type { PayloadPostTalentsBooking } from '@/features/talents/types/talentsTypes';
+import { useTalentsBookingControllers } from '@/features/talents/controllers/talentsControllers';
+import { PaymentCard } from '@/features/payments/components/PaymentCard';
 import { AppShell } from '@/components/app-shell';
 import { useAuth } from '@/components/auth-provider';
 import { useLang } from '@/components/language-provider';
@@ -20,42 +20,35 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-export default function TalentBookingPage() {
+export default function TalentBooking() {
   const params = useParams();
   const router = useRouter();
   const { user } = useAuth();
   const { t } = useLang();
-  const [talent, setTalent] = useState<TalentProfile | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [booking, setBooking] = useState({ booking_type: 'consultation', scheduled_at: '', notes: '', amount: '500000', external_name: '', external_email: '' });
-  const [saving, setSaving] = useState(false);
+  const [booking, setBooking] = useState({ booking_type: 'consultation', scheduled_at: '', notes: '', amount: '', external_name: '', external_email: '' });
   const [booked, setBooked] = useState(false);
   const [bookingId, setBookingId] = useState<string | null>(null);
   const [paymentStatus, setPaymentStatus] = useState('unpaid');
-  const [lynkidUrl, setLynkidUrl] = useState<string | null>(null);
-  const [adminFee, setAdminFee] = useState(15);
 
-  useEffect(() => {
-    (async () => {
-      const id = params.id as string;
-      const { data } = await getTalentProfile(id);
-      setTalent(data as TalentProfile | null);
+  const { fetchTalentProfile, fetchBookingSettings, storeTalentsBooking } =
+    useTalentsBookingControllers(params.id as string);
 
-      const { data: settings } = await getBookingSettings();
-      if (settings) {
-        setAdminFee(Number(settings.talent_admin_fee_percentage));
-        setLynkidUrl(settings.lynkid_bookings_url);
-      }
-      setLoading(false);
-    })();
-  }, [params]);
+  const talent = fetchTalentProfile.data ?? null;
+  const loading = fetchTalentProfile.isPending;
+  const saving = storeTalentsBooking.isPending;
+  const settings = fetchBookingSettings.data ?? null;
+  const adminFee = settings ? Number(settings.talent_admin_fee_percentage) : 15;
+  const lynkidUrl = settings?.lynkid_bookings_url ?? null;
 
-  const handleBooking = async () => {
+  // The talent's own rate seeds the amount; 500k stays the fallback when unset.
+  const defaultAmount = String(talent?.hourly_rate ?? 500000);
+  const bookingAmount = booking.amount || defaultAmount;
+
+  const saveBooking = async () => {
     if (!talent) return;
-    setSaving(true);
 
-    const amount = parseInt(booking.amount);
-    const insertData: PayloadPostTalentsBooking = {
+    const amount = parseInt(bookingAmount);
+    const payload: PayloadPostTalentsBooking = {
       talent_id: talent.id,
       booking_type: booking.booking_type,
       scheduled_at: booking.scheduled_at,
@@ -66,13 +59,18 @@ export default function TalentBookingPage() {
       client_id: user ? user.id : null,
     };
     if (!user) {
-      insertData.client_name = booking.external_name;
-      insertData.client_email = booking.external_email;
+      payload.client_name = booking.external_name;
+      payload.client_email = booking.external_email;
     }
-    const { data, error } = await postTalentsBooking(insertData);
-    setSaving(false);
-    if (error) { toast.error(t('Failed to create booking', 'Gagal membuat booking')); return; }
-    setBookingId(data.id);
+
+    let created: { id: string } | null = null;
+    try {
+      created = await storeTalentsBooking.mutateAsync(payload);
+    } catch {
+      toast.error(t('Failed to create booking', 'Gagal membuat booking'));
+      return;
+    }
+    setBookingId(created.id);
     toast.success(t('Booking created! Complete payment below.', 'Booking dibuat! Selesaikan pembayaran di bawah.'));
     setBooked(true);
   };
@@ -80,7 +78,7 @@ export default function TalentBookingPage() {
   if (loading) return <AppShell><div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div></AppShell>;
   if (!talent) return <AppShell><div className="py-20 text-center text-muted-foreground">{t('Talent not found.', 'Talent tidak ditemukan.')}</div></AppShell>;
 
-  const netAmount = parseInt(booking.amount || '0') * (1 - adminFee / 100);
+  const netAmount = parseInt(bookingAmount || '0') * (1 - adminFee / 100);
 
   return (
     <AppShell>
@@ -183,7 +181,7 @@ export default function TalentBookingPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="amount">{t('Amount (IDR)', 'Jumlah (IDR)')}</Label>
-                <Input id="amount" type="number" value={booking.amount} onChange={(e) => setBooking({ ...booking, amount: e.target.value })} placeholder="500000" />
+                <Input id="amount" type="number" value={bookingAmount} onChange={(e) => setBooking({ ...booking, amount: e.target.value })} placeholder={defaultAmount} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="notes">{t('Notes (optional)', 'Catatan (opsional)')}</Label>
@@ -198,7 +196,7 @@ export default function TalentBookingPage() {
               </div>
 
               <Button
-                onClick={handleBooking}
+                onClick={saveBooking}
                 disabled={saving || !booking.scheduled_at || !booking.amount || (!user && (!booking.external_name || !booking.external_email))}
                 className="w-full gap-2"
               >

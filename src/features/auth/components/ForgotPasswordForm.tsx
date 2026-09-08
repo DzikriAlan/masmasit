@@ -4,30 +4,37 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Loader2, Mail } from 'lucide-react';
 import { useLang } from '@/components/language-provider';
-import { postPasswordResetEmail } from '@/features/auth/services/authServices';
+import { useAuthControllers } from '@/features/auth/controllers/authControllers';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { toast } from 'sonner';
 
-export default function ForgotPasswordPage() {
+export default function ForgotPasswordForm() {
   const { t } = useLang();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const { storeAuthPasswordReset } = useAuthControllers();
+
+  const savePasswordReset = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { error } = await postPasswordResetEmail(email, `${window.location.origin}/reset-password`);
-    setLoading(false);
-    if (error) {
-      toast.error(error.message);
-    } else {
-      setSent(true);
-      toast.success(t('Reset link sent! Check your email.', 'Link reset dikirim! Cek email Anda.'));
+    try {
+      await storeAuthPasswordReset.mutateAsync({
+        email,
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+    } catch (error) {
+      setLoading(false);
+      toast.error(error instanceof Error ? error.message : 'Request failed');
+      return;
     }
+    setLoading(false);
+    setSent(true);
+    toast.success(t('Reset link sent! Check your email.', 'Link reset dikirim! Cek email Anda.'));
   };
 
   return (
@@ -55,7 +62,7 @@ export default function ForgotPasswordPage() {
               <Link href="/login"><Button className="w-full">{t('Back to Login', 'Kembali ke Login')}</Button></Link>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={savePasswordReset} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">{t('Email', 'Email')}</Label>
                 <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />

@@ -1,45 +1,74 @@
 import { supabase } from '@/shared/lib/supabase';
+import { toApiResponse } from '@/shared/lib/apiResponse';
 
-export const getProjects = async (search: string, statusFilter: string) => {
+import type {
+  DataProjects,
+  DataProjectsBids,
+  DataProjectsDetail,
+  PayloadGetProjects,
+  PayloadPostProjects,
+  PayloadPostProjectsBid,
+} from '../types/projectsTypes';
+
+export const getProjects = async (payload: PayloadGetProjects) => {
   let query = supabase
     .from('projects')
     .select('*, profiles(full_name)')
     .order('created_at', { ascending: false });
 
-  if (statusFilter !== 'all') query = query.eq('status', statusFilter);
-  if (search) query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%`);
+  if (payload.statusFilter !== 'all') query = query.eq('status', payload.statusFilter);
+  if (payload.search) {
+    query = query.or(`title.ilike.%${payload.search}%,description.ilike.%${payload.search}%`);
+  }
 
-  return query.limit(50);
+  return toApiResponse<DataProjects[]>(query.limit(50), 'Projects retrieved successfully');
 };
 
-export const postProject = async (payload: Record<string, unknown>) => {
-  return supabase.from('projects').insert(payload);
+export const postProjects = async (payload: PayloadPostProjects) => {
+  return toApiResponse<null>(supabase.from('projects').insert(payload), 'Project created successfully');
 };
 
-export const getProjectDetail = async (id: string) => {
-  return supabase.from('projects').select('*, profiles(full_name)').eq('id', id).maybeSingle();
+export const getProjectsDetail = async (id: string) => {
+  return toApiResponse<DataProjectsDetail>(
+    supabase.from('projects').select('*, profiles(full_name)').eq('id', id).maybeSingle(),
+    'Project retrieved successfully'
+  );
 };
 
-export const getProjectBids = async (projectId: string) => {
-  return supabase
-    .from('project_bids')
-    .select('*, profiles(full_name)')
-    .eq('project_id', projectId)
-    .order('created_at', { ascending: false });
+export const getProjectsBids = async (projectId: string) => {
+  return toApiResponse<DataProjectsBids[]>(
+    supabase
+      .from('project_bids')
+      .select('*, profiles(full_name)')
+      .eq('project_id', projectId)
+      .order('created_at', { ascending: false }),
+    'Bids retrieved successfully'
+  );
 };
 
-export const postProjectBid = async (payload: Record<string, unknown>) => {
-  return supabase.from('project_bids').insert(payload);
+export const postProjectsBid = async (payload: PayloadPostProjectsBid) => {
+  return toApiResponse<null>(
+    supabase.from('project_bids').insert(payload),
+    'Bid submitted successfully'
+  );
 };
 
-export const updateBidStatus = async (bidId: string, status: string) => {
-  return supabase.from('project_bids').update({ status }).eq('id', bidId);
+/**
+ * Accepting a bid used to be three separate calls (accept, reject the rest,
+ * move the project to in_progress); a failure part-way left the project
+ * inconsistent. `accept_project_bid` does all three in one transaction and
+ * verifies the caller owns the project.
+ */
+export const postProjectsBidAccepted = async (bidId: string, projectId: string) => {
+  return toApiResponse<null>(
+    supabase.rpc('accept_project_bid', { p_bid_id: bidId, p_project_id: projectId }),
+    'Bid accepted successfully'
+  );
 };
 
-export const updateOtherBidsRejected = async (bidId: string, projectId: string) => {
-  return supabase.from('project_bids').update({ status: 'rejected' }).neq('id', bidId).eq('project_id', projectId);
-};
-
-export const updateProjectStatus = async (projectId: string, status: string) => {
-  return supabase.from('projects').update({ status }).eq('id', projectId);
+export const updateProjectsStatus = async (projectId: string, status: string) => {
+  return toApiResponse<null>(
+    supabase.from('projects').update({ status }).eq('id', projectId),
+    'Project status updated successfully'
+  );
 };

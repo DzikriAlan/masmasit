@@ -37,6 +37,8 @@ export interface UserProfile {
   is_talent: boolean;
   coach_approved: ApprovalStatus;
   talent_approved: ApprovalStatus;
+  /** Default session amount a talent charges, in rupiah. */
+  hourly_rate: number | null;
   created_at: string;
 }
 

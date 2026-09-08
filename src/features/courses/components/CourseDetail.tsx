@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
   ArrowLeft, Loader2, GraduationCap, Lock, Play, CheckCircle2,
@@ -8,17 +8,14 @@ import {
   ExternalLink, Check, X, Circle
 } from 'lucide-react';
 import { AppShell } from '@/components/app-shell';
-import type { Material, QuizQuestion, Quiz, Module, CourseDetail } from '@/features/courses/types/coursesTypes';
-import {
-  getCourseDetail,
-  getCourseModules,
-  getEnrollment,
-  getCertificate,
-  getCoursesSettings,
-  postEnrollment,
-  updateEnrollmentProgress,
-  postCertificate,
-} from '@/features/courses/services/coursesServices';
+import { API_ERROR_CODE } from '@/shared/lib/apiResponse';
+import type {
+  DataCoursesMaterial as Material,
+  DataCoursesQuizQuestion as QuizQuestion,
+  DataCoursesQuiz as Quiz,
+  DataCoursesModule as Module,
+} from '@/features/courses/types/coursesTypes';
+import { useCoursesDetailControllers } from '@/features/courses/controllers/coursesControllers';
 import { useAuth } from '@/components/auth-provider';
 import { useLang } from '@/components/language-provider';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -28,7 +25,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
-import { PaymentCard } from '@/components/payment-card';
+import { PaymentCard } from '@/features/payments/components/PaymentCard';
 
 const courseCoverImages: Record<string, string> = {
   'Software Engineering': 'https://images.pexels.com/photos/270404/pexels-photo-270404.jpeg?auto=compress&cs=tinysrgb&h=300&w=800',
@@ -41,55 +38,74 @@ const courseCoverImages: Record<string, string> = {
 };
 const getCourseCoverImage = (cat: string) => courseCoverImages[cat] ?? courseCoverImages.default;
 
-export default function CourseDetailPage() {
+export default function CourseDetail() {
   const params = useParams();
   const router = useRouter();
   const { user } = useAuth();
   const { t } = useLang();
-  const [course, setCourse] = useState<CourseDetail | null>(null);
-  const [modules, setModules] = useState<Module[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [enrolled, setEnrolled] = useState(false);
-  const [enrollmentId, setEnrollmentId] = useState<string | null>(null);
-  const [progress, setProgress] = useState(0);
-  const [enrolling, setEnrolling] = useState(false);
   const [expandedModules, setExpandedModules] = useState<Set<string>>(new Set());
-  const [completedModules, setCompletedModules] = useState<Set<string>>(new Set());
   const [activeMaterial, setActiveMaterial] = useState<string | null>(null);
   const [activeQuiz, setActiveQuiz] = useState<string | null>(null);
   const [quizAnswers, setQuizAnswers] = useState<Record<string, string>>({});
-  const [quizResults, setQuizResults] = useState<Record<string, { score: number; passed: boolean }>>({});
-  const [submittingQuiz, setSubmittingQuiz] = useState(false);
-  const [hasCertificate, setHasCertificate] = useState(false);
-  const [paymentStatus, setPaymentStatus] = useState('unpaid');
-  const [lynkidCoursesUrl, setLynkidCoursesUrl] = useState<string | null>(null);
+  const [localQuizResults, setLocalQuizResults] = useState<Record<string, { score: number; passed: boolean }>>({});
+  const [retakingQuizIds, setRetakingQuizIds] = useState<Set<string>>(new Set());
 
-  useEffect(() => {
-    (async () => {
-      const id = params.id as string;
-      const { data: c } = await getCourseDetail(id);
-      setCourse(c as CourseDetail | null);
+  const {
+    fetchCoursesDetail,
+    fetchCoursesModules,
+    fetchCoursesEnrollment,
+    fetchCoursesCertificate,
+    fetchCoursesSettings,
+    storeCoursesEnrollment,
+    changeCoursesEnrollmentProgress,
+    storeCoursesCertificate,
+    fetchCoursesModuleCompletions,
+    fetchCoursesQuizSubmissions,
+    storeCoursesModuleCompletion,
+    storeCoursesQuizSubmission,
+  } = useCoursesDetailControllers(params.id as string, user?.id);
 
-      const { data: mods } = await getCourseModules(id);
-      setModules((mods as Module[]) ?? []);
+  const course = fetchCoursesDetail.data ?? null;
+  const modules: Module[] = fetchCoursesModules.data ?? [];
+  const loading = fetchCoursesDetail.isPending;
+  const enrolling = storeCoursesEnrollment.isPending;
+  const enrollment = fetchCoursesEnrollment.data ?? null;
+  const enrolled = Boolean(enrollment) || storeCoursesEnrollment.isSuccess;
+  const enrollmentId = enrollment?.id ?? storeCoursesEnrollment.data?.id ?? null;
+  const progress = enrollment?.progress ?? 0;
+  const paymentStatus = enrollment?.payment_status ?? 'unpaid';
+  const hasCertificate = Boolean(fetchCoursesCertificate.data) || storeCoursesCertificate.isSuccess;
+  const lynkidCoursesUrl = fetchCoursesSettings.data ?? null;
+  const submittingQuiz = storeCoursesQuizSubmission.isPending;
 
-      if (user) {
-        const { data: e } = await getEnrollment(id, user.id);
-        if (e) {
-          setEnrolled(true);
-          setEnrollmentId(e.id);
-          setProgress(e.progress);
-          setPaymentStatus(e.payment_status);
-        }
+  // Completions and quiz scores are persisted, so a refresh keeps them.
+  const completedModules = new Set((fetchCoursesModuleCompletions.data ?? []).map((c) => c.module_id));
 
-        const { data: cert } = await getCertificate(id, user.id);
-        setHasCertificate(!!cert);
+  const buildQuizResults = () => {
+    const stored: Record<string, { score: number; passed: boolean }> = {};
+    (fetchCoursesQuizSubmissions.data ?? []).forEach((sub) => {
+      const current = stored[sub.quiz_id];
+      if (!current || sub.score > current.score) {
+        stored[sub.quiz_id] = { score: sub.score, passed: sub.passed };
       }
-      const { data: settings } = await getCoursesSettings();
-      if (settings) setLynkidCoursesUrl(settings.lynkid_courses_url);
-      setLoading(false);
-    })();
-  }, [params, user]);
+    });
+    return { ...stored, ...localQuizResults };
+  };
+
+  const storedQuizResults = buildQuizResults();
+
+  // A quiz being retaken hides its previous score until the new one is in.
+  const quizResults = Object.fromEntries(
+    Object.entries(storedQuizResults).filter(([quizId]) => !retakingQuizIds.has(quizId))
+  );
+
+  // A certificate is only earned once every quiz in the course has been passed.
+  const allQuizIds = modules.flatMap((m) => (m.quizzes ?? []).map((q) => q.id));
+  const hasPassedEveryQuiz = allQuizIds.every((id) => quizResults[id]?.passed);
+
+  const modifyPaymentStatus = () => {
+    fetchCoursesEnrollment.refetch();
+  };
 
   const toggleModule = (id: string) => {
     const next = new Set(expandedModules);
@@ -98,61 +114,102 @@ export default function CourseDetailPage() {
     setExpandedModules(next);
   };
 
-  const handleEnroll = async () => {
-    if (!user) { router.push('/login'); return; }
-    setEnrolling(true);
-    const { data, error } = await postEnrollment({
-      course_id: course!.id,
-      user_id: user.id,
-    });
-    setEnrolling(false);
-    if (error) {
-      toast.error(error.message.includes('duplicate') ? t('Already enrolled', 'Sudah terdaftar') : t('Failed to enroll', 'Gagal mendaftar'));
-    } else {
-      toast.success(t('Enrolled! Start learning.', 'Terdaftar! Mulai belajar.'));
-      setEnrolled(true);
-      setEnrollmentId(data.id);
-      if (course!.price > 0) setPaymentStatus('unpaid');
+  const saveEnrollment = async () => {
+    if (!user || !course) { router.push('/login'); return; }
+    try {
+      await storeCoursesEnrollment.mutateAsync({ course_id: course.id, user_id: user.id });
+    } catch (error) {
+      const code = error instanceof Error ? error.name : '';
+      toast.error(
+        code === API_ERROR_CODE.CONFLICT
+          ? t('Already enrolled', 'Sudah terdaftar')
+          : t('Failed to enroll', 'Gagal mendaftar')
+      );
+      return;
+    }
+    toast.success(t('Enrolled! Start learning.', 'Terdaftar! Mulai belajar.'));
+  };
+
+  const saveModuleComplete = async (moduleId: string) => {
+    if (!user || !enrollmentId || !course) return;
+    if (completedModules.has(moduleId)) return;
+
+    try {
+      await storeCoursesModuleCompletion.mutateAsync({
+        enrollment_id: enrollmentId,
+        module_id: moduleId,
+        user_id: user.id,
+      });
+    } catch (error) {
+      // A repeat completion is harmless; anything else is worth surfacing.
+      const code = error instanceof Error ? error.name : '';
+      if (code !== API_ERROR_CODE.CONFLICT) {
+        toast.error(t('Failed to save progress', 'Gagal menyimpan progres'));
+        return;
+      }
+    }
+
+    const totalModules = modules.length || 1;
+    const newProgress = Math.round(((completedModules.size + 1) / totalModules) * 100);
+    await changeCoursesEnrollmentProgress.mutateAsync({ enrollmentId, progress: newProgress });
+
+    if (newProgress >= 100 && hasPassedEveryQuiz && !hasCertificate) {
+      await storeCoursesCertificate.mutateAsync({ course_id: course.id, user_id: user.id });
+      toast.success(t('Course completed! Certificate issued.', 'Kursus selesai! Sertifikat diterbitkan.'));
     }
   };
 
-  const markModuleComplete = useCallback(async (moduleId: string) => {
-    if (!user || !enrollmentId) return;
-    const next = new Set(completedModules);
-    next.add(moduleId);
-    setCompletedModules(next);
-
-    const totalModules = modules.length || 1;
-    const newProgress = Math.round((next.size / totalModules) * 100);
-    setProgress(newProgress);
-    await updateEnrollmentProgress(enrollmentId, newProgress);
-
-    if (newProgress >= 100 && !hasCertificate) {
-      await postCertificate({
-        course_id: course!.id,
-        user_id: user.id,
-      });
-      setHasCertificate(true);
-      toast.success(t('Course completed! Certificate issued.', 'Kursus selesai! Sertifikat diterbitkan.'));
-    }
-  }, [user, enrollmentId, completedModules, modules.length, hasCertificate, course]);
-
-  const submitQuiz = async (quiz: Quiz) => {
-    setSubmittingQuiz(true);
-    const total = quiz.quiz_questions.length;
-    let correct = 0;
-    quiz.quiz_questions.forEach((q) => {
-      if (quizAnswers[q.id] === q.correct_answer) correct++;
+  const modifyQuizRetake = (quiz: Quiz) => {
+    setRetakingQuizIds((prev) => new Set(prev).add(quiz.id));
+    setLocalQuizResults((prev) => {
+      const next = { ...prev };
+      delete next[quiz.id];
+      return next;
     });
+    setQuizAnswers((prev) => {
+      const next = { ...prev };
+      quiz.quiz_questions.forEach((q) => delete next[q.id]);
+      return next;
+    });
+  };
+
+  const saveQuiz = async (quiz: Quiz) => {
+    if (!user) { router.push('/login'); return; }
+
+    const total = quiz.quiz_questions.length || 1;
+    const correct = quiz.quiz_questions.filter((q) => quizAnswers[q.id] === q.correct_answer).length;
     const score = Math.round((correct / total) * 100);
     const passed = score >= quiz.passing_grade;
-    setQuizResults({ ...quizResults, [quiz.id]: { score, passed } });
-    setSubmittingQuiz(false);
+
+    const answers: Record<string, string> = {};
+    quiz.quiz_questions.forEach((q) => {
+      if (quizAnswers[q.id]) answers[q.id] = quizAnswers[q.id];
+    });
+
+    try {
+      await storeCoursesQuizSubmission.mutateAsync({
+        quiz_id: quiz.id,
+        user_id: user.id,
+        score,
+        passed,
+        answers,
+      });
+    } catch {
+      toast.error(t('Failed to submit quiz', 'Gagal mengirim kuis'));
+      return;
+    }
+
+    setLocalQuizResults({ ...localQuizResults, [quiz.id]: { score, passed } });
+    setRetakingQuizIds((prev) => {
+      const next = new Set(prev);
+      next.delete(quiz.id);
+      return next;
+    });
 
     if (passed) {
       toast.success(t('Quiz passed!', 'Kuis lulus!') + ` ${score}%`);
       const moduleId = modules.find((m) => m.quizzes?.some((q) => q.id === quiz.id))?.id;
-      if (moduleId) await markModuleComplete(moduleId);
+      if (moduleId) await saveModuleComplete(moduleId);
     } else {
       toast.error(t('Quiz not passed.', 'Kuis tidak lulus.') + ` ${score}% (need ${quiz.passing_grade}%)`);
     }
@@ -209,7 +266,7 @@ export default function CourseDetailPage() {
                       paymentLinkUrl={null}
                       paymentNote={null}
                       fallbackUrl={lynkidCoursesUrl}
-                      onStatusChange={setPaymentStatus}
+                      onStatusChange={modifyPaymentStatus}
                     />
                   </div>
                 ) : (
@@ -218,7 +275,7 @@ export default function CourseDetailPage() {
                   </div>
                 )
               ) : (
-                <Button onClick={handleEnroll} disabled={enrolling} className="mt-4 gap-2">
+                <Button onClick={saveEnrollment} disabled={enrolling} className="mt-4 gap-2">
                   {enrolling && <Loader2 className="h-4 w-4 animate-spin" />}
                   {course.price === 0 ? t('Enroll for Free', 'Daftar Gratis') : `${t('Enroll', 'Daftar')} — Rp ${(course.price / 1000).toFixed(0)}K`}
                 </Button>
@@ -256,7 +313,7 @@ export default function CourseDetailPage() {
                         </div>
                       </div>
                       {!canAccess && !enrolled && !mod.is_free && (
-                        <Button size="sm" variant="outline" onClick={handleEnroll}>{t('Enroll to Access', 'Daftar untuk Akses')}</Button>
+                        <Button size="sm" variant="outline" onClick={saveEnrollment}>{t('Enroll to Access', 'Daftar untuk Akses')}</Button>
                       )}
                     </div>
 
@@ -349,7 +406,7 @@ export default function CourseDetailPage() {
                                           </div>
                                           <p className="font-semibold">{t('Score', 'Nilai')}: {result.score}%</p>
                                           <p className="text-sm text-muted-foreground">{result.passed ? t('Passed!', 'Lulus!') : `${t('Need', 'Butuh')} ${qz.passing_grade}% ${t('to pass', 'untuk lulus')}`}</p>
-                                          <Button variant="outline" size="sm" className="mt-3" onClick={() => { setQuizResults((prev) => { const n = { ...prev }; delete n[qz.id]; return n; }); setQuizAnswers((prev) => { const n = { ...prev }; qz.quiz_questions.forEach((q) => delete n[q.id]); return n; }); }}>
+                                          <Button variant="outline" size="sm" className="mt-3" onClick={() => modifyQuizRetake(qz)}>
                                             {t('Retake Quiz', 'Ulangi Kuis')}
                                           </Button>
                                         </div>
@@ -376,7 +433,7 @@ export default function CourseDetailPage() {
                                             </div>
                                           ))}
                                           <Button
-                                            onClick={() => submitQuiz(qz)}
+                                            onClick={() => saveQuiz(qz)}
                                             disabled={submittingQuiz || qz.quiz_questions.some((q) => !quizAnswers[q.id])}
                                             className="w-full gap-2"
                                           >
@@ -395,7 +452,7 @@ export default function CourseDetailPage() {
 
                         {/* Mark complete button */}
                         {enrolled && !isComplete && (
-                          <Button variant="outline" size="sm" onClick={() => markModuleComplete(mod.id)} className="gap-2">
+                          <Button variant="outline" size="sm" onClick={() => saveModuleComplete(mod.id)} className="gap-2">
                             <Circle className="h-3.5 w-3.5" /> {t('Mark as Complete', 'Tandai Selesai')}
                           </Button>
                         )}

@@ -4,8 +4,9 @@ import { useState, useCallback, useRef } from 'react';
 import { Upload, Loader2, X, ImageIcon } from 'lucide-react';
 import { useAuth } from '@/components/auth-provider';
 import { useLang } from '@/components/language-provider';
-import { supabase } from '@/shared/lib/supabase';
 import { toast } from 'sonner';
+
+import { useUploadsControllers } from '@/features/uploads/controllers/uploadsControllers';
 
 interface FileUploadProps {
   bucket: 'avatars' | 'company-logos' | 'portfolios' | 'certificates';
@@ -30,10 +31,12 @@ export function FileUpload({
   const { t } = useLang();
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+
+  const { storeUploads } = useUploadsControllers();
   const [preview, setPreview] = useState<string | null>(existingUrl ?? null);
   const [dragOver, setDragOver] = useState(false);
 
-  const handleFile = useCallback(async (file: File) => {
+  const saveFile = useCallback(async (file: File) => {
     if (!user) {
       toast.error(t('Please sign in to upload', 'Silakan masuk untuk upload'));
       return;
@@ -52,32 +55,30 @@ export function FileUpload({
 
     setUploading(true);
     const ext = file.name.split('.').pop()?.toLowerCase() ?? 'jpg';
-    const fileName = `${user.id}/${Date.now()}.${ext}`;
+    const path = `${user.id}/${Date.now()}.${ext}`;
 
-    const { error } = await supabase.storage
-      .from(bucket)
-      .upload(fileName, file, { cacheControl: '3600', upsert: true });
-
-    if (error) {
+    let uploaded: { publicUrl: string };
+    try {
+      uploaded = await storeUploads.mutateAsync({ bucket, path, file });
+    } catch (error) {
       setUploading(false);
-      toast.error(t('Upload failed', 'Upload gagal') + ': ' + error.message);
+      const message = error instanceof Error ? error.message : '';
+      toast.error(t('Upload failed', 'Upload gagal') + (message ? `: ${message}` : ''));
       return;
     }
 
-    const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(fileName);
-    const publicUrl = urlData.publicUrl;
-    setPreview(publicUrl);
-    onUpload(publicUrl);
+    setPreview(uploaded.publicUrl);
+    onUpload(uploaded.publicUrl);
     setUploading(false);
     toast.success(t('Upload complete', 'Upload selesai'));
-  }, [user, bucket, maxSizeMB, onUpload, t]);
+  }, [user, bucket, maxSizeMB, onUpload, t, storeUploads]);
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
+  const modifyDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setDragOver(false);
     const file = e.dataTransfer.files[0];
-    if (file) handleFile(file);
-  }, [handleFile]);
+    if (file) saveFile(file);
+  }, [saveFile]);
 
   const handleRemove = () => {
     setPreview(null);
@@ -103,7 +104,7 @@ export function FileUpload({
           onClick={() => inputRef.current?.click()}
           onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
           onDragLeave={() => setDragOver(false)}
-          onDrop={handleDrop}
+          onDrop={modifyDrop}
           className={`flex h-32 w-32 cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed transition-all ${
             dragOver ? 'border-primary bg-primary/5' : 'border-border/60 hover:border-primary/40 hover:bg-muted/30'
           }`}
@@ -127,7 +128,7 @@ export function FileUpload({
         className="hidden"
         onChange={(e) => {
           const file = e.target.files?.[0];
-          if (file) handleFile(file);
+          if (file) saveFile(file);
         }}
       />
     </div>

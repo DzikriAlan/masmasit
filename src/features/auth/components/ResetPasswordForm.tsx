@@ -5,14 +5,15 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Loader2 } from 'lucide-react';
 import { useLang } from '@/components/language-provider';
-import { getSession, updateUserPassword } from '@/features/auth/services/authServices';
+import { getAuthSession } from '@/features/auth/services/authServices';
+import { useAuthControllers } from '@/features/auth/controllers/authControllers';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { toast } from 'sonner';
 
-export default function ResetPasswordPage() {
+export default function ResetPasswordForm() {
   const { t } = useLang();
   const router = useRouter();
   const [password, setPassword] = useState('');
@@ -20,11 +21,13 @@ export default function ResetPasswordPage() {
   const [loading, setLoading] = useState(false);
   const [ready, setReady] = useState(false);
 
+  const { changeAuthPassword } = useAuthControllers();
+
   useEffect(() => {
-    getSession().then(() => setReady(true));
+    getAuthSession().then(() => setReady(true));
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const savePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (password.length < 6) {
       toast.error(t('Password must be at least 6 characters', 'Kata sandi minimal 6 karakter'));
@@ -35,14 +38,16 @@ export default function ResetPasswordPage() {
       return;
     }
     setLoading(true);
-    const { error } = await updateUserPassword(password);
-    setLoading(false);
-    if (error) {
-      toast.error(error.message);
-    } else {
-      toast.success(t('Password updated! Please sign in.', 'Kata sandi diperbarui! Silakan masuk.'));
-      router.push('/login');
+    try {
+      await changeAuthPassword.mutateAsync({ password });
+    } catch (error) {
+      setLoading(false);
+      toast.error(error instanceof Error ? error.message : 'Request failed');
+      return;
     }
+    setLoading(false);
+    toast.success(t('Password updated! Please sign in.', 'Kata sandi diperbarui! Silakan masuk.'));
+    router.push('/login');
   };
 
   if (!ready) return <div className="flex min-h-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
@@ -65,7 +70,7 @@ export default function ResetPasswordPage() {
           <CardDescription>{t('Enter your new password below.', 'Masukkan kata sandi baru Anda di bawah.')}</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={savePassword} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="password">{t('New Password', 'Kata Sandi Baru')}</Label>
               <Input id="password" type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 6 characters" />

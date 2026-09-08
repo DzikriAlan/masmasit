@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Building2, MapPin, Clock, Wallet, Loader2, ArrowLeft, Send, CheckCircle2 } from 'lucide-react';
 import { AppShell } from '@/components/app-shell';
-import type { JobDetail } from '@/features/jobs/types/jobsTypes';
-import { getJobDetail, getJobApplication, postJobApplication } from '@/features/jobs/services/jobsServices';
+import { API_ERROR_CODE } from '@/shared/lib/apiResponse';
+import { useJobsDetailControllers } from '@/features/jobs/controllers/jobsControllers';
 import { useAuth } from '@/components/auth-provider';
 import { useLang } from '@/components/language-provider';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,47 +15,43 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 
-export default function JobDetailPage() {
+export default function JobDetail() {
   const params = useParams();
   const router = useRouter();
   const { user } = useAuth();
   const { t } = useLang();
-  const [job, setJob] = useState<JobDetail | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [hasApplied, setHasApplied] = useState(false);
-  const [applying, setApplying] = useState(false);
   const [coverLetter, setCoverLetter] = useState('');
   const [showApply, setShowApply] = useState(false);
 
-  useEffect(() => {
-    (async () => {
-      const id = params.id as string;
-      const { data } = await getJobDetail(id);
-      setJob(data as JobDetail | null);
-      if (user) {
-        const { data: app } = await getJobApplication(id, user.id);
-        setHasApplied(!!app);
-      }
-      setLoading(false);
-    })();
-  }, [params, user]);
+  const { fetchJobsDetail, fetchJobsApplication, storeJobsApplication } = useJobsDetailControllers(
+    params.id as string,
+    user?.id
+  );
 
-  const handleApply = async () => {
-    if (!user) { router.push('/login'); return; }
-    setApplying(true);
-    const { error } = await postJobApplication({
-      job_id: job!.id,
-      user_id: user.id,
-      cover_letter: coverLetter || null,
-    });
-    setApplying(false);
-    if (error) {
-      toast.error(error.message.includes('duplicate') ? t('You already applied to this job', 'Anda sudah melamar pekerjaan ini') : t('Failed to apply', 'Gagal melamar'));
-    } else {
-      toast.success(t('Application submitted!', 'Lamaran terkirim!'));
-      setHasApplied(true);
-      setShowApply(false);
+  const job = fetchJobsDetail.data ?? null;
+  const loading = fetchJobsDetail.isPending;
+  const applying = storeJobsApplication.isPending;
+  const hasApplied = Boolean(fetchJobsApplication.data);
+
+  const saveApplication = async () => {
+    if (!user || !job) { router.push('/login'); return; }
+    try {
+      await storeJobsApplication.mutateAsync({
+        job_id: job.id,
+        user_id: user.id,
+        cover_letter: coverLetter || null,
+      });
+    } catch (error) {
+      const code = error instanceof Error ? error.name : '';
+      toast.error(
+        code === API_ERROR_CODE.CONFLICT
+          ? t('You already applied to this job', 'Anda sudah melamar pekerjaan ini')
+          : t('Failed to apply', 'Gagal melamar')
+      );
+      return;
     }
+    toast.success(t('Application submitted!', 'Lamaran terkirim!'));
+    setShowApply(false);
   };
 
   if (loading) return <AppShell><div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div></AppShell>;
@@ -130,7 +126,7 @@ export default function JobDetailPage() {
                 </div>
                 <div className="flex gap-2">
                   <Button variant="outline" onClick={() => setShowApply(false)}>{t('Cancel', 'Batal')}</Button>
-                  <Button onClick={handleApply} disabled={applying} className="gap-2">
+                  <Button onClick={saveApplication} disabled={applying} className="gap-2">
                     {applying ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                     {t('Submit Application', 'Kirim Lamaran')}
                   </Button>

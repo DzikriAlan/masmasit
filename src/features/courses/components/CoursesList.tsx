@@ -1,11 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { GraduationCap, Loader2, Star, Users, Wallet, Plus } from 'lucide-react';
 import Link from 'next/link';
 import { AppShell } from '@/components/app-shell';
-import type { CourseWithCoach } from '@/features/courses/types/coursesTypes';
-import { getCourses } from '@/features/courses/services/coursesServices';
+import type { DataCourses } from '@/features/courses/types/coursesTypes';
+import { useCoursesControllers } from '@/features/courses/controllers/coursesControllers';
 import { useLang } from '@/components/language-provider';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -23,18 +22,12 @@ const courseImages: Record<string, string> = {
 
 const getCourseImage = (cat: string | null) => (cat && courseImages[cat]) ? courseImages[cat] : courseImages.default;
 
-export default function CoursesPage() {
+export default function CoursesList() {
   const { t } = useLang();
-  const [courses, setCourses] = useState<CourseWithCoach[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { fetchCourses } = useCoursesControllers();
 
-  useEffect(() => {
-    (async () => {
-      const { data } = await getCourses();
-      setCourses((data as CourseWithCoach[]) ?? []);
-      setLoading(false);
-    })();
-  }, []);
+  const courses: DataCourses[] = fetchCourses.data ?? [];
+  const loading = fetchCourses.isPending;
 
   return (
     <AppShell>

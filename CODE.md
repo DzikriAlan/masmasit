@@ -13,48 +13,67 @@ src/features/{folderName}/
 
 ## Tech Stack
 
-- **Framework**: Next.js 14 (Pages Router)
+- **Framework**: Next.js 14 (**App Router**, `src/app/`)
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS + Shadcn/UI
 - **Server State**: TanStack Query (`@tanstack/react-query`)
 - **Client State**: Zustand
 - **Forms**: React Hook Form + Zod
-- **Database ORM**: Prisma (PostgreSQL)
+- **Database**: **Supabase (PostgreSQL) dengan Row Level Security**
+
+> Versi awal dokumen ini menyebut Pages Router dan Prisma. Proyek berjalan di
+> App Router dengan Supabase sejak migrasi dari Vite, dan tidak ada
+> `schema.prisma` di repo. Router tidak dimigrasikan karena akan menulis ulang
+> seluruh halaman tanpa manfaat fungsional — bertentangan dengan Final Rules
+> "tidak boleh merubah kode, UI/UX, dan logika lain yang sudah ada".
+> Dokumen ini disesuaikan dengan kondisi sebenarnya.
 
 ## Shared Directory
 
 ```txt
 src/shared/
 ├── lib/
-│   ├── api.ts          # Client-side fetch wrapper (used by services/)
+│   ├── api.ts          # Client-side fetch wrapper untuk /api/v1 (dipakai services/)
+│   ├── apiResponse.ts  # Envelope RESPONSE.md + toApiResponse/unwrapApiResponse
+│   ├── supabase.ts     # Browser client (cookie-based)
+│   ├── types.ts        # Tipe domain bersama
 │   └── utils.ts        # cn() utility
-├── styles/
-│   └── globals.css     # Tailwind base + Shadcn CSS variables
-└── locales/
-    ├── en.json
-    └── id.json
+└── styles/
+    └── globals.css     # Tailwind base + Shadcn CSS variables
 ```
+
+> Terjemahan memakai `useLang().t('English', 'Indonesia')` dari
+> `language-provider`, belum file `locales/*.json`.
 
 ## Server Directory (backend-only, root-level)
 
 ```txt
 server/
-├── prisma.ts           # Prisma client singleton
-├── apiResponse.ts       # Response envelope + error helpers
-├── serverAuth.ts        # withAuth / withOptionalAuth
-├── products/
-│   ├── productsService.ts   # search sessions/history CRUD
-│   └── searchEngine.ts      # catalog query + NL filter detection
-├── users/
-│   └── usersService.ts      # seller lookup/profile
-└── orders/
-    ├── ordersService.ts
-    └── mayarService.ts
+├── supabase.ts          # getServerSupabase (cookie/RLS) + getServiceSupabase
+├── apiResponse.ts       # Response envelope + error helpers (RESPONSE.md)
+├── serverAuth.ts        # withAuth / withOptionalAuth / withAdmin / withSuperAdmin
+├── admin/
+│   └── adminService.ts      # role grants, approval queue, katalog CRUD
+└── audit/
+    └── auditService.ts      # audit_logs
 ```
 
-> `comments` punya model di Prisma schema tapi belum ada service/route — jangan bikin folder `server/comments/` sampai ada endpoint nyata yang membutuhkannya.
+Diakses via alias `@server/*`. Route handler (**`src/app/api/v1/**/route.ts`**)
+memanggil fungsi dari `server/`.
 
-Diakses via alias `@server/*`. Route handler (`src/pages/api/**`) memanggil fungsi dari `server/` — logic database, auth, dan integrasi pihak ketiga wajib berada di sini, bukan di `src/`.
+### Batas Client vs Server
+
+Supabase RLS adalah lapisan otorisasi utama, jadi tidak semua query diproksikan
+lewat HTTP. Aturannya:
+
+| Jenis operasi | Tempat | Alasan |
+| --- | --- | --- |
+| Baca/tulis milik user sendiri, terlindungi RLS | `src/features/*/services` langsung ke Supabase | RLS sudah membatasi baris; proxy HTTP hanya menambah latensi |
+| Operasi butuh wewenang lintas user (kelola peran, antrean approval, audit log, distribusi peran) | `server/` + `src/app/api/v1/**` | Perlu `is_admin()` / `is_super_admin()` dan pencatatan audit di sisi server |
+| Validasi yang tidak boleh dipercayakan ke klien (kapasitas event, penerimaan bid) | Fungsi Postgres (`SECURITY DEFINER`) | Perlu penguncian baris dan transaksi |
+| Sesi auth (`supabase.auth.*`) dan Realtime | Klien | Mengelola cookie di browser; Realtime tidak bisa diproksikan REST |
+
+Seluruh route handler dan service **wajib** mengembalikan envelope RESPONSE.md.
 
 ---
 
@@ -99,6 +118,7 @@ Sisa path yang bermakna dibagi menjadi tiga konsep:
 | ------------------------------------------------- | ----------- | ---------- | ------------------------ |
 | `/api/v1/users/profile`                          | `users`     | `users`    | `UsersProfile`           |
 | `/api/v1/ai-search/register/file/{type}/{id}`    | `ai-search` | `aiSearch` | `AiSearchRegisterFile`   |
+| `/api/v1/admin/agency-services/{id}`             | `admin`     | `admin`    | `AdminAgencyServices`    |
 
 > Segmen dinamis (`{param}`) selalu diabaikan.
 

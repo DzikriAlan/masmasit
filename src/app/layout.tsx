@@ -4,6 +4,7 @@ import { Inter, Space_Grotesk } from 'next/font/google';
 import { ThemeProvider } from '@/components/theme-provider';
 import { AuthProvider } from '@/components/auth-provider';
 import { LanguageProvider } from '@/components/language-provider';
+import { QueryProvider } from '@/components/query-provider';
 import { Toaster } from '@/components/ui/sonner';
 
 export const dynamic = 'force-dynamic';
@@ -36,14 +37,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
       <body className={`${inter.className} ${spaceGrotesk.variable} antialiased`}>
-        <ThemeProvider>
-          <LanguageProvider>
-            <AuthProvider>
-              {children}
-              <Toaster />
-            </AuthProvider>
-          </LanguageProvider>
-        </ThemeProvider>
+        <QueryProvider>
+          <ThemeProvider>
+            <LanguageProvider>
+              <AuthProvider>
+                {children}
+                <Toaster />
+              </AuthProvider>
+            </LanguageProvider>
+          </ThemeProvider>
+        </QueryProvider>
       </body>
     </html>
   );

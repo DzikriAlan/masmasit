@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react';
 import { Search, Briefcase, MapPin, Loader2, Building2, Clock, Wallet } from 'lucide-react';
 import Link from 'next/link';
 import { AppShell } from '@/components/app-shell';
-import type { JobWithCompany } from '@/features/jobs/types/jobsTypes';
-import { getUserSkills, getJobs } from '@/features/jobs/services/jobsServices';
+import type { DataJobs } from '@/features/jobs/types/jobsTypes';
+import { useJobsControllers } from '@/features/jobs/controllers/jobsControllers';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
@@ -15,39 +15,25 @@ import { useAuth } from '@/components/auth-provider';
 import { useLang } from '@/components/language-provider';
 import { calcMatchScore, matchScoreColor } from '@/shared/lib/match-score';
 
-export default function JobsPage() {
+export default function JobsList() {
   const { t } = useLang();
   const { user } = useAuth();
-  const [jobs, setJobs] = useState<JobWithCompany[]>([]);
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
   const [locationFilter, setLocationFilter] = useState('all');
-  const [userSkills, setUserSkills] = useState<{ skill_id: string; level: string }[]>([]);
+
+  const { fetchJobs, fetchJobsUserSkills, setGetJobs } = useJobsControllers(user?.id);
+
+  const jobs: DataJobs[] = fetchJobs.data ?? [];
+  const userSkills = fetchJobsUserSkills.data ?? [];
+  const loading = fetchJobs.isPending;
 
   useEffect(() => {
-    loadJobs();
-  }, []);
-
-  useEffect(() => {
-    if (user) {
-      getUserSkills(user.id).then(({ data }) => {
-        setUserSkills((data as { skill_id: string; level: string }[]) ?? []);
-      });
-    }
-  }, [user]);
-
-  const loadJobs = async () => {
-    setLoading(true);
-    const { data } = await getJobs(search, typeFilter, locationFilter);
-    setJobs((data as JobWithCompany[]) ?? []);
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    const timeout = setTimeout(loadJobs, 300);
+    const timeout = setTimeout(() => {
+      setGetJobs({ search, typeFilter, locationFilter });
+    }, 300);
     return () => clearTimeout(timeout);
-  }, [search, typeFilter, locationFilter]);
+  }, [search, typeFilter, locationFilter, setGetJobs]);
 
   const jobTypes = ['full-time', 'part-time', 'contract', 'internship', 'remote'];
   const locations = ['Jakarta', 'Bandung', 'Surabaya', 'Yogyakarta', 'Medan', 'Makassar', 'Bali', 'Remote'];

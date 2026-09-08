@@ -13,7 +13,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { toast } from 'sonner';
 
-export default function RegisterPage() {
+export default function RegisterForm() {
   const { signUp, signInWithGoogle } = useAuth();
   const { t } = useLang();
   const router = useRouter();
@@ -25,7 +25,7 @@ export default function RegisterPage() {
   const [registered, setRegistered] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleGoogle = async () => {
+  const saveGoogleSignIn = async () => {
     setGoogleLoading(true);
     const { error } = await signInWithGoogle();
     if (error) {
@@ -34,7 +34,7 @@ export default function RegisterPage() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const saveRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (password.length < 6) {
       toast.error(t('Password must be at least 6 characters', 'Kata sandi minimal 6 karakter'));
@@ -77,7 +77,7 @@ export default function RegisterPage() {
             </div>
           ) : (
           <>
-          <Button type="button" variant="outline" className="w-full gap-2" onClick={handleGoogle} disabled={googleLoading || loading}>
+          <Button type="button" variant="outline" className="w-full gap-2" onClick={saveGoogleSignIn} disabled={googleLoading || loading}>
             {googleLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <GoogleGlyph />}
             {t('Continue with Google', 'Lanjut dengan Google')}
           </Button>
@@ -85,7 +85,7 @@ export default function RegisterPage() {
             <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border/60" /></div>
             <div className="relative flex justify-center text-xs uppercase"><span className="bg-card px-2 text-muted-foreground">{t('or', 'atau')}</span></div>
           </div>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={saveRegister} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="fullName">{t('Full Name', 'Nama Lengkap')}</Label>
               <Input

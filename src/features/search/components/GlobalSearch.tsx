@@ -1,22 +1,18 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search, User, Briefcase, GraduationCap, FolderKanban, Loader2 } from 'lucide-react';
 import { useAuth } from '@/components/auth-provider';
 import { useLang } from '@/components/language-provider';
-import { supabase } from '@/shared/lib/supabase';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 
-interface SearchResult {
-  id: string;
-  type: 'profile' | 'job' | 'course' | 'project';
-  title: string;
-  subtitle: string;
-  href: string;
-}
+import type { DataSearch } from '@/features/search/types/searchTypes';
+import { useSearchControllers } from '@/features/search/controllers/searchControllers';
+
+type SearchResult = DataSearch;
 
 export function GlobalSearch() {
   const { user } = useAuth();
@@ -24,33 +20,17 @@ export function GlobalSearch() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState<SearchResult[]>([]);
-  const [loading, setLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const search = useCallback(async (q: string) => {
-    if (q.length < 2) { setResults([]); return; }
-    setLoading(true);
-    const [profiles, jobs, courses, projects] = await Promise.all([
-      supabase.from('profiles').select('id, full_name, bio, location').or(`full_name.ilike.%${q}%,bio.ilike.%${q}%`).limit(5),
-      supabase.from('jobs').select('id, title, company_name, location').or(`title.ilike.%${q}%,description.ilike.%${q}%`).eq('status', 'open').limit(5),
-      supabase.from('courses').select('id, title, level, category').or(`title.ilike.%${q}%,description.ilike.%${q}%`).limit(5),
-      supabase.from('projects').select('id, title, budget').or(`title.ilike.%${q}%,description.ilike.%${q}%`).eq('status', 'open').limit(5),
-    ]);
+  const { fetchSearch, setGetSearch } = useSearchControllers();
 
-    const all: SearchResult[] = [];
-    (profiles.data ?? []).forEach((p: any) => all.push({ id: p.id, type: 'profile', title: p.full_name ?? 'Unknown', subtitle: p.location ?? p.bio?.slice(0, 50) ?? '', href: `/directory/${p.id}` }));
-    (jobs.data ?? []).forEach((j: any) => all.push({ id: j.id, type: 'job', title: j.title, subtitle: `${j.company_name} · ${j.location ?? ''}`, href: `/jobs/${j.id}` }));
-    (courses.data ?? []).forEach((c: any) => all.push({ id: c.id, type: 'course', title: c.title, subtitle: `${c.level} · ${c.category ?? ''}`, href: `/courses/${c.id}` }));
-    (projects.data ?? []).forEach((p: any) => all.push({ id: p.id, type: 'project', title: p.title, subtitle: p.budget ? `Rp ${(p.budget / 1000000).toFixed(0)}M` : '', href: `/projects/${p.id}` }));
-    setResults(all);
-    setLoading(false);
-  }, []);
+  const results: SearchResult[] = query.length < 2 ? [] : fetchSearch.data ?? [];
+  const loading = query.length >= 2 && fetchSearch.isFetching;
 
   useEffect(() => {
-    const handler = setTimeout(() => search(query), 250);
+    const handler = setTimeout(() => setGetSearch({ query }), 250);
     return () => clearTimeout(handler);
-  }, [query, search]);
+  }, [query, setGetSearch]);
 
   useEffect(() => {
     if (open) setTimeout(() => inputRef.current?.focus(), 50);
@@ -66,7 +46,7 @@ export function GlobalSearch() {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
-  const handleSelect = (href: string) => {
+  const modifySelect = (href: string) => {
     router.push(href);
     setOpen(false);
   };
@@ -108,7 +88,7 @@ export function GlobalSearch() {
                 return (
                   <button
                     key={`${r.type}-${r.id}`}
-                    onClick={() => handleSelect(r.href)}
+                    onClick={() => modifySelect(r.href)}
                     className="flex w-full items-center gap-3 rounded-lg p-3 text-left transition-colors hover:bg-muted/50"
                   >
                     <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">

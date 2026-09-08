@@ -8,8 +8,9 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useLang } from '@/components/language-provider';
-import { supabase } from '@/shared/lib/supabase';
 import { toast } from 'sonner';
+
+import { usePaymentsControllers } from '@/features/payments/controllers/paymentsControllers';
 
 interface PaymentCardProps {
   table: 'bookings' | 'enrollments' | 'event_rsvps';
@@ -36,7 +37,9 @@ export function PaymentCard({
 }: PaymentCardProps) {
   const { t } = useLang();
   const [note, setNote] = useState(paymentNote ?? '');
-  const [submitting, setSubmitting] = useState(false);
+  const { changePaymentsConfirmation } = usePaymentsControllers();
+
+  const submitting = changePaymentsConfirmation.isPending;
 
   const payUrl = paymentLinkUrl || fallbackUrl;
   const formattedAmount = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
@@ -50,14 +53,10 @@ export function PaymentCard({
   const config = statusConfig[paymentStatus] ?? statusConfig.unpaid;
   const StatusIcon = config.icon;
 
-  const submitNote = async () => {
-    setSubmitting(true);
-    const { error } = await supabase
-      .from(table)
-      .update({ payment_note: note || null, payment_status: 'awaiting_confirmation' })
-      .eq('id', recordId);
-    setSubmitting(false);
-    if (error) {
+  const saveNote = async () => {
+    try {
+      await changePaymentsConfirmation.mutateAsync({ table, recordId, note: note || null });
+    } catch {
       toast.error(t('Failed to submit confirmation', 'Gagal mengirim konfirmasi'));
       return;
     }
@@ -111,7 +110,7 @@ export function PaymentCard({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={submitNote}
+                onClick={saveNote}
                 disabled={submitting || paymentStatus === 'awaiting_confirmation'}
                 className="w-full gap-2"
               >

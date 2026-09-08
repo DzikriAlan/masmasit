@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Star, MapPin, Loader2, CalendarClock, Link as LinkIcon, Search } from 'lucide-react';
 import Link from 'next/link';
 
 import type { Talent } from '@/features/talents/types/talentsTypes';
-import { getTalents } from '@/features/talents/services/talentsServices';
+import { useTalentsControllers } from '@/features/talents/controllers/talentsControllers';
 import { AppShell } from '@/components/app-shell';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -21,22 +21,20 @@ const dummyTalents: Talent[] = [
   { id: 'dummy-t5', full_name: 'Dewi Lestari', bio: 'Product Manager ex-Ruangguru. I help aspiring PMs master product discovery, user research, and data-driven decision making.', avatar_url: 'https://images.pexels.com/photos/733872/pexels-photo-733872.jpeg?auto=compress&cs=tinysrgb&h=200&w=200', location: 'Jakarta, Indonesia', linkedin_url: 'https://linkedin.com/in/dewilestari', calendly_url: null, whatsapp: null, _isDummy: true },
 ];
 
-export default function TalentsPage() {
+export default function TalentsList() {
   const { t } = useLang();
-  const [talents, setTalents] = useState<Talent[]>([]);
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
 
-  useEffect(() => {
-    (async () => {
-      const { data } = await getTalents();
-      const dbTalents = (data as Talent[]) ?? [];
-      const realNames = new Set(dbTalents.map((t2) => t2.full_name?.toLowerCase()));
-      const merged = [...dbTalents, ...dummyTalents.filter((d) => !realNames.has(d.full_name?.toLowerCase()))];
-      setTalents(merged);
-      setLoading(false);
-    })();
-  }, []);
+  const { fetchTalents } = useTalentsControllers();
+
+  const loading = fetchTalents.isPending;
+
+  const mergeDummyTalents = (dbTalents: Talent[]) => {
+    const realNames = new Set(dbTalents.map((t2) => t2.full_name?.toLowerCase()));
+    return [...dbTalents, ...dummyTalents.filter((d) => !realNames.has(d.full_name?.toLowerCase()))];
+  };
+
+  const talents = mergeDummyTalents(fetchTalents.data ?? []);
 
   const filtered = talents.filter((tal) =>
     !search ||

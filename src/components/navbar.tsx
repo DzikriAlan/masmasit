@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { Menu, X, Moon, Sun, Globe, MessageCircle, LayoutDashboard, LogIn, LogOut, UserPlus, User, ChevronDown } from 'lucide-react';
+import { Menu, X, Moon, Sun, Globe, MessageCircle, LayoutDashboard, LogIn, LogOut, UserPlus, User, ChevronDown, ShieldCheck, Activity } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -17,15 +17,17 @@ import {
 import { useTheme } from '@/components/theme-provider';
 import { useAuth } from '@/components/auth-provider';
 import { useLang } from '@/components/language-provider';
-import { NotificationBell } from '@/components/notification-bell';
-import { GlobalSearch } from '@/components/global-search';
+import { NotificationBell } from '@/features/notifications/components/NotificationBell';
+import { GlobalSearch } from '@/features/search/components/GlobalSearch';
 import { cn } from '@/shared/lib/utils';
 
 export function Navbar() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const { theme, toggleTheme } = useTheme();
-  const { user, profile, signOut } = useAuth();
+  const { user, profile, roles, signOut } = useAuth();
+
+  const isAdmin = roles.includes('super_admin') || roles.includes('regional_admin');
   const { lang, toggleLang, t } = useLang();
   const router = useRouter();
 
@@ -146,8 +148,19 @@ export function Navbar() {
                   <Link href="/profile"><User className="mr-2 h-4 w-4" /> {t('Profile', 'Profil')}</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
+                  <Link href="/activity"><Activity className="mr-2 h-4 w-4" /> {t('My Activity', 'Aktivitas Saya')}</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
                   <Link href="/pesan"><MessageCircle className="mr-2 h-4 w-4" /> {t('Messages', 'Pesan')}</Link>
                 </DropdownMenuItem>
+                {isAdmin && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link href="/admin"><ShieldCheck className="mr-2 h-4 w-4" /> {t('Admin Panel', 'Panel Admin')}</Link>
+                    </DropdownMenuItem>
+                  </>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleSignOut} className="text-destructive focus:text-destructive">
                   <LogOut className="mr-2 h-4 w-4" /> {t('Sign out', 'Keluar')}

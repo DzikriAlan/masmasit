@@ -2,8 +2,21 @@
 
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
-import { supabase } from '@/shared/lib/supabase';
 import type { UserProfile } from '@/shared/lib/types';
+import { unwrapApiResponse } from '@/shared/lib/apiResponse';
+import {
+  getAuthProfileFull,
+  getAuthRoles,
+  getAuthSession,
+  getAuthStateChange,
+  postAuthGoogleSignIn,
+  postAuthResendVerification,
+  postAuthSignIn,
+  postAuthSignOut,
+  postAuthSignUp,
+  postAuthSignUpProfile,
+  postAuthSignUpRole,
+} from '@/features/auth/services/authServices';
 
 interface AuthContextValue {
   user: User | null;
@@ -31,18 +44,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isEmailVerified, setIsEmailVerified] = useState(false);
 
   const loadProfile = useCallback(async (uid: string) => {
-    const { data: p } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', uid)
-      .maybeSingle();
-    setProfile(p as UserProfile | null);
-
-    const { data: r } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', uid);
-    setRoles(r ? r.map((x: { role: string }) => x.role) : []);
+    const [profileRes, rolesRes] = await Promise.all([getAuthProfileFull(uid), getAuthRoles(uid)]);
+    setProfile(profileRes.success ? (profileRes.data as UserProfile | null) : null);
+    setRoles(rolesRes.success ? (rolesRes.data ?? []).map((x) => x.role) : []);
   }, []);
 
   const refreshProfile = useCallback(async () => {
@@ -50,7 +54,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [user, loadProfile]);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session: s } }) => {
+    getAuthSession().then((res) => {
+      const s = res.success ? res.data ?? null : null;
       setSession(s);
       setUser(s?.user ?? null);
       setIsEmailVerified(s?.user?.email_confirmed_at != null);
@@ -61,7 +66,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
+    const { data: { subscription } } = getAuthStateChange((_event, s) => {
       setSession(s);
       setUser(s?.user ?? null);
       setIsEmailVerified(s?.user?.email_confirmed_at != null);
@@ -81,48 +86,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [loadProfile]);
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await postAuthSignIn(email, password);
     return { error: error?.message ?? null };
   };
 
   const signUp = async (email: string, password: string, fullName: string) => {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { full_name: fullName } },
-    });
+    const { data, error } = await postAuthSignUp(email, password, fullName);
     if (error) return { error: error.message };
 
     if (data.user) {
-      await supabase.from('profiles').insert({
-        id: data.user.id,
-        email,
-        full_name: fullName,
-      });
-      await supabase.from('user_roles').insert({
-        user_id: data.user.id,
-        role: 'member',
-      });
+      await postAuthSignUpProfile({ id: data.user.id, email, full_name: fullName });
+      await postAuthSignUpRole(data.user.id);
     }
     return { error: null };
   };
 
   const signInWithGoogle = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        // Land on the route handler that exchanges ?code for a session cookie,
-        // then it forwards to the landing page (logged-in view). No query string
-        // so the Supabase redirect-URL allowlist needs only the plain path.
-        redirectTo: typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : undefined,
-        queryParams: { prompt: 'select_account' },
-      },
-    });
+    // Land on the route handler that exchanges ?code for a session cookie, then
+    // it forwards to the landing page. No query string, so the Supabase
+    // redirect-URL allowlist needs only the plain path.
+    const redirectTo =
+      typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : undefined;
+    const { error } = await postAuthGoogleSignIn(redirectTo);
     return { error: error?.message ?? null };
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    await postAuthSignOut();
     setProfile(null);
     setRoles([]);
     setIsEmailVerified(false);
@@ -130,7 +120,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const resendVerification = async () => {
     if (!user) return { error: 'No user' };
-    const { error } = await supabase.auth.resend({ type: 'signup', email: user.email! });
+    const { error } = await postAuthResendVerification(user.email!);
     return { error: error?.message ?? null };
   };
 

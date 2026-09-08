@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { Loader2, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { getCurrentUser, getProfileNameBio } from '@/features/auth/services/authServices';
+import { useAuthControllers } from '@/features/auth/controllers/authControllers';
 import { GoogleGlyph } from '@/features/auth/components/GoogleGlyph';
 import { useAuth } from '@/components/auth-provider';
 import { useLang } from '@/components/language-provider';
@@ -15,7 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
-export default function LoginPage() {
+export default function LoginForm() {
   const { signIn, signInWithGoogle } = useAuth();
   const { t } = useLang();
   const router = useRouter();
@@ -25,7 +25,9 @@ export default function LoginPage() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleGoogle = async () => {
+  const { fetchAuthLandingRoute } = useAuthControllers();
+
+  const saveGoogleSignIn = async () => {
     setGoogleLoading(true);
     const { error } = await signInWithGoogle();
     if (error) {
@@ -34,18 +36,17 @@ export default function LoginPage() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const saveSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     const { error } = await signIn(email, password);
     setLoading(false);
     if (error) {
       toast.error(error);
-    } else {
-      toast.success(t('Welcome back!', 'Selamat datang kembali!'));
-      const { data: p } = await getProfileNameBio((await getCurrentUser()).data.user?.id ?? '');
-      router.push(p?.full_name ? '/dashboard' : '/onboarding');
+      return;
     }
+    toast.success(t('Welcome back!', 'Selamat datang kembali!'));
+    router.push(await fetchAuthLandingRoute());
   };
 
   return (
@@ -66,7 +67,7 @@ export default function LoginPage() {
           <CardDescription>{t('Sign in to your masmasit.online account', 'Masuk ke akun masmasit.online Anda')}</CardDescription>
         </CardHeader>
         <CardContent>
-          <Button type="button" variant="outline" className="w-full gap-2" onClick={handleGoogle} disabled={googleLoading || loading}>
+          <Button type="button" variant="outline" className="w-full gap-2" onClick={saveGoogleSignIn} disabled={googleLoading || loading}>
             {googleLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <GoogleGlyph />}
             {t('Continue with Google', 'Lanjut dengan Google')}
           </Button>
@@ -74,7 +75,7 @@ export default function LoginPage() {
             <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border/60" /></div>
             <div className="relative flex justify-center text-xs uppercase"><span className="bg-card px-2 text-muted-foreground">{t('or', 'atau')}</span></div>
           </div>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={saveSignIn} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">{t('Email', 'Email')}</Label>
               <Input

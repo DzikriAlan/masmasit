@@ -5,8 +5,8 @@ import { Search, Code2, Wallet, Clock, Loader2, Plus, ArrowLeft, Send, Star } fr
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { AppShell } from '@/components/app-shell';
-import type { ProjectWithOwner } from '@/features/projects/types/projectsTypes';
-import { getProjects, postProject } from '@/features/projects/services/projectsServices';
+import type { DataProjects } from '@/features/projects/types/projectsTypes';
+import { useProjectsControllers } from '@/features/projects/controllers/projectsControllers';
 import { useAuth } from '@/components/auth-provider';
 import { useLang } from '@/components/language-provider';
 import { Input } from '@/components/ui/input';
@@ -17,10 +17,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
-export default function ProjectsPage() {
+export default function ProjectsList() {
   const { t } = useLang();
-  const [projects, setProjects] = useState<ProjectWithOwner[]>([]);
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('open');
   const [showPost, setShowPost] = useState(false);
@@ -28,41 +26,38 @@ export default function ProjectsPage() {
   const router = useRouter();
 
   const [form, setForm] = useState({ title: '', description: '', budget_min: '', budget_max: '', deadline: '' });
-  const [saving, setSaving] = useState(false);
+
+  const { fetchProjects, storeProjects, setGetProjects } = useProjectsControllers();
+
+  const projects: DataProjects[] = fetchProjects.data ?? [];
+  const loading = fetchProjects.isPending;
+  const saving = storeProjects.isPending;
 
   useEffect(() => {
-    loadProjects();
-  }, [statusFilter]);
-
-  const loadProjects = async () => {
-    setLoading(true);
-    const { data } = await getProjects(search, statusFilter);
-    setProjects((data as ProjectWithOwner[]) ?? []);
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    const timeout = setTimeout(loadProjects, 300);
+    const timeout = setTimeout(() => {
+      setGetProjects({ search, statusFilter });
+    }, 300);
     return () => clearTimeout(timeout);
-  }, [search]);
+  }, [search, statusFilter, setGetProjects]);
 
-  const handlePost = async () => {
+  const saveProject = async () => {
     if (!user) { router.push('/login'); return; }
-    setSaving(true);
-    const { error } = await postProject({
-      user_id: user.id,
-      title: form.title,
-      description: form.description,
-      budget_min: form.budget_min ? parseInt(form.budget_min) : null,
-      budget_max: form.budget_max ? parseInt(form.budget_max) : null,
-      deadline: form.deadline || null,
-    });
-    setSaving(false);
-    if (error) { toast.error(t('Failed to post project', 'Gagal memposting proyek')); return; }
+    try {
+      await storeProjects.mutateAsync({
+        user_id: user.id,
+        title: form.title,
+        description: form.description,
+        budget_min: form.budget_min ? parseInt(form.budget_min) : null,
+        budget_max: form.budget_max ? parseInt(form.budget_max) : null,
+        deadline: form.deadline || null,
+      });
+    } catch {
+      toast.error(t('Failed to post project', 'Gagal memposting proyek'));
+      return;
+    }
     toast.success(t('Project posted!', 'Proyek diposting!'));
     setShowPost(false);
     setForm({ title: '', description: '', budget_min: '', budget_max: '', deadline: '' });
-    loadProjects();
   };
 
   const formatBudget = (min: number | null, max: number | null) => {
@@ -119,7 +114,7 @@ export default function ProjectsPage() {
               </div>
               <div className="flex gap-2">
                 <Button variant="outline" onClick={() => setShowPost(false)}>{t('Cancel', 'Batal')}</Button>
-                <Button onClick={handlePost} disabled={saving || !form.title || !form.description} className="gap-2">
+                <Button onClick={saveProject} disabled={saving || !form.title || !form.description} className="gap-2">
                   {saving && <Loader2 className="h-4 w-4 animate-spin" />} {t('Post Project', 'Pasang Proyek')}
                 </Button>
               </div>

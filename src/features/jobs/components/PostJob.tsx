@@ -6,7 +6,7 @@ import { Building2, Loader2, Briefcase, Plus } from 'lucide-react';
 import { AppShell } from '@/components/app-shell';
 import { useAuth } from '@/components/auth-provider';
 import { useLang } from '@/components/language-provider';
-import { getUserCompany, postCompany, postUserRole, postJobPosting } from '@/features/jobs/services/jobsServices';
+import { usePostJobControllers } from '@/features/jobs/controllers/jobsControllers';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,63 +16,61 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 
-export default function PostJobPage() {
+export default function PostJob() {
   const { user, loading, roles } = useAuth();
   const { t } = useLang();
   const router = useRouter();
-  const [company, setCompany] = useState<any>(null);
   const [companyForm, setCompanyForm] = useState({ name: '', description: '', website: '', location: '', industry: '' });
   const [jobForm, setJobForm] = useState({ title: '', description: '', location: '', job_type: 'full-time', salary_min: '', salary_max: '', deadline: '' });
-  const [saving, setSaving] = useState(false);
   const [mode, setMode] = useState<'company' | 'job'>('company');
+
+  const { fetchJobsCompany, storeJobsCompany, storeJobsUserRole, storeJobsPosting } =
+    usePostJobControllers(user?.id);
+
+  const company = fetchJobsCompany.data ?? null;
+  const saving = storeJobsCompany.isPending || storeJobsPosting.isPending;
 
   useEffect(() => {
     if (!loading && !user) router.push('/login');
   }, [user, loading, router]);
 
   useEffect(() => {
-    if (!user) return;
-    (async () => {
-      const { data } = await getUserCompany(user.id);
-      if (data) {
-        setCompany(data);
-        if (data.approval_status === 'approved') setMode('job');
-      }
-    })();
-  }, [user]);
+    if (company?.approval_status === 'approved') setMode('job');
+  }, [company]);
 
-  const registerCompany = async () => {
+  const saveCompany = async () => {
     if (!user) return;
-    setSaving(true);
-    const { error } = await postCompany({
-      user_id: user.id,
-      ...companyForm,
-    });
-    setSaving(false);
-    if (error) { toast.error(t('Failed to register company', 'Gagal mendaftarkan perusahaan')); return; }
+    try {
+      await storeJobsCompany.mutateAsync({ user_id: user.id, ...companyForm });
+    } catch {
+      toast.error(t('Failed to register company', 'Gagal mendaftarkan perusahaan'));
+      return;
+    }
 
     if (!roles.includes('company')) {
-      await postUserRole({ user_id: user.id, role: 'company' });
+      await storeJobsUserRole.mutateAsync({ user_id: user.id, role: 'company' });
     }
     toast.success(t('Company registered! Waiting for admin approval.', 'Perusahaan terdaftar! Menunggu persetujuan admin.'));
     router.push('/dashboard');
   };
 
-  const postJob = async () => {
+  const savePosting = async () => {
     if (!user || !company) return;
-    setSaving(true);
-    const { error } = await postJobPosting({
-      company_id: company.id,
-      title: jobForm.title,
-      description: jobForm.description,
-      location: jobForm.location || null,
-      job_type: jobForm.job_type,
-      salary_min: jobForm.salary_min ? parseInt(jobForm.salary_min) : null,
-      salary_max: jobForm.salary_max ? parseInt(jobForm.salary_max) : null,
-      deadline: jobForm.deadline || null,
-    });
-    setSaving(false);
-    if (error) { toast.error(t('Failed to post job', 'Gagal memposting lowongan')); return; }
+    try {
+      await storeJobsPosting.mutateAsync({
+        company_id: company.id,
+        title: jobForm.title,
+        description: jobForm.description,
+        location: jobForm.location || null,
+        job_type: jobForm.job_type,
+        salary_min: jobForm.salary_min ? parseInt(jobForm.salary_min) : null,
+        salary_max: jobForm.salary_max ? parseInt(jobForm.salary_max) : null,
+        deadline: jobForm.deadline || null,
+      });
+    } catch {
+      toast.error(t('Failed to post job', 'Gagal memposting lowongan'));
+      return;
+    }
     toast.success(t('Job posted!', 'Lowangan terposting!'));
     router.push('/jobs');
   };
@@ -97,7 +95,7 @@ export default function PostJobPage() {
                 <div className="space-y-2"><Label htmlFor="cloc">{t('Location', 'Lokasi')}</Label><Input id="cloc" value={companyForm.location} onChange={(e) => setCompanyForm({ ...companyForm, location: e.target.value })} placeholder="Jakarta" /></div>
               </div>
               <div className="space-y-2"><Label htmlFor="cind">{t('Industry', 'Industri')}</Label><Input id="cind" value={companyForm.industry} onChange={(e) => setCompanyForm({ ...companyForm, industry: e.target.value })} placeholder={t('Fintech, E-commerce, etc.', 'Fintech, E-commerce, dll')} /></div>
-              <Button onClick={registerCompany} disabled={saving || !companyForm.name} className="w-full">
+              <Button onClick={saveCompany} disabled={saving || !companyForm.name} className="w-full">
                 {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} {t('Register Company', 'Daftarkan Perusahaan')}
               </Button>
             </CardContent>
@@ -146,7 +144,7 @@ export default function PostJobPage() {
                 <div className="space-y-2"><Label htmlFor="jsmax">{t('Salary Max (IDR)', 'Gaji Max (IDR)')}</Label><Input id="jsmax" type="number" value={jobForm.salary_max} onChange={(e) => setJobForm({ ...jobForm, salary_max: e.target.value })} placeholder="10000000" /></div>
               </div>
               <div className="space-y-2"><Label htmlFor="jdead">{t('Deadline', 'Tenggat')}</Label><Input id="jdead" type="date" value={jobForm.deadline} onChange={(e) => setJobForm({ ...jobForm, deadline: e.target.value })} /></div>
-              <Button onClick={postJob} disabled={saving || !jobForm.title || !jobForm.description} className="w-full gap-2">
+              <Button onClick={savePosting} disabled={saving || !jobForm.title || !jobForm.description} className="w-full gap-2">
                 {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />} {t('Post Job', 'Posting Lowongan')}
               </Button>
             </CardContent>
