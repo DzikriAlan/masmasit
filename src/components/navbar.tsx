@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { Menu, X, Moon, Sun, Code2, Globe, MessageCircle, LayoutDashboard, LogIn, LogOut, UserPlus, User, ChevronDown } from 'lucide-react';
+import { Menu, X, Moon, Sun, Globe, MessageCircle, LayoutDashboard, LogIn, LogOut, UserPlus, User, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -61,19 +61,23 @@ export function Navbar() {
   return (
     <header
       className={cn(
-        'sticky top-0 z-50 w-full transition-all duration-300',
+        'sticky top-0 z-50 w-full bg-background transition-all duration-300',
         scrolled || !isHome
-          ? 'border-b border-border/40 glass'
-          : 'border-b border-transparent bg-transparent'
+          ? 'border-b border-border/40'
+          : 'border-b border-transparent'
       )}
     >
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <Link href="/" className="flex items-center gap-2 transition-transform hover:scale-[1.02]">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary transition-shadow hover:shadow-lg hover:shadow-primary/30">
-            <Code2 className="h-5 w-5 text-primary-foreground" />
-          </div>
+          <img
+            src="/icon-192.webp"
+            alt=""
+            width={36}
+            height={36}
+            className="h-9 w-9 shrink-0 rounded-[24%]"
+          />
           <span className="font-display text-lg font-bold tracking-tight">
-            masmasit<span className="text-primary">.online</span>
+            masmasit
           </span>
         </Link>
 
