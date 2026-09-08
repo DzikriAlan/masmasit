@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Code2, Loader2, Mail } from 'lucide-react';
+import { Loader2, Mail } from 'lucide-react';
 import { useLang } from '@/components/language-provider';
 import { postPasswordResetEmail } from '@/features/auth/services/authServices';
 import { Button } from '@/components/ui/button';
@@ -36,9 +36,13 @@ export default function ForgotPasswordPage() {
       <Card className="relative w-full max-w-md glass">
         <CardHeader className="text-center">
           <Link href="/" className="mx-auto mb-4 flex items-center gap-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-accent">
-              <Code2 className="h-5 w-5 text-white" />
-            </div>
+            <img
+              src="/icon-192.webp"
+              alt="masmasit.online"
+              width={40}
+              height={40}
+              className="h-10 w-10 shrink-0 rounded-[24%]"
+            />
           </Link>
           <CardTitle className="font-display text-2xl">{t('Forgot Password', 'Lupa Kata Sandi')}</CardTitle>
           <CardDescription>{t('Enter your email and we\'ll send you a reset link.', 'Masukkan email Anda dan kami akan mengirim link reset.')}</CardDescription>

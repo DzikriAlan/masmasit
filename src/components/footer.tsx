@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Code2, Mail, MessageCircle } from 'lucide-react';
+import { Mail, MessageCircle } from 'lucide-react';
 
 export function Footer() {
   return (
@@ -8,9 +8,13 @@ export function Footer() {
         <div className="grid gap-8 md:grid-cols-4">
           <div className="md:col-span-2">
             <div className="flex items-center gap-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-                <Code2 className="h-5 w-5 text-primary-foreground" />
-              </div>
+              <img
+                src="/icon-192.webp"
+                alt=""
+                width={36}
+                height={36}
+                className="h-9 w-9 shrink-0 rounded-[24%]"
+              />
               <span className="font-display text-lg font-bold">
                 masmasit<span className="text-primary">.online</span>
               </span>

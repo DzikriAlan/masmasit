@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Code2, Loader2, Mail, Eye, EyeOff } from 'lucide-react';
+import { Loader2, Mail, Eye, EyeOff } from 'lucide-react';
 import { GoogleGlyph } from '@/features/auth/components/GoogleGlyph';
 import { useAuth } from '@/components/auth-provider';
 import { useLang } from '@/components/language-provider';
@@ -57,9 +57,13 @@ export default function RegisterPage() {
       <Card className="relative w-full max-w-md glass">
         <CardHeader className="text-center">
           <Link href="/" className="mx-auto mb-4 flex items-center gap-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-accent">
-              <Code2 className="h-5 w-5 text-white" />
-            </div>
+            <img
+              src="/icon-192.webp"
+              alt="masmasit.online"
+              width={40}
+              height={40}
+              className="h-10 w-10 shrink-0 rounded-[24%]"
+            />
           </Link>
           <CardTitle className="font-display text-2xl">{t('Join the Ecosystem', 'Gabung Ekosistem')}</CardTitle>
           <CardDescription>{t('Create your masmasit.online account', 'Buat akun masmasit.online Anda')}</CardDescription>
