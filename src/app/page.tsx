@@ -1,86 +1,181 @@
 'use client';
 
 import Link from 'next/link';
+import { useEffect, useRef, useState } from 'react';
 import {
-  ArrowRight, Users, Briefcase, GraduationCap,
-  Code2, Brain, Palette, UsersRound, Star,
-  MessageCircle, CalendarClock, Mail,
-  MapPin, Quote, ChevronLeft, ChevronRight,
-  TrendingUp, UserPlus, Compass, Handshake, Sprout,
-  Shield, Cloud, Bug, Megaphone, Blocks,
-  Activity, Sparkles, Zap, Target,
+  ArrowRight, ArrowUpRight, Search, BookOpen, Briefcase, FolderGit2, Users,
+  GraduationCap, CalendarDays, Wrench, MessagesSquare, Bookmark, Eye,
+  MapPin, Clock, Star, Circle, Plus,
+  UserPlus, Compass, Handshake, Sprout, Code2, Brain, Palette, Cloud,
+  Shield, Bug, UsersRound, Megaphone, Blocks, TrendingUp, Quote,
+  ChevronLeft, ChevronRight, Activity, MessageCircle, Mail, CalendarClock,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { useEffect, useState } from 'react';
-import { supabase } from '@/shared/lib/supabase';
-import { useLang } from '@/components/language-provider';
+
 import { AppShell } from '@/components/app-shell';
+import { PageDecor } from '@/components/page-decor';
+import { useLang } from '@/components/language-provider';
+import { supabase } from '@/shared/lib/supabase';
+import { Button } from '@/components/ui/button';
 
-const heroImg = 'https://images.pexels.com/photos/7652188/pexels-photo-7652188.jpeg?auto=compress&cs=tinysrgb&h=650&w=940';
-const heroImg2 = 'https://images.pexels.com/photos/7534107/pexels-photo-7534107.jpeg?auto=compress&cs=tinysrgb&h=400&w=400';
-const heroImg3 = 'https://images.pexels.com/photos/12902899/pexels-photo-12902899.jpeg?auto=compress&cs=tinysrgb&h=300&w=300';
+const px = (id: string, w: number, h: number) =>
+  `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&h=${h}&w=${w}`;
 
-const mentorPhotos = [
-  'https://images.pexels.com/photos/5308640/pexels-photo-5308640.jpeg?auto=compress&cs=tinysrgb&h=200&w=200',
-  'https://images.pexels.com/photos/6942776/pexels-photo-6942776.jpeg?auto=compress&cs=tinysrgb&h=200&w=200',
-  'https://images.pexels.com/photos/749091/pexels-photo-749091.jpeg?auto=compress&cs=tinysrgb&h=200&w=200',
-  'https://images.pexels.com/photos/7534107/pexels-photo-7534107.jpeg?auto=compress&cs=tinysrgb&h=200&w=200',
-  'https://images.pexels.com/photos/7752820/pexels-photo-7752820.jpeg?auto=compress&cs=tinysrgb&h=200&w=200',
-  'https://images.pexels.com/photos/15014092/pexels-photo-15014092.jpeg?auto=compress&cs=tinysrgb&h=200&w=200',
+const heroImage = px('7652188', 1200, 900);
+const ctaImage = px('8518816', 1600, 700);
+
+/* ---------------------------------------------------------------- content */
+
+const ecosystem = [
+  { key: 'resources', href: null, icon: BookOpen, en: 'Resources', id: 'Resource', descEn: 'Guides, tools, documentation, templates, repositories, references.', descId: 'Panduan, tools, dokumentasi, template, repository, referensi.' },
+  { key: 'jobs', href: '/jobs', icon: Briefcase, en: 'Jobs', id: 'Lowongan', descEn: 'Full-time, contract, freelance, remote and onsite opportunities.', descId: 'Full-time, kontrak, freelance, remote dan onsite.' },
+  { key: 'projects', href: '/projects', icon: FolderGit2, en: 'Projects', id: 'Proyek', descEn: 'Real projects posted by companies, founders, and individuals.', descId: 'Proyek nyata dari perusahaan, founder, dan individu.' },
+  { key: 'talents', href: '/talents', icon: Users, en: 'Talents', id: 'Talent', descEn: 'Discover Indonesian IT professionals by skills and experience.', descId: 'Temukan praktisi IT Indonesia berdasarkan skill dan pengalaman.' },
+  { key: 'learn', href: '/courses', icon: GraduationCap, en: 'Learn', id: 'Belajar', descEn: 'Courses, tutorials, workshops, mentoring, and certifications.', descId: 'Kursus, tutorial, workshop, mentoring, dan sertifikasi.' },
+  { key: 'events', href: '/events', icon: CalendarDays, en: 'Events', id: 'Event', descEn: 'Meetups, conferences, workshops, hackathons, and tech events.', descId: 'Meetup, konferensi, workshop, hackathon, dan acara teknologi.' },
+  { key: 'services', href: '/services', icon: Wrench, en: 'Services', id: 'Layanan', descEn: 'Professional IT services offered by agencies and practitioners.', descId: 'Layanan IT profesional dari agency dan praktisi.' },
+  { key: 'community', href: null, icon: MessagesSquare, en: 'Community', id: 'Komunitas', descEn: 'Discussions, knowledge sharing, networking, and collaboration.', descId: 'Diskusi, berbagi pengetahuan, networking, dan kolaborasi.' },
+];
+
+const trendingResources = [
+  { title: 'System Design Interview Guide', cat: 'Software Engineering', level: 'Intermediate', views: '12.4K', saves: '2.1K', updated: '2d' },
+  { title: 'Golang Concurrency Patterns', cat: 'Backend', level: 'Advanced', views: '9.8K', saves: '1.7K', updated: '4d' },
+  { title: 'Next.js App Router Playbook', cat: 'Frontend', level: 'Intermediate', views: '8.6K', saves: '1.5K', updated: '1w' },
+  { title: 'Kubernetes untuk Tim Kecil', cat: 'DevOps', level: 'Intermediate', views: '7.2K', saves: '1.3K', updated: '1w' },
+  { title: 'Benchmark Gaji Developer Indonesia 2026', cat: 'Career', level: 'Beginner', views: '24.1K', saves: '5.9K', updated: '3d' },
+  { title: 'Prompt Engineering & LLM Ops', cat: 'Data & AI', level: 'Advanced', views: '6.4K', saves: '1.1K', updated: '5d' },
+];
+
+const opportunityTabs = ['jobs', 'projects', 'freelance', 'internships'] as const;
+type OpportunityTab = (typeof opportunityTabs)[number];
+
+const opportunities: Record<OpportunityTab, {
+  role: string; company: string; location: string; setup: string;
+  type: string; level: string; stack: string[]; pay: string; posted: string;
+}[]> = {
+  jobs: [
+    { role: 'Senior Fullstack Engineer', company: 'PT Kirana Teknologi', location: 'Jakarta', setup: 'Remote', type: 'Full-time', level: 'Senior', stack: ['React', 'Node.js', 'PostgreSQL', 'AWS'], pay: 'Rp 20–30jt', posted: '2 jam lalu' },
+    { role: 'Backend Engineer (Go)', company: 'Payungi', location: 'Bandung', setup: 'Hybrid', type: 'Full-time', level: 'Mid', stack: ['Go', 'gRPC', 'PostgreSQL'], pay: 'Rp 15–24jt', posted: '5 jam lalu' },
+    { role: 'Data Engineer', company: 'Semesta Analytics', location: 'Surabaya', setup: 'Onsite', type: 'Full-time', level: 'Mid', stack: ['Python', 'Airflow', 'BigQuery'], pay: 'Rp 14–22jt', posted: '1 hari lalu' },
+    { role: 'Product Designer', company: 'Warung Digital', location: 'Yogyakarta', setup: 'Remote', type: 'Full-time', level: 'Mid', stack: ['Figma', 'Design System'], pay: 'Rp 12–18jt', posted: '1 hari lalu' },
+  ],
+  projects: [
+    { role: 'Payment Infrastructure Revamp', company: 'Koperasi Nusantara', location: 'Jakarta', setup: 'Remote', type: 'Project', level: 'Senior', stack: ['Go', 'Kafka', 'PostgreSQL'], pay: 'Rp 85–120jt', posted: '6 jam lalu' },
+    { role: 'Company Profile + CMS', company: 'CV Adiwangsa', location: 'Semarang', setup: 'Remote', type: 'Project', level: 'Mid', stack: ['Next.js', 'Sanity'], pay: 'Rp 25–40jt', posted: '1 hari lalu' },
+    { role: 'Dashboard Analitik Retail', company: 'Toko Sinar Jaya', location: 'Medan', setup: 'Hybrid', type: 'Project', level: 'Mid', stack: ['React', 'Metabase'], pay: 'Rp 35–55jt', posted: '2 hari lalu' },
+  ],
+  freelance: [
+    { role: 'Flutter Developer', company: 'Bali Trip Co', location: 'Bali', setup: 'Remote', type: 'Freelance', level: 'Mid', stack: ['Flutter', 'Firebase'], pay: 'Rp 9jt / bulan', posted: '3 jam lalu' },
+    { role: 'DevOps Consultant', company: 'PT Anugerah Logistik', location: 'Jakarta', setup: 'Remote', type: 'Freelance', level: 'Senior', stack: ['Kubernetes', 'Terraform'], pay: 'Rp 1,2jt / hari', posted: '8 jam lalu' },
+    { role: 'Technical Writer', company: 'Belajar Koding', location: 'Remote', setup: 'Remote', type: 'Freelance', level: 'Junior', stack: ['Docs', 'Markdown'], pay: 'Rp 350rb / artikel', posted: '1 hari lalu' },
+  ],
+  internships: [
+    { role: 'Frontend Intern', company: 'Ruang Belajar', location: 'Bandung', setup: 'Hybrid', type: 'Internship', level: 'Student', stack: ['React', 'TypeScript'], pay: 'Rp 2–3,5jt', posted: '4 jam lalu' },
+    { role: 'QA Intern', company: 'PT Solusi Data', location: 'Jakarta', setup: 'Onsite', type: 'Internship', level: 'Student', stack: ['Playwright', 'Manual QA'], pay: 'Rp 2jt', posted: '2 hari lalu' },
+  ],
+};
+
+const demoTalents = [
+  { id: 'd1', full_name: 'Rizky Pratama', role: 'Senior Backend Engineer', location: 'Jakarta', skills: ['Go', 'PostgreSQL', 'Kubernetes', 'AWS'], years: 8, available: true, avatar_url: px('220453', 200, 200) as string | null },
+  { id: 'd2', full_name: 'Sarah Widodo', role: 'Product Designer', location: 'Bandung', skills: ['Figma', 'Design System', 'Research'], years: 6, available: true, avatar_url: px('774909', 200, 200) as string | null },
+  { id: 'd3', full_name: 'Aditya Nugroho', role: 'Data Scientist', location: 'Surabaya', skills: ['Python', 'PyTorch', 'BigQuery'], years: 5, available: false, avatar_url: px('1681010', 200, 200) as string | null },
+  { id: 'd4', full_name: 'Maya Santoso', role: 'DevOps Engineer', location: 'Yogyakarta', skills: ['Terraform', 'AWS', 'CI/CD'], years: 7, available: true, avatar_url: px('1130626', 200, 200) as string | null },
+];
+
+const learnCategories = ['Software Engineering', 'Data & AI', 'DevOps', 'Cybersecurity', 'UI/UX', 'Product', 'Career', 'Leadership'];
+
+const courses = [
+  { title: 'Backend Scalable dengan Go', instructor: 'Rizky Pratama', level: 'Intermediate', duration: '8j 40m', rating: 4.8, learners: '1.2K', thumb: px('270404', 240, 160) },
+  { title: 'Design System dari Nol', instructor: 'Sarah Widodo', level: 'Beginner', duration: '5j 10m', rating: 4.9, learners: '2.4K', thumb: px('1966452', 240, 160) },
+  { title: 'MLOps untuk Data Scientist', instructor: 'Aditya Nugroho', level: 'Advanced', duration: '11j 05m', rating: 4.7, learners: '860', thumb: px('8386440', 240, 160) },
+];
+
+const activity = [
+  { kind: 'discussion', en: 'New discussion', id: 'Diskusi baru', text: 'Best approach for structuring a large Next.js application?', meta: 'Frontend · 24 balasan', time: '12m' },
+  { kind: 'resource', en: 'New resource', id: 'Resource baru', text: 'Indonesian Developer Salary Benchmark 2026', meta: 'Career · 5.9K saves', time: '1j' },
+  { kind: 'project', en: 'New project', id: 'Proyek baru', text: 'Need a backend engineer for payment infrastructure', meta: 'Jakarta · Rp 85–120jt', time: '3j' },
+  { kind: 'event', en: 'New event', id: 'Event baru', text: 'Jakarta Cloud Native Meetup', meta: '18 Sep · 240 peserta', time: '5j' },
+  { kind: 'discussion', en: 'New discussion', id: 'Diskusi baru', text: 'Pengalaman migrasi monolith ke microservices di tim kecil', meta: 'Backend · 41 balasan', time: '7j' },
+];
+
+const events = [
+  { day: '18', month: 'Sep', title: 'Jakarta Cloud Native Meetup', org: 'CNCF Jakarta', place: 'Jakarta · Onsite', cat: 'Meetup', attendees: 240, thumb: px('7643736', 320, 200) },
+  { day: '24', month: 'Sep', title: 'Hackathon Fintech Nusantara', org: 'Fintech ID', place: 'Bandung · Onsite', cat: 'Hackathon', attendees: 512, thumb: px('17724731', 320, 200) },
+  { day: '02', month: 'Okt', title: 'Workshop: Observability 101', org: 'DevOps Indonesia', place: 'Online', cat: 'Workshop', attendees: 890, thumb: px('9301872', 320, 200) },
+  { day: '11', month: 'Okt', title: 'UI/UX Conference Surabaya', org: 'Designudy', place: 'Surabaya · Onsite', cat: 'Conference', attendees: 320, thumb: px('8761524', 320, 200) },
+];
+
+const serviceCategories = [
+  'Software Development', 'UI/UX Design', 'AI Development', 'Cloud & DevOps',
+  'Cybersecurity', 'Data Engineering', 'Digital Product Development', 'IT Consulting',
+];
+
+const scattered = [
+  { tool: 'LinkedIn', forWhat: { en: 'networking', id: 'networking' } },
+  { tool: 'Job portals', forWhat: { en: 'jobs', id: 'lowongan' } },
+  { tool: 'GitHub', forWhat: { en: 'code', id: 'kode' } },
+  { tool: 'Discord / Telegram', forWhat: { en: 'communities', id: 'komunitas' } },
+  { tool: 'YouTube', forWhat: { en: 'learning', id: 'belajar' } },
+  { tool: 'Event platforms', forWhat: { en: 'meetups', id: 'meetup' } },
+  { tool: 'Freelance marketplaces', forWhat: { en: 'projects', id: 'proyek' } },
 ];
 
 const galleryImages = [
-  { url: 'https://images.pexels.com/photos/7652188/pexels-photo-7652188.jpeg?auto=compress&cs=tinysrgb&h=400&w=600', en: 'Team collaboration', id: 'Kolaborasi tim' },
-  { url: 'https://images.pexels.com/photos/8101931/pexels-photo-8101931.jpeg?auto=compress&cs=tinysrgb&h=400&w=600', en: 'Deep work', id: 'Fokus mendalam' },
-  { url: 'https://images.pexels.com/photos/8761524/pexels-photo-8761524.jpeg?auto=compress&cs=tinysrgb&h=400&w=600', en: 'Conference', id: 'Konferensi' },
-  { url: 'https://images.pexels.com/photos/17724731/pexels-photo-17724731.jpeg?auto=compress&cs=tinysrgb&h=400&w=600', en: 'Brainstorm sessions', id: 'Sesi brainstorm' },
-  { url: 'https://images.pexels.com/photos/9301872/pexels-photo-9301872.jpeg?auto=compress&cs=tinysrgb&h=400&w=600', en: 'Creative workshop', id: 'Workshop kreatif' },
-  { url: 'https://images.pexels.com/photos/7643736/pexels-photo-7643736.jpeg?auto=compress&cs=tinysrgb&h=400&w=600', en: 'Community meetup', id: 'Meetup komunitas' },
-  { url: 'https://images.pexels.com/photos/10375906/pexels-photo-10375906.jpeg?auto=compress&cs=tinysrgb&h=400&w=600', en: 'Diverse teams', id: 'Tim beragam' },
-  { url: 'https://images.pexels.com/photos/8518816/pexels-photo-8518816.jpeg?auto=compress&cs=tinysrgb&h=400&w=600', en: 'Shipping together', id: 'Shipping bersama' },
+  { id: '7652188', en: 'Team collaboration', idn: 'Kolaborasi tim' },
+  { id: '8101931', en: 'Deep work', idn: 'Fokus mendalam' },
+  { id: '8761524', en: 'Conference', idn: 'Konferensi' },
+  { id: '17724731', en: 'Brainstorm sessions', idn: 'Sesi brainstorm' },
+  { id: '9301872', en: 'Creative workshop', idn: 'Workshop kreatif' },
+  { id: '7643736', en: 'Community meetup', idn: 'Meetup komunitas' },
+  { id: '10375906', en: 'Diverse teams', idn: 'Tim beragam' },
+  { id: '8518816', en: 'Shipping together', idn: 'Shipping bersama' },
+  { id: '7534107', en: 'Mentoring session', idn: 'Sesi mentoring' },
 ];
 
-const newsItems = [
-  { en: 'New jobs posted today across 12 regions', id: 'Lowongan baru hari ini di 12 wilayah' },
-  { en: 'Fresh talent verified this week', id: 'Talent baru terverifikasi minggu ini' },
-  { en: 'New marketplace filters now live', id: 'Filter marketplace baru kini tersedia' },
-  { en: 'Direct messaging keeps you in control', id: 'Pesan langsung, tanpa perantara' },
-  { en: 'Match score helps you find the right fit', id: 'Match score bantu temukan kandidat tepat' },
+const liveActivityLabels = [
+  { icon: Briefcase, en: 'New jobs today', id: 'Lowongan baru hari ini' },
+  { icon: Users, en: 'New members this week', id: 'Member baru minggu ini' },
+  { icon: FolderGit2, en: 'New projects this week', id: 'Proyek baru minggu ini' },
+  { icon: Star, en: 'Talent bookings this month', id: 'Booking talent bulan ini' },
 ];
 
-const skillCategories = [
-  { icon: Code2, en: 'Software Engineering', id: 'Software Engineering' },
-  { icon: Brain, en: 'Data & AI', id: 'Data & AI' },
-  { icon: Compass, en: 'Product Management', id: 'Product Management' },
-  { icon: Palette, en: 'UI/UX & Creative', id: 'UI/UX & Creative' },
-  { icon: Cloud, en: 'DevOps & Infrastructure', id: 'DevOps & Infrastructure' },
-  { icon: Shield, en: 'Cybersecurity', id: 'Cybersecurity' },
-  { icon: Bug, en: 'QA & Testing', id: 'QA & Testing' },
-  { icon: UsersRound, en: 'HR & People', id: 'HR & People' },
-  { icon: Megaphone, en: 'Digital Marketing & Growth', id: 'Digital Marketing & Growth' },
-  { icon: Blocks, en: 'No-Code/Low-Code', id: 'No-Code/Low-Code' },
-  { icon: Handshake, en: 'Sales & Business Development', id: 'Sales & Business Development' },
+const platformCounts = [
+  { en: 'Members', id: 'Member' },
+  { en: 'Open Jobs', id: 'Lowongan Terbuka' },
+  { en: 'Projects', id: 'Proyek' },
+  { en: 'Courses', id: 'Kursus' },
 ];
 
 const howItWorks = [
-  { icon: UserPlus, en: 'Create Profile', id: 'Buat Profil', desc_en: 'Sign up, add your skills, experience, and portfolio.', desc_id: 'Daftar, tambahkan skill, pengalaman, dan portofolio.' },
-  { icon: Compass, en: 'Explore', id: 'Jelajahi', desc_en: 'Browse jobs, projects, talents, and courses.', desc_id: 'Jelajahi lowongan, proyek, talent, dan kursus.' },
-  { icon: Handshake, en: 'Connect', id: 'Terhubung', desc_en: 'Apply, bid, book sessions, or message members.', desc_id: 'Lamar, tawar, pesan sesi, atau chat member.' },
-  { icon: Sprout, en: 'Grow', id: 'Tumbuh', desc_en: 'Learn, earn, and advance your career.', desc_id: 'Belajar, hasilkan, dan kembangkan karier.' },
+  { icon: UserPlus, en: 'Create Profile', id: 'Buat Profil', descEn: 'Sign up, add your skills, experience, and portfolio.', descId: 'Daftar, tambahkan skill, pengalaman, dan portofolio.' },
+  { icon: Compass, en: 'Explore', id: 'Jelajahi', descEn: 'Browse jobs, projects, talents, and courses.', descId: 'Jelajahi lowongan, proyek, talent, dan kursus.' },
+  { icon: Handshake, en: 'Connect', id: 'Terhubung', descEn: 'Apply, bid, book sessions, or message members.', descId: 'Lamar, tawar, pesan sesi, atau chat member.' },
+  { icon: Sprout, en: 'Grow', id: 'Tumbuh', descEn: 'Learn, earn, and advance your career.', descId: 'Belajar, hasilkan, dan kembangkan karier.' },
 ];
 
-const features = [
-  { icon: Users, en: 'Member Directory', id: 'Direktori Member', desc_en: 'Find IT practitioners by skill & location.', desc_id: 'Cari praktisi IT berdasarkan skill & lokasi.' },
-  { icon: Briefcase, en: 'Job Portal', id: 'Job Portal', desc_en: 'Post jobs, apply with one click.', desc_id: 'Pasang lowongan, lamar sekali klik.' },
-  { icon: Code2, en: 'Project Portal', id: 'Project Portal', desc_en: 'Post projects, receive bids, hire.', desc_id: 'Pasang proyek, terima penawaran, rekrut.' },
-  { icon: GraduationCap, en: 'LMS + Coaching', id: 'LMS + Coaching', desc_en: 'Courses with quizzes & certificates.', desc_id: 'Kursus dengan kuis & sertifikat.' },
-  { icon: CalendarClock, en: 'Events', id: 'Event', desc_en: 'Meetups, workshops & hackathons.', desc_id: 'Meetup, workshop & hackathon.' },
-  { icon: TrendingUp, en: 'Agency Services', id: 'Layanan Agency', desc_en: 'End-to-end digital product delivery.', desc_id: 'Pengiriman produk digital end-to-end.' },
+const skillCategories = [
+  { icon: Code2, label: 'Software Engineering' },
+  { icon: Brain, label: 'Data & AI' },
+  { icon: Compass, label: 'Product Management' },
+  { icon: Palette, label: 'UI/UX & Creative' },
+  { icon: Cloud, label: 'DevOps & Infrastructure' },
+  { icon: Shield, label: 'Cybersecurity' },
+  { icon: Bug, label: 'QA & Testing' },
+  { icon: UsersRound, label: 'HR & People' },
+  { icon: Megaphone, label: 'Digital Marketing & Growth' },
+  { icon: Blocks, label: 'No-Code/Low-Code' },
+  { icon: Handshake, label: 'Sales & Business Development' },
 ];
 
-const services = [
+const platformFeatures = [
+  { icon: Users, href: '/directory', en: 'Member Directory', id: 'Direktori Member', descEn: 'Find IT practitioners by skill & location.', descId: 'Cari praktisi IT berdasarkan skill & lokasi.' },
+  { icon: Briefcase, href: '/jobs', en: 'Job Portal', id: 'Job Portal', descEn: 'Post jobs, apply with one click.', descId: 'Pasang lowongan, lamar sekali klik.' },
+  { icon: FolderGit2, href: '/projects', en: 'Project Portal', id: 'Project Portal', descEn: 'Post projects, receive bids, hire.', descId: 'Pasang proyek, terima penawaran, rekrut.' },
+  { icon: GraduationCap, href: '/courses', en: 'LMS + Coaching', id: 'LMS + Coaching', descEn: 'Courses with quizzes & certificates.', descId: 'Kursus dengan kuis & sertifikat.' },
+  { icon: CalendarDays, href: '/events', en: 'Events', id: 'Event', descEn: 'Meetups, workshops & hackathons.', descId: 'Meetup, workshop & hackathon.' },
+  { icon: TrendingUp, href: '/services', en: 'Agency Services', id: 'Layanan Agency', descEn: 'End-to-end digital product delivery.', descId: 'Pengiriman produk digital end-to-end.' },
+];
+
+const agencyServices = [
   { icon: Code2, title: 'SaaS', en: 'Product & cloud platforms', id: 'Produk & platform cloud' },
   { icon: Brain, title: 'AI', en: 'Chatbots, ML & data pipelines', id: 'Chatbot, ML & data pipeline' },
   { icon: Palette, title: 'Creative', en: 'Design, brand & UI kits', id: 'Desain, brand & UI kit' },
@@ -88,542 +183,881 @@ const services = [
 ];
 
 const testimonials = [
-  { text_en: 'Every interaction feels intentional. This platform gave me clarity I\'d been searching for.', text_id: 'Setiap interaksi terasa intentional. Platform ini memberi kejelasan yang saya cari.', author: 'Rizky Pratama', role: 'Backend Dev · Jakarta', photo: mentorPhotos[0] },
-  { text_en: 'It goes beyond functionality — it offers direction. The authenticity is unmatched.', text_id: 'Melampaui fungsionalitas — ia memberi arah. Keasliannya tak tertandingi.', author: 'Sarah Wijaya', role: 'Founder · Bandung', photo: mentorPhotos[4] },
-  { text_en: 'Simple and deep. I could focus on meaningful outcomes, not processes.', text_id: 'Simpel dan mendalam. Saya bisa fokus pada hasil, bukan proses.', author: 'Aditya Nugroho', role: 'Data Scientist · Surabaya', photo: mentorPhotos[1] },
-  { text_en: 'It doesn\'t overwhelm, yet delivers depth where it matters. Professional and personal.', text_id: 'Tidak berlebihan, tapi memberi kedalaman di tempat penting. Profesional dan personal.', author: 'Maya Sari', role: 'Product Designer · Yogya', photo: mentorPhotos[5] },
+  { textEn: 'Every interaction feels intentional. This platform gave me clarity I’d been searching for.', textId: 'Setiap interaksi terasa intentional. Platform ini memberi kejelasan yang saya cari.', author: 'Rizky Pratama', role: 'Backend Dev · Jakarta', photo: px('5308640', 200, 200) },
+  { textEn: 'It goes beyond functionality — it offers direction. The authenticity is unmatched.', textId: 'Melampaui fungsionalitas — ia memberi arah. Keasliannya tak tertandingi.', author: 'Sarah Wijaya', role: 'Founder · Bandung', photo: px('7752820', 200, 200) },
+  { textEn: 'Simple and deep. I could focus on meaningful outcomes, not processes.', textId: 'Simpel dan mendalam. Saya bisa fokus pada hasil, bukan proses.', author: 'Aditya Nugroho', role: 'Data Scientist · Surabaya', photo: px('6942776', 200, 200) },
+  { textEn: 'It doesn’t overwhelm, yet delivers depth where it matters. Professional and personal.', textId: 'Tidak berlebihan, tapi memberi kedalaman di tempat penting. Profesional dan personal.', author: 'Maya Sari', role: 'Product Designer · Yogya', photo: px('15014092', 200, 200) },
+  { textEn: 'I hired two engineers here in under a week. The profiles actually show the work, not just job titles.', textId: 'Saya merekrut dua engineer di sini kurang dari seminggu. Profilnya menunjukkan karya, bukan sekadar jabatan.', author: 'Bayu Prakoso', role: 'CTO · PT Kirana Teknologi', photo: px('749091', 200, 200) },
+  { textEn: 'The courses and the community feed keep me current without ten tabs open all day.', textId: 'Kursus dan feed komunitasnya bikin saya tetap update tanpa buka sepuluh tab seharian.', author: 'Nadia Rahmawati', role: 'DevOps Engineer · Semarang', photo: px('7534107', 200, 200) },
 ];
 
-const matchPreviewJobs = [
-  { title: 'Senior Frontend Developer', company: 'PT Tech Nusantara', location: 'Remote', match: 94 },
-  { title: 'Product Designer', company: 'Kreasi Studio', location: 'Jakarta', match: 88 },
-  { title: 'Data Engineer', company: 'NusaData', location: 'Bandung', match: 81 },
-];
+/* -------------------------------------------------------------- components */
+
+function SectionHead({ eyebrow, title, desc, href, cta }: {
+  eyebrow: string; title: string; desc?: string; href?: string; cta?: string;
+}) {
+  return (
+    <div className="mb-8 flex items-end justify-between gap-6">
+      <div className="max-w-2xl">
+        <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">{eyebrow}</p>
+        <h2 className="mt-2 font-display text-2xl font-semibold tracking-tight sm:text-3xl">{title}</h2>
+        {desc && <p className="mt-2 text-sm leading-relaxed text-muted-foreground text-pretty">{desc}</p>}
+      </div>
+      {href && cta && (
+        <Link href={href} className="hidden shrink-0 items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground sm:flex">
+          {cta} <ArrowUpRight className="h-4 w-4" />
+        </Link>
+      )}
+    </div>
+  );
+}
+
+function Meta({ children }: { children: React.ReactNode }) {
+  return <span className="text-xs text-muted-foreground">{children}</span>;
+}
+
+function Chip({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="rounded border border-border px-1.5 py-0.5 text-[11px] leading-4 text-muted-foreground">
+      {children}
+    </span>
+  );
+}
+
+/* ------------------------------------------------------------------- page */
 
 export default function HomePage() {
-  const { t, lang } = useLang();
-  const [stats, setStats] = useState({ members: 0, jobs: 0, projects: 0, courses: 0 });
-  const [talents, setTalents] = useState<any[]>([]);
-  const [activeT, setActiveT] = useState(0);
-  const [activity, setActivity] = useState<{ label_en: string; label_id: string; count: number }[]>([]);
-  const [activeNews, setActiveNews] = useState(0);
+  const { t } = useLang();
+  const [tab, setTab] = useState<OpportunityTab>('jobs');
+  const [talents, setTalents] = useState(demoTalents);
+  const [live, setLive] = useState<number[]>([0, 0, 0, 0]);
+  const [totals, setTotals] = useState<number[]>([0, 0, 0, 0]);
 
   useEffect(() => {
     (async () => {
-      const [{ count: members }, { count: jobs }, { count: projects }, { count: courses }] = await Promise.all([
-        supabase.from('profiles').select('*', { count: 'exact', head: true }),
-        supabase.from('jobs').select('*', { count: 'exact', head: true }).eq('status', 'open'),
-        supabase.from('projects').select('*', { count: 'exact', head: true }).eq('status', 'open'),
-        supabase.from('courses').select('*', { count: 'exact', head: true }),
-      ]);
-      setStats({ members: members ?? 0, jobs: jobs ?? 0, projects: projects ?? 0, courses: courses ?? 0 });
-
-      const { data: tal } = await supabase
+      const { data } = await supabase
         .from('profiles')
-        .select('id, full_name, bio, avatar_url, location, linkedin_url')
+        .select('id, full_name, bio, avatar_url, location')
         .eq('is_talent', true)
         .eq('talent_approved', 'approved')
         .limit(4);
-      setTalents(tal ?? []);
-
-      const today = new Date(); today.setHours(0, 0, 0, 0);
-      const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate() - 7);
-      const [{ count: jobsToday }, { count: membersWeek }, { count: projectsWeek }, { count: bookingsMonth }] = await Promise.all([
-        supabase.from('jobs').select('*', { count: 'exact', head: true }).gte('created_at', today.toISOString()),
-        supabase.from('profiles').select('*', { count: 'exact', head: true }).gte('created_at', weekAgo.toISOString()),
-        supabase.from('projects').select('*', { count: 'exact', head: true }).gte('created_at', weekAgo.toISOString()),
-        supabase.from('bookings').select('*', { count: 'exact', head: true }).gte('created_at', new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString()),
-      ]);
-      setActivity([
-        { label_en: 'New jobs today', label_id: 'Lowongan baru hari ini', count: jobsToday ?? 0 },
-        { label_en: 'New members this week', label_id: 'Member baru minggu ini', count: membersWeek ?? 0 },
-        { label_en: 'New projects this week', label_id: 'Proyek baru minggu ini', count: projectsWeek ?? 0 },
-        { label_en: 'Talent bookings this month', label_id: 'Booking talent bulan ini', count: bookingsMonth ?? 0 },
-      ]);
+      if (data && data.length > 0) {
+        setTalents(
+          data.map((p: Record<string, unknown>, i) => ({
+            id: String(p.id),
+            full_name: (p.full_name as string) ?? demoTalents[i % 4].full_name,
+            role: (p.bio as string)?.slice(0, 40) ?? demoTalents[i % 4].role,
+            location: (p.location as string) ?? demoTalents[i % 4].location,
+            skills: demoTalents[i % 4].skills,
+            years: demoTalents[i % 4].years,
+            available: true,
+            avatar_url: (p.avatar_url as string) ?? null,
+          }))
+        );
+      }
     })();
   }, []);
 
+  /* Live counters — real rows, counted head-only so nothing is downloaded. */
   useEffect(() => {
-    const interval = setInterval(() => setActiveT((p) => (p + 1) % testimonials.length), 6000);
-    return () => clearInterval(interval);
+    (async () => {
+      const now = new Date();
+      const startOfDay = new Date(now); startOfDay.setHours(0, 0, 0, 0);
+      const weekAgo = new Date(now); weekAgo.setDate(weekAgo.getDate() - 7);
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+      const count = async (table: string, since: Date) => {
+        const { count: n } = await supabase
+          .from(table)
+          .select('*', { count: 'exact', head: true })
+          .gte('created_at', since.toISOString());
+        return n ?? 0;
+      };
+
+      const results = await Promise.all([
+        count('jobs', startOfDay),
+        count('profiles', weekAgo),
+        count('projects', weekAgo),
+        count('bookings', startOfMonth),
+      ]).catch(() => null);
+
+      if (results) setLive(results);
+
+      const total = async (table: string, filter?: [string, string]) => {
+        let q = supabase.from(table).select('*', { count: 'exact', head: true });
+        if (filter) q = q.eq(filter[0], filter[1]);
+        const { count: n } = await q;
+        return n ?? 0;
+      };
+
+      const totalResults = await Promise.all([
+        total('profiles'),
+        total('jobs', ['status', 'open']),
+        total('projects', ['status', 'open']),
+        total('courses'),
+      ]).catch(() => null);
+
+      if (totalResults) setTotals(totalResults);
+    })();
   }, []);
 
-  useEffect(() => {
-    const interval = setInterval(() => setActiveNews((p) => (p + 1) % newsItems.length), 4000);
-    return () => clearInterval(interval);
-  }, []);
+  const rows = opportunities[tab];
+
+  /* Stories slider: scrolls by one card, one row on every breakpoint. */
+  const storiesRef = useRef<HTMLDivElement>(null);
+  const slideStories = (dir: 1 | -1) => {
+    const el = storiesRef.current;
+    if (!el) return;
+    const card = el.firstElementChild as HTMLElement | null;
+    const step = card ? card.offsetWidth + 16 : el.clientWidth * 0.8;
+    el.scrollBy({ left: dir * step, behavior: 'smooth' });
+  };
 
   return (
     <AppShell>
-      <div className="min-h-screen bg-background">
-        {/* NEWS TICKER — mcity style */}
-        <div className="border-b border-border/30 bg-card/50 py-1.5 overflow-hidden">
-          <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 sm:px-6 lg:px-8">
-            <Badge variant="default" className="shrink-0 gap-1 text-[0.65rem]">
-              <Sparkles className="h-2.5 w-2.5" /> {t('News', 'Info')}
-            </Badge>
-            <div className="relative flex-1 overflow-hidden">
-              <div key={activeNews} className="animate-fade-up text-xs text-muted-foreground">
-                {t(newsItems[activeNews].en, newsItems[activeNews].id)}
-              </div>
-            </div>
-            <div className="hidden shrink-0 items-center gap-1.5 sm:flex">
-              {newsItems.map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setActiveNews(i)}
-                  className={`h-1 rounded-full transition-all ${i === activeNews ? 'w-4 bg-primary' : 'w-1 bg-muted'}`}
-                />
-              ))}
-            </div>
-          </div>
-        </div>
+      <PageDecor>
+        {/* 1 ── HERO ------------------------------------------------------- */}
+        <section className="relative overflow-hidden border-b border-border">
 
-        {/* HERO */}
-        <section className="relative overflow-hidden bg-mesh">
-          <div className="absolute inset-0 bg-grid opacity-[0.03]" />
-          <div className="absolute inset-0 bg-hero-radial" />
-          <div className="absolute left-1/4 top-0 h-[500px] w-[700px] -translate-x-1/2 rounded-full bg-primary/[0.07] blur-[150px] animate-pulse-soft" />
-          <div className="absolute right-0 bottom-0 h-[300px] w-[400px] rounded-full bg-accent/[0.05] blur-[120px] animate-pulse-soft" style={{ animationDelay: '1.5s' }} />
+          <div className="relative mx-auto grid max-w-6xl gap-10 px-4 pb-14 pt-16 sm:px-6 sm:pb-20 sm:pt-24 lg:grid-cols-[1.08fr_0.92fr] lg:items-center lg:gap-14 lg:px-8">
+            <div>
+              <p className="flex items-center gap-2 text-xs font-medium uppercase tracking-widest text-muted-foreground">
+                <Circle className="h-1.5 w-1.5 animate-pulse-soft fill-primary text-primary" />
+                {t('IT Resources & Professional Ecosystem for Indonesia', 'Ekosistem Resource & Profesional IT Indonesia')}
+              </p>
 
-          <div className="relative mx-auto max-w-7xl px-4 pt-16 pb-10 sm:px-6 lg:px-8 lg:pt-24">
-            <div className="grid items-center gap-10 lg:grid-cols-[1.1fr_0.9fr]">
-              <div className="animate-fade-up">
-                <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs font-medium text-primary">
-                  <span className="h-1.5 w-1.5 animate-pulse-soft rounded-full bg-primary" />
-                  {t('Indonesian IT Community', 'Komunitas IT Indonesia')}
+              <h1 className="mt-5 max-w-3xl font-display text-4xl font-semibold leading-[1.08] tracking-tight text-balance sm:text-5xl lg:text-6xl">
+                {t("Indonesia's IT ecosystem, in one place.", 'Ekosistem IT Indonesia, dalam satu tempat.')}
+              </h1>
+              <p className="mt-5 max-w-2xl text-base leading-relaxed text-muted-foreground text-pretty sm:text-lg">
+                {t(
+                  'Discover resources, opportunities, talent, learning, projects, and communities built for Indonesian IT professionals.',
+                  'Temukan resource, peluang, talent, materi belajar, proyek, dan komunitas untuk praktisi IT Indonesia.'
+                )}
+              </p>
+
+              {/* Global search — the platform is searchable end to end */}
+              <div className="mt-8 max-w-2xl">
+                <div className="flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 transition-colors focus-within:border-muted-foreground/40">
+                  <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  <input
+                    className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+                    placeholder={t('Search jobs, projects, people, courses, resources…', 'Cari lowongan, proyek, orang, kursus, resource…')}
+                  />
+                  <kbd className="hidden shrink-0 rounded border border-border px-1.5 py-0.5 text-[11px] text-muted-foreground sm:block">⌘K</kbd>
                 </div>
-                <h1 className="font-display text-4xl font-bold leading-[1.08] tracking-tight text-balance sm:text-5xl lg:text-[3.5rem]">
-                  {t('Find opportunities.', 'Temukan peluang.')}{' '}
-                  <span className="text-gradient-brand animate-gradient">{t('Offer services.', 'Tawarkan layanan.')}</span>{' '}
-                  {t('Grow together.', 'Tumbuh bersama.')}
-                </h1>
-                <p className="mt-5 max-w-lg text-base text-muted-foreground lg:text-lg">
-                  {t(
-                    'Connect with Indonesian IT practitioners for jobs, projects, mentorship & collaboration.',
-                    'Terhubung dengan praktisi IT Indonesia untuk pekerjaan, proyek, mentorship & kolaborasi.'
-                  )}
-                </p>
-                <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-                  <Link href="/register">
-                    <Button size="lg" className="gap-2 glow-primary">
-                      {t('Join Community', 'Gabung Komunitas')} <ArrowRight className="h-4 w-4" />
-                    </Button>
-                  </Link>
-                  <Link href="/talents">
-                    <Button size="lg" variant="outline" className="gap-2">
-                      <Star className="h-4 w-4" /> {t('Find Talent', 'Cari Talent')}
-                    </Button>
-                  </Link>
-                </div>
-
-                {/* Trust line */}
-                <div className="mt-6 flex items-center gap-4 text-sm text-muted-foreground">
-                  <div className="flex items-center gap-1.5">
-                    <div className="flex -space-x-2">
-                      {mentorPhotos.slice(0, 4).map((p, i) => (
-                        <img key={i} src={p} alt="" className="h-7 w-7 rounded-full border-2 border-background object-cover" />
-                      ))}
-                    </div>
-                    <span>{stats.members.toLocaleString()}+ {t('members', 'member')}</span>
-                  </div>
-                  <div className="hidden items-center gap-1.5 sm:flex">
-                    <Star className="h-4 w-4 text-warning" />
-                    <span>98% {t('satisfaction', 'puas')}</span>
-                  </div>
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <Meta>{t('Try', 'Coba')}:</Meta>
+                  {['React developer remote Jakarta', 'Go backend', 'UI/UX mentor', 'System design'].map((s) => (
+                    <button key={s} className="rounded border border-border px-2 py-1 text-xs text-muted-foreground transition-colors hover:border-muted-foreground/40 hover:text-foreground">
+                      {s}
+                    </button>
+                  ))}
                 </div>
               </div>
 
-              {/* Hero visual with match preview card — mcity style */}
-              <div className="relative animate-scale-in">
-                <div className="relative overflow-hidden rounded-2xl border border-border/40 transition-transform duration-500 hover:scale-[1.02]">
-                  <img src={heroImg} alt="IT professional" className="h-[340px] w-full object-cover sm:h-[420px]" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-transparent to-transparent" />
-                </div>
-                <div className="absolute -bottom-5 -right-3 hidden overflow-hidden rounded-xl border-2 border-background shadow-xl sm:block animate-float">
-                  <img src={heroImg2} alt="Developer" className="h-28 w-28 object-cover" />
-                </div>
-                <div className="absolute -top-4 -left-4 hidden overflow-hidden rounded-xl border-2 border-background shadow-xl lg:block animate-float" style={{ animationDelay: '1.5s' }}>
-                  <img src={heroImg3} alt="Developer" className="h-20 w-20 object-cover" />
-                </div>
-                {/* Match preview card */}
-                <div className="absolute -bottom-8 left-2 hidden w-64 rounded-xl border border-border/50 bg-card/90 p-3 backdrop-blur-xl shadow-xl lg:block animate-fade-up" style={{ animationDelay: '0.5s' }}>
-                  <div className="flex items-center gap-2 mb-2">
-                    <Target className="h-4 w-4 text-primary" />
-                    <span className="text-xs font-semibold">{t('Smart Matching', 'Match Cerdas')}</span>
-                    <Badge variant="default" className="ml-auto text-[0.6rem] gap-0.5"><Zap className="h-2.5 w-2.5" /> 94%</Badge>
-                  </div>
-                  <div className="space-y-1.5">
-                    {matchPreviewJobs.slice(0, 2).map((job) => (
-                      <div key={job.title} className="flex items-center justify-between rounded-lg bg-muted/40 px-2.5 py-1.5">
-                        <div>
-                          <div className="text-xs font-medium">{job.title}</div>
-                          <div className="text-[0.65rem] text-muted-foreground">{job.company} · {job.location}</div>
-                        </div>
-                        <span className="text-xs font-bold text-primary">{job.match}%</span>
-                      </div>
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                <Link href="/register">
+                  <Button size="lg" className="w-full gap-2 sm:w-auto">
+                    {t('Join Community', 'Gabung Komunitas')} <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </Link>
+                <Link href="/talents">
+                  <Button size="lg" variant="outline" className="w-full gap-2 sm:w-auto">
+                    <Star className="h-4 w-4" /> {t('Find Talent', 'Cari Talent')}
+                  </Button>
+                </Link>
+              </div>
+
+              {/* Trust line — member count and satisfaction. */}
+              <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-3 text-sm text-muted-foreground">
+                <div className="flex items-center gap-2.5">
+                  <div className="flex -space-x-2">
+                    {demoTalents.map((m) => (
+                      <img
+                        key={m.id}
+                        src={m.avatar_url ?? ''}
+                        alt=""
+                        loading="lazy"
+                        className="h-7 w-7 rounded-full border-2 border-background object-cover"
+                      />
                     ))}
                   </div>
+                  <span>
+                    <span className="tnum">{totals[0].toLocaleString('id-ID')}</span>+ {t('members', 'member')}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Star className="h-4 w-4 fill-warning text-warning" />
+                  <span><span className="tnum">98%</span> {t('satisfaction', 'puas')}</span>
                 </div>
               </div>
             </div>
 
-            {/* Stats */}
-            <div className="mt-16 grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
-              {[
-                { en: 'Members', id: 'Member', val: stats.members, icon: Users },
-                { en: 'Open Jobs', id: 'Lowongan', val: stats.jobs, icon: Briefcase },
-                { en: 'Projects', id: 'Proyek', val: stats.projects, icon: Code2 },
-                { en: 'Courses', id: 'Kursus', val: stats.courses, icon: GraduationCap },
-              ].map((s, i) => (
-                <div key={s.en} className={`glass glass-hover rounded-xl p-4 text-center stagger-${i + 1}`}>
-                  <s.icon className="mx-auto mb-1.5 h-4 w-4 text-primary/70" />
-                  <div className="text-2xl font-bold">{s.val.toLocaleString()}</div>
-                  <div className="text-xs text-muted-foreground">{t(s.en, s.id)}</div>
+            {/* Visual asset — framed, scrimmed so it sits in the dark surface. */}
+            <div className="relative">
+              <div className="relative overflow-hidden rounded-xl border border-border">
+                <img
+                  src={heroImage}
+                  alt={t('Indonesian IT practitioners collaborating', 'Praktisi IT Indonesia berkolaborasi')}
+                  loading="lazy"
+                  className="h-[220px] w-full object-cover sm:h-[300px] lg:h-[380px]"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-background via-background/25 to-transparent" />
+                <div className="absolute inset-x-0 bottom-0 flex flex-wrap items-center gap-x-4 gap-y-1 p-4">
+                  <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <Circle className="h-1.5 w-1.5 animate-pulse-soft fill-primary text-primary" />
+                    <span className="tnum">248</span> {t('online now', 'sedang online')}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    <span className="tnum">36</span> {t('new opportunities today', 'peluang baru hari ini')}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* 10 ── STATISTICS (moved up: credibility before the tour) --------- */}
+        <section className="border-b border-border">
+          <div className="mx-auto grid max-w-6xl grid-cols-2 px-4 sm:px-6 lg:grid-cols-4 lg:px-8">
+            {platformCounts.map((s, i) => (
+              <div
+                key={s.en}
+                className={`py-7 ${i % 2 === 1 ? 'border-l border-border pl-6' : ''} ${i >= 2 ? 'border-t border-border lg:border-t-0' : ''} ${i === 2 ? 'lg:border-l lg:pl-6' : ''} ${i === 3 ? 'lg:pl-6' : ''}`}
+              >
+                <div className="tnum font-display text-2xl font-semibold tracking-tight sm:text-3xl">
+                  {totals[i].toLocaleString('id-ID')}
+                </div>
+                <div className="mt-1 text-sm text-muted-foreground">{t(s.en, s.id)}</div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* 2 ── EXPLORE THE ECOSYSTEM -------------------------------------- */}
+        <section className="relative overflow-hidden border-b border-border">
+          <div className="relative mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
+            <SectionHead
+              eyebrow={t('Ecosystem', 'Ekosistem')}
+              title={t('Everything an Indonesian IT professional needs', 'Semua yang dibutuhkan praktisi IT Indonesia')}
+              desc={t('Eight connected areas, one account. Start anywhere.', 'Delapan area yang saling terhubung, satu akun. Mulai dari mana saja.')}
+            />
+
+            <div className="grid gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-2 lg:grid-cols-6">
+              {ecosystem.map((e, i) => {
+                const lead = i < 2;
+                const span = lead ? 'sm:col-span-2 lg:col-span-3' : 'lg:col-span-2';
+                const inner = (
+                  <div className={`group flex h-full flex-col bg-card transition-colors hover:bg-secondary ${lead ? 'p-6' : 'p-5'}`}>
+                    <e.icon className={`text-primary ${lead ? 'h-6 w-6' : 'h-5 w-5'}`} strokeWidth={1.75} />
+                    <div className={`mt-4 flex items-center gap-1.5 font-medium ${lead ? 'text-lg' : 'text-sm'}`}>
+                      {t(e.en, e.id)}
+                      {e.href && <ArrowUpRight className="h-3.5 w-3.5 -translate-x-1 opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100" />}
+                      {!e.href && <span className="rounded border border-border px-1.5 py-0.5 text-[10px] font-normal text-muted-foreground">{t('soon', 'segera')}</span>}
+                    </div>
+                    <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+                      {t(e.descEn, e.descId)}
+                    </p>
+                  </div>
+                );
+                return e.href
+                  ? <Link key={e.key} href={e.href} className={span}>{inner}</Link>
+                  : <div key={e.key} className={span}>{inner}</div>;
+              })}
+            </div>
+          </div>
+        </section>
+
+        {/* 2b ── HOW IT WORKS ---------------------------------------------- */}
+        <section className="border-b border-border">
+          <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
+            <SectionHead
+              eyebrow={t('How It Works', 'Cara Kerja')}
+              title={t('Four steps to success', 'Empat langkah menuju sukses')}
+              desc={t(
+                'From signing up to landing your first gig — it only takes a few minutes.',
+                'Dari mendaftar sampai dapat pekerjaan pertama — hanya butuh beberapa menit.'
+              )}
+            />
+
+            <ol className="grid gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-2 lg:grid-cols-4">
+              {howItWorks.map((s, i) => (
+                <li key={s.en} className="flex h-full flex-col bg-card p-5">
+                  <div className="flex items-center gap-3">
+                    <s.icon className="h-5 w-5 shrink-0 text-primary" strokeWidth={1.75} />
+                    <span className="text-sm font-medium">{t(s.en, s.id)}</span>
+                    <span className="tnum ml-auto text-xs text-muted-foreground">{String(i + 1).padStart(2, '0')}</span>
+                  </div>
+                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{t(s.descEn, s.descId)}</p>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </section>
+
+        {/* 3 ── TRENDING RESOURCES ----------------------------------------- */}
+        <section className="border-b border-border">
+          <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
+            <SectionHead
+              eyebrow={t('Resources', 'Resource')}
+              title={t('What the community is reading', 'Yang sedang dibaca komunitas')}
+              desc={t('Guides, references and tools saved most this week.', 'Panduan, referensi dan tools yang paling banyak disimpan minggu ini.')}
+              href="/directory" cta={t('All resources', 'Semua resource')}
+            />
+
+            <div className="overflow-hidden rounded-lg border border-border">
+              {trendingResources.map((r, i) => (
+                <div
+                  key={r.title}
+                  className={`group flex items-center gap-4 px-4 py-3.5 transition-colors hover:bg-secondary ${i > 0 ? 'border-t border-border' : ''}`}
+                >
+                  <span className="tnum w-5 shrink-0 text-xs text-muted-foreground">{String(i + 1).padStart(2, '0')}</span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium">{r.title}</p>
+                    <p className="mt-0.5 truncate text-xs text-muted-foreground">{r.cat} · {r.level}</p>
+                  </div>
+                  <div className="hidden shrink-0 items-center gap-4 sm:flex">
+                    <Meta><span className="inline-flex items-center gap-1"><Eye className="h-3 w-3" />{r.views}</span></Meta>
+                    <Meta><span className="inline-flex items-center gap-1"><Bookmark className="h-3 w-3" />{r.saves}</span></Meta>
+                    <Meta>{r.updated}</Meta>
+                  </div>
+                  <ArrowUpRight className="h-4 w-4 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* MARQUEE */}
-        <div className="border-y border-border/30 bg-card/30 py-3 overflow-hidden">
-          <div className="flex animate-marquee whitespace-nowrap">
-            {[...Array(2)].map((_, d) => (
-              <div key={d} className="flex items-center gap-6 px-3">
-                {['React', 'Next.js', 'TypeScript', 'Node.js', 'Python', 'Go', 'Rust', 'Kubernetes', 'AWS', 'Docker', 'GraphQL', 'PostgreSQL', 'Supabase', 'Vercel'].map((tech) => (
-                  <span key={tech} className="text-sm font-medium text-muted-foreground/40">{tech}</span>
+        {/* 4 ── LATEST OPPORTUNITIES --------------------------------------- */}
+        <section className="relative overflow-hidden border-b border-border">
+          <div className="relative mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
+            <SectionHead
+              eyebrow={t('Opportunities', 'Peluang')}
+              title={t('Latest opportunities', 'Peluang terbaru')}
+              href="/jobs" cta={t('Browse all', 'Lihat semua')}
+            />
+
+            <div className="mb-4 flex gap-1 overflow-x-auto no-scrollbar" role="tablist">
+              {opportunityTabs.map((tb) => (
+                <button
+                  key={tb}
+                  role="tab"
+                  aria-selected={tab === tb}
+                  onClick={() => setTab(tb)}
+                  className={`shrink-0 rounded px-3 py-1.5 text-sm capitalize transition-colors ${tab === tb ? 'bg-secondary text-foreground' : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                >
+                  {tb}
+                  <span className="tnum ml-1.5 text-xs text-muted-foreground">{opportunities[tb].length}</span>
+                </button>
+              ))}
+            </div>
+
+            <div className="overflow-hidden rounded-lg border border-border">
+              {rows.map((o, i) => (
+                <div key={o.role} className={`group px-4 py-4 transition-colors hover:bg-secondary ${i > 0 ? 'border-t border-border' : ''}`}>
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium">{o.role}</p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">{o.company}</p>
+                    </div>
+                    <div className="shrink-0 text-right">
+                      <p className="tnum text-sm font-medium text-primary">{o.pay}</p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">{o.posted}</p>
+                    </div>
+                  </div>
+                  <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                    <Chip>{o.setup}</Chip>
+                    <Chip>{o.type}</Chip>
+                    <Chip>{o.level}</Chip>
+                    <span className="mx-1 hidden h-3 w-px bg-border sm:block" />
+                    {o.stack.map((s) => <Chip key={s}>{s}</Chip>)}
+                    <span className="ml-auto inline-flex items-center gap-1 text-xs text-muted-foreground">
+                      <MapPin className="h-3 w-3" />{o.location}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* 5 ── TALENT DISCOVERY ------------------------------------------- */}
+        <section className="relative overflow-hidden border-b border-border">
+          <div className="relative mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
+            <SectionHead
+              eyebrow={t('Talent', 'Talent')}
+              title={t('Discover people, not just profiles', 'Temukan orangnya, bukan sekadar profil')}
+              desc={t('Filter by role, skill, experience, location and availability.', 'Saring berdasarkan peran, skill, pengalaman, lokasi dan ketersediaan.')}
+              href="/talents" cta={t('Talent directory', 'Direktori talent')}
+            />
+
+            <div className="no-scrollbar flex snap-x gap-4 overflow-x-auto pb-1 lg:grid lg:grid-cols-4 lg:overflow-visible">
+              {talents.map((p) => (
+                <Link
+                  key={p.id}
+                  href={`/talents/${p.id}`}
+                  className="flex w-[78vw] max-w-[300px] shrink-0 snap-start flex-col rounded-lg border border-border bg-card p-5 transition-colors hover:border-muted-foreground/30 lg:w-auto lg:max-w-none"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-secondary text-sm font-medium">
+                      {p.avatar_url
+                        ? <img src={p.avatar_url} alt="" className="h-full w-full object-cover" />
+                        : p.full_name.charAt(0)}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium">{p.full_name}</p>
+                      <p className="truncate text-xs text-muted-foreground">{p.role}</p>
+                    </div>
+                  </div>
+                  <div className="mt-4 flex flex-wrap gap-1.5">
+                    {p.skills.slice(0, 4).map((s) => <Chip key={s}>{s}</Chip>)}
+                  </div>
+                  <div className="mt-auto flex items-center justify-between border-t border-border pt-3">
+                    <Meta><span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3" />{p.location}</span></Meta>
+                    <Meta>
+                      <span className="inline-flex items-center gap-1.5">
+                        <Circle className={`h-1.5 w-1.5 ${p.available ? 'fill-primary text-primary' : 'fill-muted-foreground text-muted-foreground'}`} />
+                        {p.available ? t('Available', 'Tersedia') : t('Busy', 'Sibuk')}
+                      </span>
+                    </Meta>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* 5b ── SKILL CATEGORIES ------------------------------------------ */}
+        <section className="border-b border-border">
+          <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
+            <SectionHead
+              eyebrow={t('Skills', 'Skill')}
+              title={t('Explore by category', 'Jelajahi per kategori')}
+              desc={t(
+                '11 specialized skill categories with verified sub-skills.',
+                '11 kategori skill spesialis dengan sub-skill terverifikasi.'
+              )}
+              href="/directory" cta={t('All categories', 'Semua kategori')}
+            />
+
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+              {skillCategories.map((c) => (
+                <Link
+                  key={c.label}
+                  href="/directory"
+                  className="group flex items-center gap-3 rounded-lg border border-border px-3.5 py-3 transition-colors hover:border-muted-foreground/30 hover:bg-secondary"
+                >
+                  <c.icon className="h-[18px] w-[18px] shrink-0 text-primary" strokeWidth={1.75} />
+                  <span className="text-sm leading-tight">{c.label}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* 6 ── LEARNING + 7 ── COMMUNITY ACTIVITY (two columns) ----------- */}
+        <section className="relative overflow-hidden border-b border-border">
+          <div className="relative mx-auto grid max-w-6xl gap-12 px-4 py-16 sm:px-6 sm:py-20 lg:grid-cols-[1.15fr_0.85fr] lg:gap-16 lg:px-8">
+            {/* Learning */}
+            <div>
+              <SectionHead
+                eyebrow={t('Learn', 'Belajar')}
+                title={t('Learning built by practitioners', 'Materi belajar dari praktisi')}
+                href="/courses" cta={t('All courses', 'Semua kursus')}
+              />
+              <div className="mb-5 flex flex-wrap gap-1.5">
+                {learnCategories.map((c) => (
+                  <button key={c} className="rounded border border-border px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:border-muted-foreground/40 hover:text-foreground">
+                    {c}
+                  </button>
                 ))}
+              </div>
+              <div className="overflow-hidden rounded-lg border border-border">
+                {courses.map((c, i) => (
+                  <div key={c.title} className={`flex items-center gap-4 px-4 py-4 transition-colors hover:bg-secondary ${i > 0 ? 'border-t border-border' : ''}`}>
+                    <img
+                      src={c.thumb}
+                      alt=""
+                      loading="lazy"
+                      className="h-11 w-16 shrink-0 rounded border border-border object-cover"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium">{c.title}</p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">{c.instructor} · {c.level}</p>
+                    </div>
+                    <div className="hidden shrink-0 items-center gap-4 sm:flex">
+                      <Meta><span className="inline-flex items-center gap-1"><Clock className="h-3 w-3" />{c.duration}</span></Meta>
+                      <Meta><span className="inline-flex items-center gap-1"><Star className="h-3 w-3 fill-current" />{c.rating}</span></Meta>
+                      <Meta>{c.learners}</Meta>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Community activity */}
+            <div>
+              <SectionHead
+                eyebrow={t('Community', 'Komunitas')}
+                title={t('Happening now', 'Sedang berlangsung')}
+              />
+              <div className="space-y-0">
+                {activity.map((a, i) => (
+                  <div key={a.text} className={`flex gap-3 py-3.5 ${i > 0 ? 'border-t border-border' : ''}`}>
+                    <div className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[11px] uppercase tracking-wider text-muted-foreground">{t(a.en, a.id)}</p>
+                      <p className="mt-0.5 text-sm leading-snug">{a.text}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">{a.meta}</p>
+                    </div>
+                    <Meta>{a.time}</Meta>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* 8 ── EVENTS ------------------------------------------------------ */}
+        <section className="relative overflow-hidden border-b border-border">
+          <div className="relative mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
+            <SectionHead
+              eyebrow={t('Events', 'Event')}
+              title={t('Upcoming in the Indonesian tech scene', 'Akan datang di skena teknologi Indonesia')}
+              href="/events" cta={t('All events', 'Semua event')}
+            />
+            <div className="grid gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-2">
+              {events.map((e) => (
+                <div key={e.title} className="flex gap-4 bg-card p-5 transition-colors hover:bg-secondary">
+                  <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded border border-border">
+                    <img src={e.thumb} alt="" loading="lazy" className="h-full w-full object-cover" />
+                    <div className="absolute inset-0 bg-background/55" />
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                      <span className="tnum text-lg font-semibold leading-none">{e.day}</span>
+                      <span className="mt-0.5 text-[11px] uppercase text-muted-foreground">{e.month}</span>
+                    </div>
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium">{e.title}</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">{e.org} · {e.place}</p>
+                    <div className="mt-2.5 flex items-center gap-2">
+                      <Chip>{e.cat}</Chip>
+                      <Meta><span className="tnum">{e.attendees}</span> {t('attending', 'peserta')}</Meta>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* 8c ── COMMUNITY GALLERY ------------------------------------------ */}
+        <section className="border-b border-border">
+          <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
+            <SectionHead
+              eyebrow={t('Community', 'Komunitas')}
+              title={t('Real people, real work', 'Orang nyata, kerja nyata')}
+              desc={t(
+                'Meetups, workshops and everyday collaboration across Indonesian tech.',
+                'Meetup, workshop dan kolaborasi sehari-hari di dunia teknologi Indonesia.'
+              )}
+              href="/events" cta={t('See events', 'Lihat event')}
+            />
+
+            {/*
+              9 tiles with the first one spanning 2x2 fills 12 cells exactly —
+              so the grid stays flush at 2, 3 and 4 columns with no ragged row.
+            */}
+            <div className="grid auto-rows-[110px] grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border sm:auto-rows-[130px] sm:grid-cols-3 lg:auto-rows-[150px] lg:grid-cols-4">
+              {galleryImages.map((img, i) => (
+                <figure
+                  key={img.id}
+                  className={`group relative overflow-hidden bg-card ${i === 0 ? 'col-span-2 row-span-2' : ''}`}
+                >
+                  <img
+                    src={px(img.id, 800, 600)}
+                    alt={t(img.en, img.idn)}
+                    loading="lazy"
+                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+                  />
+                  <div
+                    aria-hidden
+                    className="pointer-events-none absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-background/85 via-background/25 to-transparent"
+                  />
+                  <figcaption className="absolute inset-x-0 bottom-0 truncate px-3 pb-2.5 text-[11px] font-medium text-foreground/90">
+                    {t(img.en, img.idn)}
+                  </figcaption>
+                </figure>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* 8b ── PLATFORM FEATURES ----------------------------------------- */}
+        <section className="border-b border-border">
+          <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
+            <SectionHead
+              eyebrow={t('Platform', 'Platform')}
+              title={t('Everything in one place', 'Semua dalam satu tempat')}
+            />
+
+            <div className="grid gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-2 lg:grid-cols-3">
+              {platformFeatures.map((f) => (
+                <Link key={f.en} href={f.href} className="group flex h-full flex-col bg-card p-5 transition-colors hover:bg-secondary">
+                  <div className="flex items-center gap-3">
+                    <f.icon className="h-5 w-5 shrink-0 text-primary" strokeWidth={1.75} />
+                    <span className="text-sm font-medium">{t(f.en, f.id)}</span>
+                    <ArrowUpRight className="ml-auto h-3.5 w-3.5 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+                  </div>
+                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{t(f.descEn, f.descId)}</p>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* 9 ── SERVICES ---------------------------------------------------- */}
+        <section className="relative overflow-hidden border-b border-border">
+          <div className="relative mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
+            <SectionHead
+              eyebrow={t('Services', 'Layanan')}
+              title={t('Hire agencies and independent practitioners', 'Sewa agency dan praktisi independen')}
+              href="/services" cta={t('Browse services', 'Lihat layanan')}
+            />
+            <div className="flex flex-wrap gap-2">
+              {serviceCategories.map((c) => (
+                <Link
+                  key={c}
+                  href="/services"
+                  className="group inline-flex items-center gap-2 rounded-lg border border-border px-3.5 py-2.5 text-sm transition-colors hover:border-muted-foreground/30 hover:bg-secondary"
+                >
+                  {c}
+                  <Plus className="h-3.5 w-3.5 text-muted-foreground transition-transform group-hover:rotate-90" />
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* 9b ── AGENCY ----------------------------------------------------- */}
+        <section className="border-b border-border">
+          <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
+            <SectionHead
+              eyebrow={t('Agency', 'Agency')}
+              title={t('Build with our team', 'Bangun bersama tim kami')}
+              href="/services" cta={t('Talk to us', 'Hubungi kami')}
+            />
+
+            <div className="grid gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-2 lg:grid-cols-4">
+              {agencyServices.map((s) => (
+                <div key={s.title} className="flex h-full flex-col bg-card p-5">
+                  <div className="flex items-center gap-3">
+                    <s.icon className="h-5 w-5 shrink-0 text-primary" strokeWidth={1.75} />
+                    <span className="text-sm font-medium">{s.title}</span>
+                  </div>
+                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{t(s.en, s.id)}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* 11 ── WHY THIS PLATFORM ------------------------------------------ */}
+        <section className="border-b border-border">
+          <div className="mx-auto grid max-w-6xl gap-12 px-4 py-16 sm:px-6 sm:py-20 lg:grid-cols-2 lg:gap-16 lg:px-8">
+            <div>
+              <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">{t('Why', 'Kenapa')}</p>
+              <h2 className="mt-2 font-display text-2xl font-semibold tracking-tight text-balance sm:text-3xl">
+                {t('Seven tabs open, one career.', 'Tujuh tab terbuka, satu karier.')}
+              </h2>
+              <p className="mt-4 text-sm leading-relaxed text-muted-foreground text-pretty">
+                {t(
+                  'Indonesian IT professionals juggle a different platform for every need. Context, reputation and history stay scattered across all of them.',
+                  'Praktisi IT Indonesia memakai platform berbeda untuk tiap kebutuhan. Konteks, reputasi dan riwayat tercecer di semuanya.'
+                )}
+              </p>
+              <p className="mt-3 text-sm leading-relaxed text-muted-foreground text-pretty">
+                {t(
+                  'masmasit brings those professional resources into one ecosystem — with a single profile that carries your work, skills and standing.',
+                  'masmasit menyatukan resource profesional itu dalam satu ekosistem — dengan satu profil yang membawa karya, skill dan reputasimu.'
+                )}
+              </p>
+            </div>
+
+            <div className="rounded-lg border border-border">
+              {scattered.map((s, i) => (
+                <div key={s.tool} className={`flex items-center justify-between px-4 py-3 ${i > 0 ? 'border-t border-border' : ''}`}>
+                  <span className="text-sm text-muted-foreground line-through decoration-border">{s.tool}</span>
+                  <span className="text-xs text-muted-foreground">{t(s.forWhat.en, s.forWhat.id)}</span>
+                </div>
+              ))}
+              <div className="flex items-center justify-between border-t border-border bg-secondary px-4 py-3.5">
+                <span className="text-sm font-medium">masmasit</span>
+                <span className="text-xs text-primary">{t('all of the above', 'semuanya di atas')}</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* 11b ── TESTIMONIALS (slider) ------------------------------------- */}
+        <section className="border-b border-border">
+          <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
+            <div className="mb-8 flex items-end justify-between gap-6">
+              <div className="max-w-2xl">
+                <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">{t('Stories', 'Cerita')}</p>
+                <h2 className="mt-2 font-display text-2xl font-semibold tracking-tight sm:text-3xl">
+                  {t('From our community', 'Dari komunitas kami')}
+                </h2>
+              </div>
+              <div className="hidden shrink-0 gap-2 sm:flex">
+                <button
+                  type="button"
+                  aria-label={t('Previous stories', 'Cerita sebelumnya')}
+                  onClick={() => slideStories(-1)}
+                  className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:border-muted-foreground/30 hover:text-foreground"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  aria-label={t('More stories', 'Cerita berikutnya')}
+                  onClick={() => slideStories(1)}
+                  className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:border-muted-foreground/30 hover:text-foreground"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+
+            <div ref={storiesRef} className="no-scrollbar flex snap-x snap-mandatory gap-4 overflow-x-auto pb-1">
+              {testimonials.map((q) => (
+                <figure
+                  key={q.author}
+                  className="flex w-[85vw] max-w-[420px] shrink-0 snap-start flex-col rounded-lg border border-border bg-card p-6 sm:w-[400px]"
+                >
+                  <Quote className="h-4 w-4 shrink-0 text-primary" strokeWidth={2} />
+                  <blockquote className="mt-3 text-sm leading-relaxed text-pretty">
+                    {t(q.textEn, q.textId)}
+                  </blockquote>
+                  <figcaption className="mt-auto flex items-center gap-3 pt-5">
+                    <img
+                      src={q.photo}
+                      alt=""
+                      loading="lazy"
+                      className="h-9 w-9 shrink-0 rounded-full border border-border object-cover"
+                    />
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium">{q.author}</p>
+                      <p className="truncate text-xs text-muted-foreground">{q.role}</p>
+                    </div>
+                  </figcaption>
+                </figure>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* 11c ── LIVE ACTIVITY --------------------------------------------- */}
+      <section className="border-b border-border">
+        <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
+          <div className="mb-8 flex items-end justify-between gap-6">
+            <div className="max-w-2xl">
+              <p className="flex items-center gap-2 text-xs font-medium uppercase tracking-widest text-muted-foreground">
+                <Circle className="h-1.5 w-1.5 animate-pulse-soft fill-primary text-primary" />
+                {t('Live', 'Langsung')}
+              </p>
+              <h2 className="mt-2 flex items-center gap-2.5 font-display text-2xl font-semibold tracking-tight sm:text-3xl">
+                <Activity className="h-6 w-6 shrink-0 text-primary" strokeWidth={1.75} />
+                {t('Live Activity', 'Aktivitas Terkini')}
+              </h2>
+            </div>
+          </div>
+
+          <div className="grid gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-2 lg:grid-cols-4">
+            {liveActivityLabels.map((a, i) => (
+              <div key={a.en} className="flex h-full flex-col bg-card p-5">
+                <a.icon className="h-5 w-5 shrink-0 text-primary" strokeWidth={1.75} />
+                <div className="tnum mt-4 font-display text-3xl font-semibold tracking-tight">
+                  {live[i].toLocaleString('id-ID')}
+                </div>
+                <p className="mt-1 text-sm text-muted-foreground">{t(a.en, a.id)}</p>
               </div>
             ))}
           </div>
         </div>
+      </section>
 
-        {/* HOW IT WORKS */}
-        <section className="py-20">
-          <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-            <div className="mb-10 text-center">
-              <Badge variant="secondary" className="mb-3 text-primary">{t('How It Works', 'Cara Kerja')}</Badge>
-              <h2 className="font-display text-3xl font-bold sm:text-4xl">{t('Four steps to success', 'Empat langkah menuju sukses')}</h2>
-              <p className="mt-2 text-muted-foreground">{t('From signing up to landing your first gig — it only takes a few minutes.', 'Dari daftar hingga dapat pekerjaan pertama — hanya butuh beberapa menit.')}</p>
-            </div>
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-              {howItWorks.map((step, i) => (
-                <div key={step.en} className={`stagger-${i + 1}`}>
-                  <div className="flex items-center gap-3">
-                    <div className="relative shrink-0">
-                      <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 transition-all duration-300 hover:bg-primary hover:text-primary-foreground hover:scale-110 hover:shadow-lg hover:shadow-primary/20">
-                        <step.icon className="h-6 w-6 text-primary" />
-                      </div>
-                      <div className="pointer-events-none absolute left-1/2 -top-2 -translate-x-1/2 text-5xl font-bold text-primary/[0.06]">{i + 1}</div>
-                    </div>
-                    <h3 className="font-semibold">{t(step.en, step.id)}</h3>
-                  </div>
-                  <p className="mt-2 text-sm text-muted-foreground">{t(step.desc_en, step.desc_id)}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* SKILL CATEGORIES */}
-        <section className="section-glow py-20 bg-card/20">
-          <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-            <div className="mb-10">
-              <Badge variant="secondary" className="mb-3 text-primary">{t('Skills', 'Skill')}</Badge>
-              <h2 className="font-display text-3xl font-bold sm:text-4xl">{t('Explore by category', 'Jelajahi per kategori')}</h2>
-              <p className="mt-2 text-muted-foreground">{t('11 specialized skill categories with verified sub-skills.', '11 kategori skill spesialis dengan sub-skill terverifikasi.')}</p>
-            </div>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-              {skillCategories.map((cat, i) => (
-                <Link key={cat.en} href="/directory">
-                  <div className={`group glass glass-hover flex items-center gap-3 rounded-xl p-4 stagger-${(i % 6) + 1}`}>
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 transition-all duration-300 group-hover:bg-primary group-hover:text-primary-foreground group-hover:scale-110">
-                      <cat.icon className="h-5 w-5 text-primary transition-colors group-hover:text-primary-foreground" />
-                    </div>
-                    <span className="text-sm font-medium leading-tight">{t(cat.en, cat.id)}</span>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* FEATURES GRID */}
-        <section className="py-20">
-          <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-            <div className="mb-10">
-              <Badge variant="secondary" className="mb-3 text-primary">{t('Platform', 'Platform')}</Badge>
-              <h2 className="font-display text-3xl font-bold sm:text-4xl">{t('Everything in one place', 'Semua dalam satu tempat')}</h2>
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {features.map((f, i) => (
-                <div key={f.en} className={`glass glass-hover group rounded-xl p-5 stagger-${(i % 6) + 1}`}>
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 transition-all duration-300 group-hover:bg-primary group-hover:text-primary-foreground group-hover:scale-110">
-                      <f.icon className="h-5 w-5 text-primary transition-colors group-hover:text-primary-foreground" />
-                    </div>
-                    <h3 className="font-semibold">{t(f.en, f.id)}</h3>
-                  </div>
-                  <p className="mt-2 text-sm text-muted-foreground">{t(f.desc_en, f.desc_id)}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* TALENT SHOWCASE — ADPList style */}
-        <section className="section-glow overflow-hidden py-20 bg-aurora">
-          <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-            <div className="mb-10 flex items-end justify-between">
+      {/* 12 ── FINAL CTA -------------------------------------------------- */}
+        <section className="relative overflow-hidden">
+          <img
+            src={ctaImage}
+            alt=""
+            aria-hidden
+            loading="lazy"
+            className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-[0.14]"
+          />
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 bg-gradient-to-b from-background via-background/70 to-background"
+          />
+          <div className="relative mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-24 lg:px-8">
+            <div className="grid gap-10 lg:grid-cols-[1.15fr_0.85fr] lg:items-center lg:gap-16">
               <div>
-                <Badge variant="secondary" className="mb-3 text-primary">{t('Talent', 'Talent')}</Badge>
-                <h2 className="font-display text-3xl font-bold sm:text-4xl">{t('Meet our talent', 'Kenalan dengan talent')}</h2>
-              </div>
-              <Link href="/talents" className="hidden sm:block">
-                <Button variant="outline" size="sm" className="gap-2">{t('View all', 'Lihat semua')} <ArrowRight className="h-4 w-4" /></Button>
-              </Link>
-            </div>
-
-            <div className="no-scrollbar flex snap-x gap-4 overflow-x-auto pb-1 lg:grid lg:grid-cols-4 lg:overflow-visible lg:pb-0">
-              {talents.length > 0 ? talents.map((tal, i) => (
-                <Link key={tal.id} href={`/talents/${tal.id}`} className="w-[78vw] max-w-[280px] shrink-0 snap-start lg:w-auto lg:max-w-none">
-                  <Card className={`group h-full glass glass-hover stagger-${i + 1}`}>
-                    <CardContent className="p-5">
-                      <div className="mb-4 flex justify-center">
-                        <div className="relative h-20 w-20 overflow-hidden rounded-full border-2 border-border/60 transition-all group-hover:border-primary/40">
-                          {tal.avatar_url ? (
-                            <img src={tal.avatar_url} alt={tal.full_name} className="h-full w-full object-cover" />
-                          ) : (
-                            <div className="flex h-full w-full items-center justify-center bg-primary/10 text-xl font-bold text-primary">
-                              {tal.full_name?.charAt(0)?.toUpperCase() ?? '?'}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      <div className="text-center">
-                        <h3 className="font-semibold">{tal.full_name ?? 'Anonymous'}</h3>
-                        <p className="mt-0.5 flex items-center justify-center gap-1 text-xs text-muted-foreground">
-                          <MapPin className="h-3 w-3" /> {tal.location ?? 'Indonesia'}
-                        </p>
-                        <p className="mt-2 line-clamp-2 text-xs text-muted-foreground/80">{tal.bio ?? 'IT professional'}</p>
-                      </div>
-                      <div className="mt-4 flex items-center justify-center gap-1.5">
-                        <Badge variant="secondary" className="gap-1 text-xs">
-                          <Star className="h-3 w-3 text-primary" /> Talent
-                        </Badge>
-                        {tal.linkedin_url && (
-                          <Badge variant="secondary" className="text-xs">LinkedIn</Badge>
-                        )}
-                      </div>
-                      <div className="mt-4">
-                        <Button size="sm" className="w-full gap-2">
-                          <CalendarClock className="h-3.5 w-3.5" /> {t('Book session', 'Pesan sesi')}
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              )) : (
-                [...Array(4)].map((_, i) => (
-                  <Card key={i} className={`w-[78vw] max-w-[280px] shrink-0 snap-start glass glass-hover stagger-${i + 1} lg:w-auto lg:max-w-none`}>
-                    <CardContent className="p-5 text-center">
-                      <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-primary/10 text-xl font-bold text-primary">
-                        {['R', 'S', 'A', 'M'][i]}
-                      </div>
-                      <h3 className="font-semibold">{['Rizky P.', 'Sarah W.', 'Aditya N.', 'Maya S.'][i]}</h3>
-                      <p className="mt-0.5 text-xs text-muted-foreground">{['Backend Dev', 'Founder', 'Data Scientist', 'Product Designer'][i]}</p>
-                      <p className="mt-1 text-xs text-muted-foreground/60">{['Jakarta', 'Bandung', 'Surabaya', 'Yogyakarta'][i]}</p>
-                      <div className="mt-4">
-                        <Button size="sm" variant="outline" className="w-full gap-2">
-                          <CalendarClock className="h-3.5 w-3.5" /> {t('Book session', 'Pesan sesi')}
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))
-              )}
-            </div>
-          </div>
-        </section>
-
-        {/* IMAGE BANNER */}
-        <section className="py-8 bg-aurora">
-          <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-            <div className="relative overflow-hidden rounded-2xl border border-border/40 transition-transform duration-500 hover:scale-[1.01]">
-              <img src="https://images.pexels.com/photos/8518816/pexels-photo-8518816.jpeg?auto=compress&cs=tinysrgb&h=650&w=940" alt="Team collaboration" className="h-[200px] w-full object-cover sm:h-[300px]" />
-              <div className="absolute inset-0 bg-gradient-to-r from-background via-background/50 to-transparent" />
-              <div className="absolute inset-0 flex items-center">
-                <div className="max-w-sm px-6 sm:px-10">
-                  <h3 className="font-display text-xl font-bold sm:text-2xl">{t('A community that gets it', 'Komunitas yang paham')}</h3>
-                  <p className="mt-2 text-sm text-muted-foreground/80">
-                    {t('Built by people who lived the problem.', 'Dibuat oleh orang yang mengalami masalahnya.')}
-                  </p>
-                  <Link href="/register" className="mt-3 inline-block">
-                    <Button size="sm" className="gap-2">{t('Join us', 'Gabung')} <ArrowRight className="h-3.5 w-3.5" /></Button>
+                <h2 className="font-display text-2xl font-semibold tracking-tight text-balance sm:text-4xl">
+                  {t('Ready to join?', 'Siap bergabung?')}
+                </h2>
+                <p className="mt-4 text-sm leading-relaxed text-muted-foreground text-pretty sm:text-base">
+                  {t(
+                    "Whether you're hiring, offering services, or growing your career — we're here.",
+                    'Baik merekrut, menawarkan layanan, atau mengembangkan karier — kami di sini.'
+                  )}
+                </p>
+                <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                  <Link href="/register">
+                    <Button size="lg" className="w-full gap-2 sm:w-auto">
+                      {t('Join now', 'Gabung sekarang')} <ArrowRight className="h-4 w-4" />
+                    </Button>
                   </Link>
+                  <a href="https://wa.me/6281234567890" target="_blank" rel="noreferrer">
+                    <Button size="lg" variant="outline" className="w-full gap-2 sm:w-auto">
+                      <MessageCircle className="h-4 w-4" /> WhatsApp
+                    </Button>
+                  </a>
                 </div>
               </div>
-            </div>
-          </div>
-        </section>
 
-        {/* SERVICES */}
-        <section className="py-20">
-          <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-            <div className="mb-10">
-              <Badge variant="secondary" className="mb-3 text-primary">{t('Agency', 'Agency')}</Badge>
-              <h2 className="font-display text-3xl font-bold sm:text-4xl">{t('Build with our team', 'Bangun bersama tim kami')}</h2>
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {services.map((s, i) => (
-                <Card key={s.title} className={`group glass glass-hover stagger-${i + 1}`}>
-                  <CardContent className="p-5">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 transition-all duration-300 group-hover:bg-primary group-hover:text-primary-foreground group-hover:scale-110">
-                        <s.icon className="h-5 w-5 text-primary transition-colors group-hover:text-primary-foreground" />
-                      </div>
-                      <h3 className="font-display text-base font-bold">{s.title}</h3>
-                    </div>
-                    <p className="mt-2 text-sm text-muted-foreground">{t(s.en, s.id)}</p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* GALLERY */}
-        <section className="py-20">
-          <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-            <div className="mb-10">
-              <Badge variant="secondary" className="mb-3 text-primary">{t('Community', 'Komunitas')}</Badge>
-              <h2 className="font-display text-3xl font-bold sm:text-4xl">{t('Real people, real work', 'Orang nyata, kerja nyata')}</h2>
-            </div>
-            <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-              {galleryImages.map((img, i) => (
-                <div key={i} className={`group relative overflow-hidden rounded-xl border border-border/40 transition-all duration-300 hover:border-primary/30 ${i === 0 ? 'lg:col-span-2 lg:row-span-2' : ''}`}>
-                  <img src={img.url} alt={t(img.en, img.id)} className={`w-full object-cover transition-transform duration-500 group-hover:scale-110 ${i === 0 ? 'h-28 sm:h-40 lg:h-full' : 'h-28 sm:h-40'}`} />
-                  <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-                  <div className="absolute bottom-3 left-3 opacity-0 transition-all duration-300 group-hover:opacity-100 group-hover:translate-y-0 translate-y-2">
-                    <span className="text-xs font-medium text-foreground/90">{t(img.en, img.id)}</span>
+              <div className="grid gap-px overflow-hidden rounded-lg border border-border bg-border">
+                <a
+                  href="https://calendly.com"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="group flex items-center gap-3 bg-card p-4 transition-colors hover:bg-secondary"
+                >
+                  <CalendarClock className="h-5 w-5 shrink-0 text-primary" strokeWidth={1.75} />
+                  <div className="min-w-0">
+                    <div className="text-sm font-medium">{t('Schedule a call', 'Jadwalkan panggilan')}</div>
+                    <div className="truncate text-xs text-muted-foreground">Calendly</div>
                   </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* TESTIMONIALS */}
-        <section className="py-20">
-          <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
-            <div className="mb-8 text-center">
-              <Badge variant="secondary" className="mb-3 text-primary">{t('Stories', 'Cerita')}</Badge>
-              <h2 className="font-display text-3xl font-bold sm:text-4xl">{t('From our community', 'Dari komunitas kami')}</h2>
-            </div>
-            <div className="glass-strong rounded-2xl p-8 sm:p-10">
-              <Quote className="mb-4 h-8 w-8 text-primary/30" />
-              <blockquote key={activeT} className="animate-fade-up text-lg leading-relaxed">
-                {lang === 'id' ? testimonials[activeT].text_id : testimonials[activeT].text_en}
-              </blockquote>
-              <div className="mt-5 flex items-center gap-3">
-                <img src={testimonials[activeT].photo} alt={testimonials[activeT].author} className="h-10 w-10 rounded-full object-cover" />
-                <div>
-                  <div className="font-medium">{testimonials[activeT].author}</div>
-                  <div className="text-sm text-muted-foreground">{testimonials[activeT].role}</div>
-                </div>
-              </div>
-            </div>
-            <div className="mt-5 flex items-center justify-center gap-3">
-              <button onClick={() => setActiveT((p) => (p - 1 + testimonials.length) % testimonials.length)} className="flex h-8 w-8 items-center justify-center rounded-full border border-border/60 transition-colors hover:bg-muted" aria-label="Previous">
-                <ChevronLeft className="h-4 w-4" />
-              </button>
-              <div className="flex gap-2">
-                {testimonials.map((_, i) => (
-                  <button key={i} onClick={() => setActiveT(i)} className={`h-2 rounded-full transition-all ${i === activeT ? 'w-6 bg-primary' : 'w-2 bg-muted hover:bg-muted-foreground/40'}`} aria-label={`Story ${i + 1}`} />
-                ))}
-              </div>
-              <button onClick={() => setActiveT((p) => (p + 1) % testimonials.length)} className="flex h-8 w-8 items-center justify-center rounded-full border border-border/60 transition-colors hover:bg-muted" aria-label="Next">
-                <ChevronRight className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-        </section>
-
-        {/* LIVE ACTIVITY FEED */}
-        <section className="py-12">
-          <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-            <div className="glass-strong rounded-2xl p-6 sm:p-8">
-              <div className="mb-4 flex items-center gap-2">
-                <Activity className="h-5 w-5 text-primary animate-pulse-soft" />
-                <h3 className="font-display text-lg font-bold">{t('Live Activity', 'Aktivitas Terkini')}</h3>
-                <Badge variant="secondary" className="ml-auto gap-1 text-xs">
-                  <span className="h-1.5 w-1.5 animate-pulse-soft rounded-full bg-success" /> {t('Live', 'Langsung')}
-                </Badge>
-              </div>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                {activity.map((a, i) => (
-                  <div key={i} className="flex items-center gap-3 rounded-xl border border-border/40 bg-card/30 p-4 transition-all hover:border-primary/30">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                      {[Briefcase, Users, Code2, Star][i] && (() => {
-                        const Icon = [Briefcase, Users, Code2, Star][i];
-                        return <Icon className="h-5 w-5 text-primary" />;
-                      })()}
-                    </div>
-                    <div>
-                      <div className="text-xl font-bold">{a.count}</div>
-                      <div className="text-xs text-muted-foreground">{t(a.label_en, a.label_id)}</div>
-                    </div>
+                  <ArrowUpRight className="ml-auto h-4 w-4 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+                </a>
+                <a
+                  href="mailto:hello@masmasit.online"
+                  className="group flex items-center gap-3 bg-card p-4 transition-colors hover:bg-secondary"
+                >
+                  <Mail className="h-5 w-5 shrink-0 text-primary" strokeWidth={1.75} />
+                  <div className="min-w-0">
+                    <div className="text-sm font-medium">{t('Email us', 'Kirim email')}</div>
+                    <div className="truncate text-xs text-muted-foreground">hello@masmasit.online</div>
                   </div>
-                ))}
+                  <ArrowUpRight className="ml-auto h-4 w-4 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+                </a>
               </div>
             </div>
           </div>
         </section>
-
-        {/* CTA */}
-        <section className="py-20">
-          <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-            <Card className="glass overflow-hidden border-primary/20 glow-primary">
-              <CardContent className="relative p-8 lg:p-12">
-                <div className="absolute right-0 top-0 h-[250px] w-[350px] rounded-full bg-primary/[0.05] blur-[100px]" />
-                <div className="relative grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
-                  <div>
-                    <h2 className="font-display text-3xl font-bold sm:text-4xl">{t('Ready to join?', 'Siap bergabung?')}</h2>
-                    <p className="mt-3 text-muted-foreground">
-                      {t('Whether you\'re hiring, offering services, or growing your career — we\'re here.', 'Baik merekrut, menawarkan layanan, atau mengembangkan karier — kami di sini.')}
-                    </p>
-                    <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-                      <Link href="/register">
-                        <Button size="lg" className="gap-2 glow-primary">{t('Join now', 'Gabung sekarang')} <ArrowRight className="h-4 w-4" /></Button>
-                      </Link>
-                      <a href="https://wa.me/6281234567890" target="_blank" rel="noreferrer">
-                        <Button size="lg" variant="outline" className="gap-2"><MessageCircle className="h-4 w-4" /> WhatsApp</Button>
-                      </a>
-                    </div>
-                  </div>
-                  <div className="space-y-2.5">
-                    <a href="https://calendly.com" target="_blank" rel="noreferrer" className="flex items-center gap-3 rounded-lg border border-border/50 p-3.5 transition-all hover:border-primary/30 hover:bg-muted/40">
-                      <CalendarClock className="h-5 w-5 text-primary" />
-                      <div>
-                        <div className="text-sm font-medium">{t('Schedule a call', 'Jadwalkan panggilan')}</div>
-                        <div className="text-xs text-muted-foreground">Calendly</div>
-                      </div>
-                    </a>
-                    <a href="mailto:hello@masmasit.online" className="flex items-center gap-3 rounded-lg border border-border/50 p-3.5 transition-all hover:border-primary/30 hover:bg-muted/40">
-                      <Mail className="h-5 w-5 text-primary" />
-                      <div>
-                        <div className="text-sm font-medium">{t('Email us', 'Kirim email')}</div>
-                        <div className="text-xs text-muted-foreground">hello@masmasit.online</div>
-                      </div>
-                    </a>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </section>
-      </div>
+      </PageDecor>
     </AppShell>
   );
 }
