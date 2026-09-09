@@ -321,11 +321,6 @@ export default function HomePage() {
 
           <div className="relative mx-auto grid max-w-6xl gap-10 px-4 pb-14 pt-16 sm:px-6 sm:pb-20 sm:pt-24 lg:grid-cols-[1.08fr_0.92fr] lg:items-center lg:gap-14 lg:px-8">
             <div>
-              <p className="flex items-center gap-2 text-xs font-medium uppercase tracking-widest text-muted-foreground">
-                <Circle className="h-1.5 w-1.5 animate-pulse-soft fill-primary text-primary" />
-                {t('IT Resources & Professional Ecosystem for Indonesia', 'Ekosistem Resource & Profesional IT Indonesia')}
-              </p>
-
               <h1 className="mt-5 max-w-3xl font-display text-4xl font-semibold leading-[1.08] tracking-tight text-balance sm:text-5xl lg:text-6xl">
                 {t("Indonesia's IT ecosystem, in one place.", 'Ekosistem IT Indonesia, dalam satu tempat.')}
               </h1>
@@ -345,14 +340,6 @@ export default function HomePage() {
                     placeholder={t('Search jobs, projects, people, courses, resources…', 'Cari lowongan, proyek, orang, kursus, resource…')}
                   />
                   <kbd className="hidden shrink-0 rounded border border-border px-1.5 py-0.5 text-[11px] text-muted-foreground sm:block">⌘K</kbd>
-                </div>
-                <div className="mt-3 flex flex-wrap items-center gap-2">
-                  <Meta>{t('Try', 'Coba')}:</Meta>
-                  {['React developer remote Jakarta', 'Go backend', 'UI/UX mentor', 'System design'].map((s) => (
-                    <button key={s} className="rounded border border-border px-2 py-1 text-xs text-muted-foreground transition-colors hover:border-muted-foreground/40 hover:text-foreground">
-                      {s}
-                    </button>
-                  ))}
                 </div>
               </div>
 
