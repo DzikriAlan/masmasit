@@ -5,10 +5,10 @@ import { useEffect, useRef } from 'react';
 /**
  * One continuous decorative backdrop for the whole page: faint grid, soft
  * backlights spread down the document, and a canvas of drifting space
- * particles + free-floating wireframe cubes.
+ * particles.
  *
- * It is deliberately page-level (not per section) so cubes and backlights
- * cross section boundaries instead of being clipped at every divider.
+ * It is deliberately page-level (not per section) so backlights cross
+ * section boundaries instead of being clipped at every divider.
  *
  * Performance / a11y guards:
  *  - density scales down under 768px
@@ -18,25 +18,6 @@ import { useEffect, useRef } from 'react';
  */
 
 type Particle = { x: number; y: number; z: number; vx: number; vy: number; r: number };
-type Cube = {
-  x: number; y: number; z: number;
-  vx: number; vy: number; vz: number;
-  size: number;
-  rx: number; ry: number; rz: number;
-  drx: number; dry: number; drz: number;
-  parallax: number;
-};
-
-const CUBE_EDGES: [number, number][] = [
-  [0, 1], [1, 3], [3, 2], [2, 0],
-  [4, 5], [5, 7], [7, 6], [6, 4],
-  [0, 4], [1, 5], [2, 6], [3, 7],
-];
-
-const CUBE_CORNERS: [number, number, number][] = [
-  [-1, -1, -1], [1, -1, -1], [-1, 1, -1], [1, 1, -1],
-  [-1, -1, 1], [1, -1, 1], [-1, 1, 1], [1, 1, 1],
-];
 
 const rand = (min: number, max: number) => min + Math.random() * (max - min);
 
@@ -63,14 +44,12 @@ function SpaceField() {
     let width = 0;
     let height = 0;
     let particles: Particle[] = [];
-    let cubes: Cube[] = [];
     let raf = 0;
     let lastScroll = window.scrollY;
 
     const seed = () => {
       const compact = width < 768;
       const particleCount = compact ? 38 : Math.min(120, Math.round(width / 12));
-      const cubeCount = compact ? 3 : 6;
 
       particles = Array.from({ length: particleCount }, () => ({
         x: rand(0, width),
@@ -79,23 +58,6 @@ function SpaceField() {
         vx: rand(-0.16, 0.16),
         vy: rand(-0.16, 0.16),
         r: rand(0.5, 1.7),
-      }));
-
-      cubes = Array.from({ length: cubeCount }, () => ({
-        x: rand(0.04, 0.96) * width,
-        y: rand(0.04, 0.96) * height,
-        z: rand(-90, 90),
-        vx: rand(-0.24, 0.24),
-        vy: rand(-0.2, 0.2),
-        vz: rand(-0.09, 0.09),
-        size: compact ? rand(12, 24) : rand(16, 34),
-        rx: rand(0, Math.PI * 2),
-        ry: rand(0, Math.PI * 2),
-        rz: rand(0, Math.PI * 2),
-        drx: rand(-0.0045, 0.0045),
-        dry: rand(-0.0045, 0.0045),
-        drz: rand(-0.003, 0.003),
-        parallax: rand(0.04, 0.16),
       }));
     };
 
@@ -111,34 +73,6 @@ function SpaceField() {
       seed();
     };
 
-    const projectCube = (c: Cube) => {
-      const sinX = Math.sin(c.rx), cosX = Math.cos(c.rx);
-      const sinY = Math.sin(c.ry), cosY = Math.cos(c.ry);
-      const sinZ = Math.sin(c.rz), cosZ = Math.cos(c.rz);
-      const focal = 420;
-
-      return CUBE_CORNERS.map(([px, py, pz]) => {
-        let x = px * c.size;
-        let y = py * c.size;
-        let z = pz * c.size;
-
-        let ty = y * cosX - z * sinX;
-        let tz = y * sinX + z * cosX;
-        y = ty; z = tz;
-
-        let tx = x * cosY + z * sinY;
-        tz = -x * sinY + z * cosY;
-        x = tx; z = tz;
-
-        tx = x * cosZ - y * sinZ;
-        ty = x * sinZ + y * cosZ;
-        x = tx; y = ty;
-
-        const depth = focal / (focal + z + c.z);
-        return { x: c.x + x * depth, y: c.y + y * depth, depth };
-      });
-    };
-
     const draw = () => {
       ctx.clearRect(0, 0, width, height);
 
@@ -149,21 +83,6 @@ function SpaceField() {
           ? `rgba(30, 41, 59, ${0.10 + p.z * 0.24})`
           : `rgba(226, 232, 240, ${0.12 + p.z * 0.32})`;
         ctx.fill();
-      }
-
-      for (const c of cubes) {
-        const pts = projectCube(c);
-        const avgDepth = pts.reduce((s, p) => s + p.depth, 0) / pts.length;
-        ctx.strokeStyle = light
-          ? `rgba(21, 128, 87, ${0.14 + avgDepth * 0.20})`
-          : `rgba(62, 207, 142, ${0.09 + avgDepth * 0.15})`;
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        for (const [a, b] of CUBE_EDGES) {
-          ctx.moveTo(pts[a].x, pts[a].y);
-          ctx.lineTo(pts[b].x, pts[b].y);
-        }
-        ctx.stroke();
       }
     };
 
@@ -185,17 +104,6 @@ function SpaceField() {
         p.y += p.vy - delta * p.z * 0.06;
         p.x = wrap(p.x, width, 4);
         p.y = wrap(p.y, height, 4);
-      }
-
-      for (const c of cubes) {
-        c.x += c.vx;
-        c.y += c.vy - delta * c.parallax;
-        c.z += c.vz;
-        c.rx += c.drx; c.ry += c.dry; c.rz += c.drz;
-
-        c.x = wrap(c.x, width, 70);
-        c.y = wrap(c.y, height, 70);
-        if (c.z < -140 || c.z > 140) c.vz *= -1;
       }
 
       draw();
@@ -255,7 +163,7 @@ const BACKLIGHTS: { pos: string; alpha: number }[] = [
 export function PageDecor({ children }: { children: React.ReactNode }) {
   return (
     <div className="relative isolate">
-      {/* Fixed starfield + cubes: continuous, never clipped by a section. */}
+      {/* Fixed starfield: continuous, never clipped by a section. */}
       <div className="pointer-events-none fixed inset-0 z-0" aria-hidden>
         <SpaceField />
       </div>
