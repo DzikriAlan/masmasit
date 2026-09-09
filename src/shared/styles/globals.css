@@ -43,6 +43,9 @@
        Light surfaces need a much stronger wash to read at all. */
     --backlight: 152 56% 50%;
     --backlight-boost: 1;
+    /* Hero's backlight only, toned down further in dark mode; .light keeps
+       it equal to --backlight-boost so light mode is unaffected. */
+    --hero-backlight-boost: 0.5;
     --warning: 38 88% 55%;
     --warning-foreground: 220 10% 6%;
   }
@@ -79,6 +82,9 @@
 
     --backlight: 152 62% 52%;
     --backlight-boost: 2.6;
+    /* Same as --backlight-boost: keep the hero glow exactly as it was, only
+       dark mode gets dimmed. */
+    --hero-backlight-boost: 2.6;
   }
 }
 

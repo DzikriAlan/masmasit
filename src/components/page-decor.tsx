@@ -171,16 +171,22 @@ export function PageDecor({ children }: { children: React.ReactNode }) {
       {/* Grid + backlights scroll with the document, spanning its full height. */}
       <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden" aria-hidden>
         <div className="absolute inset-0 bg-grid opacity-[0.55]" />
-        {BACKLIGHTS.map((b, i) => (
-          <div
-            key={i}
-            className={`absolute rounded-full ${b.pos}`}
-            style={{
-              // boost lifts the wash on light surfaces; the cap keeps it a tint, not a flood
-              background: `hsl(var(--backlight) / min(0.22, calc(${b.alpha} * var(--backlight-boost))))`,
-            }}
-          />
-        ))}
+        {BACKLIGHTS.map((b, i) => {
+          // Index 0 sits behind the hero; it gets its own boost variable so it
+          // can be dimmed in dark mode without touching the other sections
+          // (--hero-backlight-boost mirrors --backlight-boost in light mode).
+          const boostVar = i === 0 ? '--hero-backlight-boost' : '--backlight-boost';
+          return (
+            <div
+              key={i}
+              className={`absolute rounded-full ${b.pos}`}
+              style={{
+                // boost lifts the wash on light surfaces; the cap keeps it a tint, not a flood
+                background: `hsl(var(--backlight) / min(0.22, calc(${b.alpha} * var(${boostVar}))))`,
+              }}
+            />
+          );
+        })}
       </div>
 
       <div className="relative z-10">{children}</div>
