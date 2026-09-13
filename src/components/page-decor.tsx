@@ -33,14 +33,6 @@ function SpaceField() {
 
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    // Particles/cubes must invert on a light surface or they vanish.
-    let light = document.documentElement.classList.contains('light');
-    const themeObserver = new MutationObserver(() => {
-      const next = document.documentElement.classList.contains('light');
-      if (next !== light) { light = next; draw(); }
-    });
-    themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
-
     let width = 0;
     let height = 0;
     let particles: Particle[] = [];
@@ -79,9 +71,7 @@ function SpaceField() {
       for (const p of particles) {
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.r * p.z, 0, Math.PI * 2);
-        ctx.fillStyle = light
-          ? `rgba(30, 41, 59, ${0.10 + p.z * 0.24})`
-          : `rgba(226, 232, 240, ${0.12 + p.z * 0.32})`;
+        ctx.fillStyle = `rgba(226, 232, 240, ${0.12 + p.z * 0.32})`;
         ctx.fill();
       }
     };
@@ -132,7 +122,6 @@ function SpaceField() {
 
     return () => {
       stop();
-      themeObserver.disconnect();
       window.removeEventListener('resize', onResize);
       document.removeEventListener('visibilitychange', onVisibility);
     };

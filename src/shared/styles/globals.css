@@ -42,52 +42,12 @@
     --success: 152 56% 46%;
     --success-foreground: 220 12% 96%;
 
-    /* Decorative backlight — hue and a per-theme strength multiplier.
-       Light surfaces need a much stronger wash to read at all. */
+    /* Decorative backlight glow behind the hero. */
     --backlight: 152 56% 50%;
     --backlight-boost: 1;
-    /* Hero's backlight only, toned down further in dark mode; .light keeps
-       it equal to --backlight-boost so light mode is unaffected. */
     --hero-backlight-boost: 0.5;
     --warning: 38 88% 55%;
     --warning-foreground: 220 10% 6%;
-  }
-
-  .light {
-    --background: 0 0% 100%;
-    --foreground: 220 15% 10%;
-    --card: 0 0% 100%;
-    --card-foreground: 220 15% 10%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 220 15% 10%;
-    --primary: 155 62% 34%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 220 14% 96%;
-    --secondary-foreground: 220 15% 10%;
-    --muted: 220 14% 96%;
-    --muted-foreground: 220 8% 42%;
-    --accent: 220 14% 95%;
-    --accent-foreground: 220 15% 10%;
-    --destructive: 0 68% 48%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 220 13% 90%;
-    --input: 220 13% 90%;
-    --ring: 155 62% 34%;
-    --chart-1: 155 62% 34%;
-    --chart-2: 205 70% 44%;
-    --chart-3: 38 85% 45%;
-    --chart-4: 265 45% 50%;
-    --chart-5: 0 65% 48%;
-    --success: 155 62% 32%;
-    --success-foreground: 0 0% 100%;
-    --warning: 38 88% 42%;
-    --warning-foreground: 220 15% 10%;
-
-    --backlight: 152 62% 52%;
-    --backlight-boost: 2.6;
-    /* Same as --backlight-boost: keep the hero glow exactly as it was, only
-       dark mode gets dimmed. */
-    --hero-backlight-boost: 2.6;
   }
 }
 

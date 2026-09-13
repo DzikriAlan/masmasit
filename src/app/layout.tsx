@@ -10,7 +10,6 @@ import '@fontsource/inter/800.css';
 import '@fontsource/space-grotesk/600.css';
 import '@fontsource/space-grotesk/700.css';
 import type { Metadata } from 'next';
-import { ThemeProvider } from '@/components/theme-provider';
 import { AuthProvider } from '@/components/auth-provider';
 import { LanguageProvider } from '@/components/language-provider';
 import { QueryProvider } from '@/components/query-provider';
@@ -44,14 +43,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className="dark" suppressHydrationWarning>
       <body className="antialiased">
         <QueryProvider>
-          <ThemeProvider>
-            <LanguageProvider>
-              <AuthProvider>
-                {children}
-                <Toaster />
-              </AuthProvider>
-            </LanguageProvider>
-          </ThemeProvider>
+          <LanguageProvider>
+            <AuthProvider>
+              {children}
+              <Toaster />
+            </AuthProvider>
+          </LanguageProvider>
         </QueryProvider>
       </body>
     </html>
