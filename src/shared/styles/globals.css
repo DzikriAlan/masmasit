@@ -12,6 +12,7 @@
   :root {
     --font-inter: 'Inter', ui-sans-serif, system-ui, sans-serif;
     --font-display: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+    --font-brand: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
 
     --background: 220 8% 5%;
     --foreground: 220 12% 96%;

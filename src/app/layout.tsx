@@ -9,6 +9,8 @@ import '@fontsource/inter/700.css';
 import '@fontsource/inter/800.css';
 import '@fontsource/space-grotesk/600.css';
 import '@fontsource/space-grotesk/700.css';
+// Wordmark face — Plus Jakarta Sans, by Indonesian foundry Tokotype.
+import '@fontsource/plus-jakarta-sans/800.css';
 import type { Metadata } from 'next';
 import { AuthProvider } from '@/components/auth-provider';
 import { LanguageProvider } from '@/components/language-provider';
