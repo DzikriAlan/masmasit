@@ -157,9 +157,8 @@ export function PageDecor({ children }: { children: React.ReactNode }) {
         <SpaceField />
       </div>
 
-      {/* Grid + backlights scroll with the document, spanning its full height. */}
+      {/* Backlights scroll with the document, spanning its full height. */}
       <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden" aria-hidden>
-        <div className="absolute inset-0 bg-grid opacity-[0.55]" />
         {BACKLIGHTS.map((b, i) => {
           // Index 0 sits behind the hero; it gets its own boost variable so it
           // can be dimmed in dark mode without touching the other sections
