@@ -63,14 +63,14 @@ export default function LoginForm() {
           <Link href="/" className="mx-auto mb-4 flex items-center gap-2">
             <img
               src="/icon-192.webp"
-              alt="masmasit.online"
+              alt="MasmasIT"
               width={40}
               height={40}
               className="h-10 w-10 shrink-0 rounded-[24%]"
             />
           </Link>
           <CardTitle className="font-display text-2xl">{t('Welcome Back', 'Selamat Datang Kembali')}</CardTitle>
-          <CardDescription>{t('Sign in to your masmasit.online account', 'Masuk ke akun masmasit.online Anda')}</CardDescription>
+          <CardDescription>{t('Sign in to your MasmasIT account', 'Masuk ke akun MasmasIT Anda')}</CardDescription>
         </CardHeader>
         <CardContent>
           <Button type="button" variant="outline" className="w-full gap-2" onClick={saveGoogleSignIn} disabled={googleLoading || loading}>

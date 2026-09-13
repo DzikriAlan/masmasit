@@ -45,7 +45,7 @@ export default function ForgotPasswordForm() {
           <Link href="/" className="mx-auto mb-4 flex items-center gap-2">
             <img
               src="/icon-192.webp"
-              alt="masmasit.online"
+              alt="MasmasIT"
               width={40}
               height={40}
               className="h-10 w-10 shrink-0 rounded-[24%]"

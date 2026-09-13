@@ -16,7 +16,7 @@ export default function TermsOfServicePage() {
         <div className="prose prose-sm dark:prose-invert max-w-none space-y-6 text-muted-foreground">
           <section>
             <h2 className="font-display text-lg font-bold text-foreground">{t('Acceptance', 'Penerimaan')}</h2>
-            <p>{t('By creating an account and using masmasit.online, you agree to these terms. If you do not agree, please do not use the platform.', 'Dengan membuat akun dan menggunakan masmasit.online, Anda menyetujui ketentuan ini. Jika Anda tidak setuju, mohon jangan gunakan platform ini.')}</p>
+            <p>{t('By creating an account and using MasmasIT, you agree to these terms. If you do not agree, please do not use the platform.', 'Dengan membuat akun dan menggunakan MasmasIT, Anda menyetujui ketentuan ini. Jika Anda tidak setuju, mohon jangan gunakan platform ini.')}</p>
           </section>
           <section>
             <h2 className="font-display text-lg font-bold text-foreground">{t('User Responsibilities', 'Tanggung Jawab Pengguna')}</h2>
@@ -30,7 +30,7 @@ export default function TermsOfServicePage() {
           </section>
           <section>
             <h2 className="font-display text-lg font-bold text-foreground">{t('Payments via Lynk.id', 'Pembayaran via Lynk.id')}</h2>
-            <p>{t('All payments for bookings, courses, events, and agency projects are processed externally through Lynk.id. masmasit.online does not handle payment card data. After completing payment on Lynk.id, you must submit a confirmation note so the admin can verify your payment and mark it as paid.', 'Semua pembayaran untuk booking, kursus, event, dan proyek agency diproses eksternal melalui Lynk.id. masmasit.online tidak menangani data kartu pembayaran. Setelah menyelesaikan pembayaran di Lynk.id, Anda harus mengirim catatan konfirmasi agar admin dapat memverifikasi pembayaran Anda dan menandainya sebagai lunas.')}</p>
+            <p>{t('All payments for bookings, courses, events, and agency projects are processed externally through Lynk.id. MasmasIT does not handle payment card data. After completing payment on Lynk.id, you must submit a confirmation note so the admin can verify your payment and mark it as paid.', 'Semua pembayaran untuk booking, kursus, event, dan proyek agency diproses eksternal melalui Lynk.id. MasmasIT tidak menangani data kartu pembayaran. Setelah menyelesaikan pembayaran di Lynk.id, Anda harus mengirim catatan konfirmasi agar admin dapat memverifikasi pembayaran Anda dan menandainya sebagai lunas.')}</p>
           </section>
           <section>
             <h2 className="font-display text-lg font-bold text-foreground">{t('Disputes & Refunds', 'Sengketa & Pengembalian Dana')}</h2>

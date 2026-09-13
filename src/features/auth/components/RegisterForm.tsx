@@ -59,14 +59,14 @@ export default function RegisterForm() {
           <Link href="/" className="mx-auto mb-4 flex items-center gap-2">
             <img
               src="/icon-192.webp"
-              alt="masmasit.online"
+              alt="MasmasIT"
               width={40}
               height={40}
               className="h-10 w-10 shrink-0 rounded-[24%]"
             />
           </Link>
           <CardTitle className="font-display text-2xl">{t('Join the Ecosystem', 'Gabung Ekosistem')}</CardTitle>
-          <CardDescription>{t('Create your masmasit.online account', 'Buat akun masmasit.online Anda')}</CardDescription>
+          <CardDescription>{t('Create your MasmasIT account', 'Buat akun MasmasIT Anda')}</CardDescription>
         </CardHeader>
         <CardContent>
           {registered ? (

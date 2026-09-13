@@ -20,7 +20,7 @@ import { Toaster } from '@/components/ui/sonner';
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
-  title: 'masmasit — Hire Experts & Build Digital Solutions',
+  title: 'MasmasIT — Hire Experts & Build Digital Solutions',
   description:
     'Hybrid IT Community, Talent & Agency Ecosystem for Indonesian IT practitioners. Hire talent, build digital solutions, join the community.',
   icons: {
@@ -34,7 +34,7 @@ export const metadata: Metadata = {
   },
   manifest: '/site.webmanifest',
   openGraph: {
-    title: 'masmasit',
+    title: 'MasmasIT',
     description: 'Hybrid IT Community, Talent & Agency Ecosystem for Indonesian IT practitioners.',
     images: [{ url: '/icon-512.webp', width: 512, height: 512, type: 'image/webp' }],
   },
