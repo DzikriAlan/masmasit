@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Bell, Check, CheckCheck } from 'lucide-react';
 import { useAuth } from '@/components/auth-provider';
 import { useLang } from '@/components/language-provider';
 import { Button } from '@/components/ui/button';
+import { StableLabel } from '@/components/stable-label';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import Link from 'next/link';
@@ -82,12 +82,11 @@ export function NotificationBell() {
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen(!open)}
-        className="relative flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-        aria-label="Notifications"
+        className="flex h-10 items-center gap-1.5 rounded-md px-3 text-[15px] font-semibold text-foreground/70 transition-colors hover:bg-muted hover:text-foreground"
       >
-        <Bell className="h-4 w-4" />
+        <StableLabel en="Notifications" id="Notifikasi" />
         {unreadCount > 0 && (
-          <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground">
+          <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
@@ -99,14 +98,13 @@ export function NotificationBell() {
             <span className="text-sm font-semibold">{t('Notifications', 'Notifikasi')}</span>
             {unreadCount > 0 && (
               <button onClick={modifyAllRead} className="flex items-center gap-1 text-xs text-primary hover:underline">
-                <CheckCheck className="h-3 w-3" /> {t('Mark all read', 'Tandai dibaca')}
+                {t('Mark all read', 'Tandai dibaca')}
               </button>
             )}
           </div>
           <div className="max-h-80 overflow-y-auto">
             {notifications.length === 0 ? (
               <div className="py-8 text-center">
-                <Bell className="mx-auto mb-2 h-8 w-8 text-muted-foreground/40" />
                 <p className="text-sm text-muted-foreground">{t('No notifications yet', 'Belum ada notifikasi')}</p>
               </div>
             ) : (
@@ -132,7 +130,7 @@ export function NotificationBell() {
                       )}
                       {!n.is_read && (
                         <button onClick={() => modifyOneRead(n.id)} className="flex items-center gap-0.5 text-xs text-muted-foreground hover:text-foreground">
-                          <Check className="h-3 w-3" /> {t('Read', 'Dibaca')}
+                          {t('Mark read', 'Tandai dibaca')}
                         </button>
                       )}
                     </div>

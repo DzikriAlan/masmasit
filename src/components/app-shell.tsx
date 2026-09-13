@@ -7,9 +7,8 @@ import { Footer } from '@/components/footer';
 import { cn } from '@/shared/lib/utils';
 
 export function AppShell({ children }: { children: React.ReactNode }) {
-  // Navbar is a fixed overlay (so the homepage hero can sit under it,
-  // transparent-to-black). Every other page has to reclaim that space
-  // itself since it no longer pushes content down in normal flow.
+  // The navbar is fixed and transparent at the top of the page. The homepage
+  // hero runs underneath it; every other page starts below the bar.
   const isHome = usePathname() === '/';
 
   return (
