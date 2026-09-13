@@ -2,11 +2,6 @@
 
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
-import {
-  ArrowRight, ArrowUpRight, ChevronRight, Briefcase, FolderGit2, Users,
-  GraduationCap, CalendarDays, Wrench, MessagesSquare, Star,
-  MessageCircle, Mail, CalendarClock, Cloud, Sparkles, Palette, UsersRound, Copy, Check,
-} from 'lucide-react';
 import { toast } from 'sonner';
 
 import { AppShell } from '@/components/app-shell';
@@ -14,23 +9,40 @@ import { PageDecor } from '@/components/page-decor';
 import { useLang } from '@/components/language-provider';
 import { supabase } from '@/shared/lib/supabase';
 import { Button } from '@/components/ui/button';
-import heroBackground from '@/shared/images/backgorundhero.png';
+import heroBackground from '@/shared/images/backgroundhero2.png';
 
 const px = (id: string, w: number, h: number) =>
   `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&h=${h}&w=${w}`;
 
 const CONTACT_EMAIL = 'hello@masmasit.online';
 
+/* Identity colour per ecosystem area (tokens in globals.css). Full class
+   strings live here so Tailwind can see them. */
+const tones = {
+  blue: { text: 'text-eco-blue', soft: 'bg-eco-blue/10', fill: 'bg-eco-blue', hover: 'hover:border-eco-blue/45', bar: 'border-eco-blue bg-eco-blue/15', chip: 'border-eco-blue/25 bg-eco-blue/10', cssVar: '--eco-blue', wash: 'wash wash-blue' },
+  violet: { text: 'text-eco-violet', soft: 'bg-eco-violet/10', fill: 'bg-eco-violet', hover: 'hover:border-eco-violet/45', bar: 'border-eco-violet bg-eco-violet/15', chip: 'border-eco-violet/25 bg-eco-violet/10', cssVar: '--eco-violet', wash: 'wash wash-violet' },
+  orange: { text: 'text-eco-orange', soft: 'bg-eco-orange/10', fill: 'bg-eco-orange', hover: 'hover:border-eco-orange/45', bar: 'border-eco-orange bg-eco-orange/15', chip: 'border-eco-orange/25 bg-eco-orange/10', cssVar: '--eco-orange', wash: 'wash wash-orange' },
+  teal: { text: 'text-eco-teal', soft: 'bg-eco-teal/10', fill: 'bg-eco-teal', hover: 'hover:border-eco-teal/45', bar: 'border-eco-teal bg-eco-teal/15', chip: 'border-eco-teal/25 bg-eco-teal/10', cssVar: '--eco-teal', wash: 'wash wash-teal' },
+  pink: { text: 'text-eco-pink', soft: 'bg-eco-pink/10', fill: 'bg-eco-pink', hover: 'hover:border-eco-pink/45', bar: 'border-eco-pink bg-eco-pink/15', chip: 'border-eco-pink/25 bg-eco-pink/10', cssVar: '--eco-pink', wash: 'wash wash-pink' },
+  amber: { text: 'text-eco-amber', soft: 'bg-eco-amber/10', fill: 'bg-eco-amber', hover: 'hover:border-eco-amber/45', bar: 'border-eco-amber bg-eco-amber/15', chip: 'border-eco-amber/25 bg-eco-amber/10', cssVar: '--eco-amber', wash: 'wash wash-amber' },
+  green: { text: 'text-eco-green', soft: 'bg-eco-green/10', fill: 'bg-eco-green', hover: 'hover:border-eco-green/45', bar: 'border-eco-green bg-eco-green/15', chip: 'border-eco-green/25 bg-eco-green/10', cssVar: '--eco-green', wash: 'wash wash-green' },
+} as const;
+type Tone = keyof typeof tones;
+
+/* Organisation monogram used where a logo/icon would otherwise go. */
+const initials = (name: string) => name.split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase();
+
+
 /* ---------------------------------------------------------------- content */
 
 const ecosystem = [
-  { key: 'jobs', href: '/jobs', icon: Briefcase, en: 'Jobs', id: 'Lowongan', leadEn: 'Find your next role,', leadId: 'Temukan peran berikutnya,', boldEn: 'full-time or freelance.', boldId: 'full-time atau freelance.' },
-  { key: 'projects', href: '/projects', icon: FolderGit2, en: 'Projects', id: 'Proyek', leadEn: 'Real projects,', leadId: 'Proyek nyata,', boldEn: 'posted by real companies.', boldId: 'dari perusahaan sungguhan.' },
-  { key: 'talents', href: '/talents', icon: Users, en: 'Talents', id: 'Talent', leadEn: 'Discover IT professionals,', leadId: 'Temukan praktisi IT,', boldEn: 'vetted and ready.', boldId: 'terverifikasi dan siap.' },
-  { key: 'learn', href: '/courses', icon: GraduationCap, en: 'Learn', id: 'Belajar', leadEn: 'Courses and workshops,', leadId: 'Kursus dan workshop,', boldEn: 'built by practitioners.', boldId: 'dibuat oleh praktisi.' },
-  { key: 'events', href: '/events', icon: CalendarDays, en: 'Events', id: 'Event', leadEn: 'Meetups and hackathons,', leadId: 'Meetup dan hackathon,', boldEn: 'happening near you.', boldId: 'di dekatmu.' },
-  { key: 'services', href: '/services', icon: Wrench, en: 'Services', id: 'Layanan', leadEn: 'Professional IT services,', leadId: 'Layanan IT profesional,', boldEn: 'from trusted agencies.', boldId: 'dari agency terpercaya.' },
-  { key: 'community', href: '/directory', icon: MessagesSquare, en: 'Community', id: 'Komunitas', leadEn: 'Discussions and networking,', leadId: 'Diskusi dan networking,', boldEn: 'all in one place.', boldId: 'dalam satu tempat.' },
+  { key: 'jobs', tone: 'blue' as Tone, href: '/jobs', en: 'Jobs', id: 'Lowongan', leadEn: 'Find your next role,', leadId: 'Temukan peran berikutnya,', boldEn: 'full-time or freelance.', boldId: 'full-time atau freelance.' },
+  { key: 'projects', tone: 'violet' as Tone, href: '/projects', en: 'Projects', id: 'Proyek', leadEn: 'Real projects,', leadId: 'Proyek nyata,', boldEn: 'posted by real companies.', boldId: 'dari perusahaan sungguhan.' },
+  { key: 'talents', tone: 'orange' as Tone, href: '/talents', en: 'Talents', id: 'Talent', leadEn: 'Discover IT professionals,', leadId: 'Temukan praktisi IT,', boldEn: 'vetted and ready.', boldId: 'terverifikasi dan siap.' },
+  { key: 'learn', tone: 'teal' as Tone, href: '/courses', en: 'Learn', id: 'Belajar', leadEn: 'Courses and workshops,', leadId: 'Kursus dan workshop,', boldEn: 'built by practitioners.', boldId: 'dibuat oleh praktisi.' },
+  { key: 'events', tone: 'pink' as Tone, href: '/events', en: 'Events', id: 'Event', leadEn: 'Meetups and hackathons,', leadId: 'Meetup dan hackathon,', boldEn: 'happening near you.', boldId: 'di dekatmu.' },
+  { key: 'services', tone: 'amber' as Tone, href: '/services', en: 'Services', id: 'Layanan', leadEn: 'Professional IT services,', leadId: 'Layanan IT profesional,', boldEn: 'from trusted agencies.', boldId: 'dari agency terpercaya.' },
+  { key: 'community', tone: 'green' as Tone, href: '/directory', en: 'Community', id: 'Komunitas', leadEn: 'Discussions and networking,', leadId: 'Diskusi dan networking,', boldEn: 'all in one place.', boldId: 'dalam satu tempat.' },
 ];
 
 const opportunityTabs = ['jobs', 'projects', 'freelance', 'internships'] as const;
@@ -108,21 +120,21 @@ const liveActivityLabels = [
 /* What the live feed cycles through. `avatar` rows are people, the rest
    are organisations and get their activity icon instead. */
 const activityFeed = [
-  { icon: Briefcase, avatar: null, who: 'Payungi', en: 'posted a job', id: 'memposting lowongan', what: 'Backend Engineer (Go)', timeEn: '2m', timeId: '2 mnt' },
-  { icon: Users, avatar: demoTalents[1].avatar_url, who: 'Sarah Widodo', en: 'joined as', id: 'bergabung sebagai', what: 'Product Designer', timeEn: '5m', timeId: '5 mnt' },
-  { icon: FolderGit2, avatar: null, who: 'Koperasi Nusantara', en: 'opened a project', id: 'membuka proyek', what: 'Payment Infrastructure Revamp', timeEn: '12m', timeId: '12 mnt' },
-  { icon: Star, avatar: demoTalents[0].avatar_url, who: 'Rizky Pratama', en: 'was booked by', id: 'dibooking oleh', what: 'PT Kirana Teknologi', timeEn: '18m', timeId: '18 mnt' },
-  { icon: GraduationCap, avatar: demoTalents[2].avatar_url, who: 'Aditya Nugroho', en: 'finished', id: 'menyelesaikan', what: 'MLOps untuk Data Scientist', timeEn: '26m', timeId: '26 mnt' },
-  { icon: CalendarDays, avatar: demoTalents[3].avatar_url, who: 'Maya Santoso', en: 'is attending', id: 'akan hadir di', what: 'Jakarta Cloud Native Meetup', timeEn: '34m', timeId: '34 mnt' },
-  { icon: Wrench, avatar: null, who: 'Nusantara Cloud', en: 'listed a service', id: 'menambahkan layanan', what: 'Cloud & DevOps', timeEn: '41m', timeId: '41 mnt' },
-  { icon: Briefcase, avatar: null, who: 'Sahabat Finansial', en: 'posted a job', id: 'memposting lowongan', what: 'Mobile Engineer (Flutter)', timeEn: '1h', timeId: '1 jam' },
+  { avatar: null, who: 'Payungi', tone: 'blue' as Tone, en: 'posted a job', id: 'memposting lowongan', what: 'Backend Engineer (Go)', timeEn: '2m', timeId: '2 mnt' },
+  { avatar: demoTalents[1].avatar_url, who: 'Sarah Widodo', tone: 'green' as Tone, en: 'joined as', id: 'bergabung sebagai', what: 'Product Designer', timeEn: '5m', timeId: '5 mnt' },
+  { avatar: null, who: 'Koperasi Nusantara', tone: 'violet' as Tone, en: 'opened a project', id: 'membuka proyek', what: 'Payment Infrastructure Revamp', timeEn: '12m', timeId: '12 mnt' },
+  { avatar: demoTalents[0].avatar_url, who: 'Rizky Pratama', tone: 'orange' as Tone, en: 'was booked by', id: 'dibooking oleh', what: 'PT Kirana Teknologi', timeEn: '18m', timeId: '18 mnt' },
+  { avatar: demoTalents[2].avatar_url, who: 'Aditya Nugroho', tone: 'teal' as Tone, en: 'finished', id: 'menyelesaikan', what: 'MLOps untuk Data Scientist', timeEn: '26m', timeId: '26 mnt' },
+  { avatar: demoTalents[3].avatar_url, who: 'Maya Santoso', tone: 'pink' as Tone, en: 'is attending', id: 'akan hadir di', what: 'Jakarta Cloud Native Meetup', timeEn: '34m', timeId: '34 mnt' },
+  { avatar: null, who: 'Nusantara Cloud', tone: 'amber' as Tone, en: 'listed a service', id: 'menambahkan layanan', what: 'Cloud & DevOps', timeEn: '41m', timeId: '41 mnt' },
+  { avatar: null, who: 'Sahabat Finansial', tone: 'blue' as Tone, en: 'posted a job', id: 'memposting lowongan', what: 'Mobile Engineer (Flutter)', timeEn: '1h', timeId: '1 jam' },
 ];
 
 /* Turns the activity FOMO into a next step, one per audience. */
 const joinActions = [
-  { href: '/jobs/post', icon: Briefcase, en: 'Post a job', id: 'Pasang lowongan', subEn: 'Reach vetted IT talent in days.', subId: 'Jangkau talent IT terverifikasi dalam hitungan hari.' },
-  { href: '/services', icon: Wrench, en: 'Offer your services', id: 'Tawarkan layanan', subEn: 'Get discovered by companies that need you.', subId: 'Ditemukan perusahaan yang butuh keahlianmu.' },
-  { href: '/register', icon: Users, en: 'Build your profile', id: 'Buat profil', subEn: 'Show real work, get booked.', subId: 'Tunjukkan karya nyata, dapatkan booking.' },
+  { href: '/jobs/post', tone: 'blue' as Tone, forEn: 'For companies', forId: 'Untuk perusahaan', en: 'Post a job', id: 'Pasang lowongan', subEn: 'Reach vetted IT talent in days.', subId: 'Jangkau talent IT terverifikasi dalam hitungan hari.' },
+  { href: '/services', tone: 'amber' as Tone, forEn: 'For agencies & freelancers', forId: 'Untuk agency & freelancer', en: 'Offer your services', id: 'Tawarkan layanan', subEn: 'Get discovered by companies that need you.', subId: 'Ditemukan perusahaan yang butuh keahlianmu.' },
+  { href: '/register', tone: 'orange' as Tone, forEn: 'For IT professionals', forId: 'Untuk praktisi IT', en: 'Build your profile', id: 'Buat profil', subEn: 'Show real work, get booked.', subId: 'Tunjukkan karya nyata, dapatkan booking.' },
 ];
 
 const testimonials = [
@@ -140,36 +152,36 @@ const testimonials = [
    so the conversation starts with the service already named. */
 const agencyCards = [
   {
-    key: 'saas', icon: Cloud, wide: true,
+    key: 'saas', tone: 'blue' as Tone, wide: true,
     tagEn: 'SaaS', tagId: 'SaaS',
     leadEn: 'Product & cloud platforms,', leadId: 'Produk & platform cloud,',
     boldEn: 'from MVP to millions of requests.', boldId: 'dari MVP sampai jutaan request.',
     metaEn: 'MVP in 6–10 weeks', metaId: 'MVP dalam 6–10 minggu',
-    waEn: "Hi masmasit, I'd like to build a SaaS product with your team.", waId: 'Halo masmasit, saya ingin membangun produk SaaS bersama tim Anda.',
+    waEn: "Hi MasmasIT, I'd like to build a SaaS product with your team.", waId: 'Halo MasmasIT, saya ingin membangun produk SaaS bersama tim Anda.',
   },
   {
-    key: 'ai', icon: Sparkles, wide: false,
+    key: 'ai', tone: 'violet' as Tone, wide: false,
     tagEn: 'AI', tagId: 'AI',
     leadEn: 'Chatbots, ML & data pipelines,', leadId: 'Chatbot, ML & data pipeline,',
     boldEn: 'shipped to real users.', boldId: 'dirilis ke pengguna nyata.',
     metaEn: 'Pilot in 4 weeks', metaId: 'Pilot dalam 4 minggu',
-    waEn: "Hi masmasit, I'd like to discuss an AI project.", waId: 'Halo masmasit, saya ingin diskusi proyek AI.',
+    waEn: "Hi MasmasIT, I'd like to discuss an AI project.", waId: 'Halo MasmasIT, saya ingin diskusi proyek AI.',
   },
   {
-    key: 'creative', icon: Palette, wide: false,
+    key: 'creative', tone: 'pink' as Tone, wide: false,
     tagEn: 'Creative', tagId: 'Kreatif',
     leadEn: 'Design, brand & UI kits,', leadId: 'Desain, brand & UI kit,',
     boldEn: 'as good as it works.', boldId: 'secantik performanya.',
     metaEn: 'Brand kit in 3 weeks', metaId: 'Brand kit dalam 3 minggu',
-    waEn: "Hi masmasit, I'd like help with design & branding.", waId: 'Halo masmasit, saya butuh bantuan desain & branding.',
+    waEn: "Hi MasmasIT, I'd like help with design & branding.", waId: 'Halo MasmasIT, saya butuh bantuan desain & branding.',
   },
   {
-    key: 'hr', icon: UsersRound, wide: true,
+    key: 'hr', tone: 'orange' as Tone, wide: true,
     tagEn: 'HR', tagId: 'HR',
     leadEn: 'Recruitment & HRIS,', leadId: 'Rekrutmen & HRIS,',
     boldEn: 'hire faster without the spreadsheets.', boldId: 'rekrut lebih cepat tanpa spreadsheet.',
     metaEn: 'Shortlist in 7 days', metaId: 'Shortlist dalam 7 hari',
-    waEn: "Hi masmasit, I'd like support with recruitment / HRIS.", waId: 'Halo masmasit, saya butuh dukungan rekrutmen / HRIS.',
+    waEn: "Hi MasmasIT, I'd like support with recruitment / HRIS.", waId: 'Halo MasmasIT, saya butuh dukungan rekrutmen / HRIS.',
   },
 ];
 
@@ -189,8 +201,8 @@ function SectionHead({ eyebrow, title, desc, href, cta }: {
         {desc && <p className="mt-2 text-sm leading-relaxed text-muted-foreground text-pretty">{desc}</p>}
       </div>
       {href && cta && (
-        <Link href={href} className="hidden shrink-0 items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground sm:flex">
-          {cta} <ArrowUpRight className="h-4 w-4" />
+        <Link href={href} className="hidden shrink-0 text-sm font-medium text-foreground underline decoration-border underline-offset-4 transition-colors hover:decoration-foreground sm:block">
+          {cta}
         </Link>
       )}
     </div>
@@ -203,7 +215,7 @@ function Meta({ children }: { children: React.ReactNode }) {
 
 function Chip({ children }: { children: React.ReactNode }) {
   return (
-    <span className="shrink-0 rounded border border-border px-1.5 py-0.5 text-[11px] leading-4 text-muted-foreground">
+    <span className="wash-tag shrink-0 rounded px-1.5 py-0.5 text-[11px] font-medium leading-4">
       {children}
     </span>
   );
@@ -230,7 +242,7 @@ function EcosystemPreview({ ekey, flip }: { ekey: string; flip: boolean }) {
               src={tal.avatar_url ?? ''}
               alt=""
               loading="lazy"
-              className="h-full w-32 shrink-0 rounded-xl border border-border object-cover"
+              className="h-full w-32 shrink-0 rounded-lg border-2 border-white/25 object-cover"
             />
           ))}
         </div>
@@ -243,13 +255,13 @@ function EcosystemPreview({ ekey, flip }: { ekey: string; flip: boolean }) {
     const rowA = opportunities.jobs.slice(0, half);
     const rowB = opportunities.jobs.slice(half);
     const card = (j: (typeof opportunities.jobs)[number], idx: number) => (
-      <div key={`${j.role}-${idx}`} className="flex h-full w-48 shrink-0 flex-col justify-center rounded-md border border-border bg-background/40 p-3.5">
+      <div key={`${j.role}-${idx}`} className="flex h-full w-48 shrink-0 flex-col justify-center rounded-lg wash-tint p-3.5">
         <p className="truncate text-sm font-medium">{j.role}</p>
         <p className="mt-1 truncate text-xs text-muted-foreground">{j.company} · {j.location}</p>
         <div className="mt-2.5 flex flex-wrap gap-1.5">
           {j.stack.slice(0, 2).map((s) => <Chip key={s}>{s}</Chip>)}
         </div>
-        <p className="mt-2.5 truncate text-sm font-medium text-primary">{j.pay}</p>
+        <p className="wash-ink mt-2.5 truncate text-sm font-semibold">{j.pay}</p>
       </div>
     );
     return (
@@ -273,10 +285,10 @@ function EcosystemPreview({ ekey, flip }: { ekey: string; flip: boolean }) {
     const rowA = opportunities.projects.slice(0, half);
     const rowB = opportunities.projects.slice(half);
     const card = (p: (typeof opportunities.projects)[number], idx: number) => (
-      <div key={`${p.role}-${idx}`} className="flex h-full w-40 shrink-0 flex-col justify-center rounded-md border border-border bg-background/40 p-3.5">
+      <div key={`${p.role}-${idx}`} className="flex h-full w-40 shrink-0 flex-col justify-center rounded-lg wash-tint p-3.5">
         <p className="truncate text-sm font-medium">{p.role}</p>
         <p className="mt-1 truncate text-xs text-muted-foreground">{p.company}</p>
-        <p className="mt-2.5 truncate text-xs font-medium text-primary">{p.pay}</p>
+        <p className="wash-ink mt-2.5 truncate text-xs font-semibold">{p.pay}</p>
       </div>
     );
     return (
@@ -300,10 +312,10 @@ function EcosystemPreview({ ekey, flip }: { ekey: string; flip: boolean }) {
       <div className={`flex-1 min-h-0 marquee-fade -mx-5 overflow-hidden ${flip ? '-mt-5' : '-mb-5'}`}>
         <div className={`animate-marquee flex h-full w-max gap-2.5 px-5 ${flip ? 'pb-3 pt-5' : 'pb-5 pt-4'}`}>
           {[...courses, ...courses].map((c, idx) => (
-            <div key={`${c.title}-${idx}`} className="relative h-full w-40 shrink-0 overflow-hidden rounded-lg border border-border">
+            <div key={`${c.title}-${idx}`} className="relative h-full w-40 shrink-0 overflow-hidden rounded-lg border-2 border-white/25">
               <img src={c.thumb} alt="" loading="lazy" className="h-full w-full object-cover" />
-              <div className="absolute inset-0 bg-gradient-to-t from-background via-background/10 to-transparent" />
-              <p className="absolute inset-x-0 bottom-0 line-clamp-2 p-3 text-xs font-medium leading-snug">{c.title}</p>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
+              <p className="absolute inset-x-0 bottom-0 line-clamp-2 p-3 text-xs font-medium leading-snug text-white">{c.title}</p>
             </div>
           ))}
         </div>
@@ -316,13 +328,13 @@ function EcosystemPreview({ ekey, flip }: { ekey: string; flip: boolean }) {
       <div className={`flex-1 min-h-0 marquee-fade -mx-5 overflow-hidden ${flip ? '-mt-5' : '-mb-5'}`}>
         <div className={`animate-marquee flex h-full w-max gap-2.5 px-5 ${flip ? 'pb-3 pt-5' : 'pb-5 pt-4'}`}>
           {[...events, ...events].map((ev, idx) => (
-            <div key={`${ev.title}-${idx}`} className="relative h-full w-40 shrink-0 overflow-hidden rounded-lg border border-border">
+            <div key={`${ev.title}-${idx}`} className="relative h-full w-40 shrink-0 overflow-hidden rounded-lg border-2 border-white/25">
               <img src={ev.thumb} alt="" loading="lazy" className="h-full w-full object-cover" />
-              <div className="absolute inset-0 bg-gradient-to-t from-background via-background/10 to-transparent" />
-              <div className="absolute left-1.5 top-1.5 rounded bg-background/80 px-1.5 py-0.5 leading-none">
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
+              <div className="absolute left-1.5 top-1.5 rounded bg-white px-1.5 py-0.5 leading-none text-neutral-900">
                 <span className="tnum block text-xs font-semibold">{ev.day}</span>
               </div>
-              <p className="absolute inset-x-0 bottom-0 line-clamp-2 p-3 text-xs font-medium leading-snug">{ev.title}</p>
+              <p className="absolute inset-x-0 bottom-0 line-clamp-2 p-3 text-xs font-medium leading-snug text-white">{ev.title}</p>
             </div>
           ))}
         </div>
@@ -336,7 +348,7 @@ function EcosystemPreview({ ekey, flip }: { ekey: string; flip: boolean }) {
         {serviceCategories.map((c) => (
           <span
             key={c}
-            className="flex h-fit shrink-0 items-center rounded-full border border-border bg-background/40 px-4 py-2.5 text-xs font-medium"
+            className="wash-chip flex h-fit shrink-0 items-center rounded-full px-4 py-2.5 text-xs font-semibold"
           >
             {c}
           </span>
@@ -352,7 +364,7 @@ function EcosystemPreview({ ekey, flip }: { ekey: string; flip: boolean }) {
         {topics.map((c) => (
           <span
             key={c}
-            className="flex h-fit shrink-0 items-center rounded-full border border-border bg-background/40 px-4 py-2.5 text-xs font-medium"
+            className="wash-chip flex h-fit shrink-0 items-center rounded-full px-4 py-2.5 text-xs font-semibold"
           >
             {c}
           </span>
@@ -368,7 +380,7 @@ function EcosystemPreview({ ekey, flip }: { ekey: string; flip: boolean }) {
    (dashboard, chat, UI kit, hiring funnel) instead of a paragraph describing
    it. Built in markup so it stays crisp, themed and translatable. Surfaces
    reuse the ecosystem preview tokens (bg-background/40 + hairline border). */
-const surface = 'rounded-md border border-border bg-background/40';
+const surface = 'rounded-lg wash-panel';
 
 const prefersReducedMotion = () =>
   typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -426,7 +438,7 @@ function CountUp({ to, run, decimals = 0, suffix = '', duration = 1400, delay = 
 const rise = (on: boolean) =>
   `transition-[opacity,transform] duration-700 ease-out ${on ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0'}`;
 
-function AgencyPreview({ akey }: { akey: string }) {
+function AgencyPreview({ akey, tone }: { akey: string; tone: (typeof tones)[Tone] }) {
   const { t } = useLang();
   const [ref, inView] = useInViewOnce<HTMLDivElement>();
 
@@ -451,7 +463,7 @@ function AgencyPreview({ akey }: { akey: string }) {
         <div className={`${surface} flex min-h-[150px] flex-1 flex-col p-3.5`}>
           <div className="flex items-center justify-between gap-3">
             <span className="text-xs text-muted-foreground">{t('Requests / min', 'Request / menit')}</span>
-            <span className={`tnum text-xs font-medium text-primary transition-opacity delay-1000 duration-500 ${inView ? 'opacity-100' : 'opacity-0'}`}>+38%</span>
+            <span className={`tnum text-xs font-medium ${tone.text} transition-opacity delay-1000 duration-500 ${inView ? 'opacity-100' : 'opacity-0'}`}>+38%</span>
           </div>
           <p className="tnum mt-1 text-lg font-semibold tracking-tight">
             <CountUp to={24.6} decimals={1} suffix="K" run={inView} duration={1600} />
@@ -471,16 +483,16 @@ function AgencyPreview({ akey }: { akey: string }) {
             >
               <defs>
                 <linearGradient id="agency-saas-fill" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.28" />
-                  <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0" />
+                  <stop offset="0%" stopColor={`hsl(var(${tone.cssVar}))`} stopOpacity="0.28" />
+                  <stop offset="100%" stopColor={`hsl(var(${tone.cssVar}))`} stopOpacity="0" />
                 </linearGradient>
               </defs>
               <path d={`${line} L200,60 L0,60 Z`} fill="url(#agency-saas-fill)" />
-              <path d={line} fill="none" stroke="hsl(var(--primary))" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
+              <path d={line} fill="none" stroke={`hsl(var(${tone.cssVar}))`} strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
             </svg>
           </div>
-          <div className="mt-3 flex items-center gap-2 border-t border-border pt-3 text-xs text-muted-foreground">
-            <span className="animate-pulse-soft h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+          <div className="mt-3 flex items-center gap-2 border-t border-foreground/[0.07] pt-3 text-xs text-muted-foreground">
+            <span className="animate-pulse-soft h-1.5 w-1.5 shrink-0 rounded-full bg-eco-green" />
             <span className="truncate"><span className="text-foreground">main</span> · {t('deployed 2m ago', 'dirilis 2 menit lalu')}</span>
           </div>
         </div>
@@ -504,7 +516,7 @@ function AgencyPreview({ akey }: { akey: string }) {
 
   if (akey === 'ai') {
     const typing = (
-      <span className="flex w-fit items-center gap-1 rounded-2xl rounded-bl-sm bg-secondary px-3 py-2.5 animate-fade-up" aria-hidden>
+      <span className="flex w-fit items-center gap-1 rounded-xl rounded-bl-sm bg-secondary px-3 py-2.5 animate-fade-up" aria-hidden>
         {[0, 1, 2].map((d) => (
           <span key={d} className="animate-pulse-soft h-1.5 w-1.5 rounded-full bg-muted-foreground" style={{ animationDelay: `${d * 0.3}s` }} />
         ))}
@@ -512,24 +524,24 @@ function AgencyPreview({ akey }: { akey: string }) {
     );
     return (
       <div ref={ref} className={`${surface} mt-5 flex flex-1 min-h-0 flex-col p-3.5`}>
-        <div className="flex items-center gap-2 border-b border-border pb-3">
-          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/15">
-            <Sparkles className="h-3.5 w-3.5 text-primary" />
+        <div className="flex items-center gap-2 border-b border-foreground/[0.07] pb-3">
+          <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold ${tone.soft} ${tone.text}`}>
+            AI
           </span>
           <span className="truncate text-xs font-medium">{t('Store assistant', 'Asisten toko')}</span>
           <span className="ml-auto flex items-center gap-1.5 text-[11px] text-muted-foreground">
-            <span className="h-1.5 w-1.5 rounded-full bg-primary" /> online
+            <span className="h-1.5 w-1.5 rounded-full bg-eco-green" /> online
           </span>
         </div>
         {/* min-height reserves the final layout so the card never jumps. */}
         <div className="flex min-h-[132px] flex-1 flex-col justify-end gap-2 pt-3 text-xs leading-snug">
           {chatStep >= 1 && (
-            <p className="ml-auto max-w-[85%] animate-fade-up rounded-2xl rounded-br-sm bg-secondary px-3 py-2">
+            <p className="ml-auto max-w-[85%] animate-fade-up rounded-xl rounded-br-sm bg-secondary px-3 py-2">
               {t('Where is order #4821?', 'Pesanan #4821 sudah sampai mana?')}
             </p>
           )}
           {chatStep >= 3 && (
-            <p className="max-w-[85%] animate-fade-up rounded-2xl rounded-bl-sm border border-primary/20 bg-primary/10 px-3 py-2">
+            <p className={`max-w-[85%] animate-fade-up rounded-xl rounded-bl-sm border px-3 py-2 ${tone.chip}`}>
               {t('Out for delivery — arriving tomorrow by 2 PM.', 'Sedang dikirim — estimasi tiba besok pukul 14.00.')}
             </p>
           )}
@@ -540,7 +552,7 @@ function AgencyPreview({ akey }: { akey: string }) {
   }
 
   if (akey === 'creative') {
-    const swatches = ['--primary', '--chart-2', '--chart-3', '--chart-4', '--foreground'];
+    const swatches = ['--eco-blue', '--eco-violet', '--eco-pink', '--eco-orange', '--eco-teal', '--eco-amber'];
     return (
       <div ref={ref} className="mt-5 flex flex-1 min-h-0 flex-col gap-2.5">
         <div className={`${surface} flex flex-1 items-center gap-4 p-3.5`}>
@@ -567,12 +579,12 @@ function AgencyPreview({ akey }: { akey: string }) {
         <div className={`${surface} flex items-center gap-2.5 p-3`}>
           <span className={`rounded-full bg-primary px-3 py-1.5 text-[11px] font-medium text-primary-foreground ${rise(inView)}`} style={{ transitionDelay: '800ms' }}>Button</span>
           <span
-            className={`flex h-5 w-9 shrink-0 items-center rounded-full p-0.5 transition-colors duration-300 ${inView ? 'bg-primary' : 'bg-secondary'}`}
+            className={`flex h-5 w-9 shrink-0 items-center rounded-full p-0.5 transition-colors duration-300 ${inView ? tone.fill : 'bg-secondary'}`}
             style={{ transitionDelay: '1200ms' }}
             aria-hidden
           >
             <span
-              className="h-4 w-4 rounded-full bg-primary-foreground transition-transform duration-300 ease-out"
+              className="h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-300 ease-out"
               style={{ transform: inView ? 'translateX(16px)' : 'translateX(0)', transitionDelay: '1200ms' }}
             />
           </span>
@@ -596,9 +608,9 @@ function AgencyPreview({ akey }: { akey: string }) {
           {stages.map((s, i) => (
             <div key={s.en} className="flex items-center gap-3">
               <span className="w-16 shrink-0 truncate text-xs text-muted-foreground sm:w-20">{t(s.en, s.id)}</span>
-              <div className="h-7 flex-1 overflow-hidden rounded bg-secondary/60">
+              <div className="h-7 flex-1 overflow-hidden rounded bg-secondary">
                 <div
-                  className="flex h-full items-center justify-end rounded border-r-2 border-primary bg-primary/15 pr-2 transition-[width] duration-1000 ease-out"
+                  className={`flex h-full items-center justify-end rounded border-r-2 pr-2 transition-[width] duration-1000 ease-out ${tone.bar}`}
                   style={{
                     width: inView ? `${Math.max(18, (s.n / stages[0].n) * 100)}%` : '0%',
                     transitionDelay: `${i * 160}ms`,
@@ -622,7 +634,7 @@ function AgencyPreview({ akey }: { akey: string }) {
             <p className="truncate text-xs text-muted-foreground">{hire.role}</p>
           </div>
           <span
-            className={`shrink-0 rounded-full border border-primary/25 bg-primary/10 px-2.5 py-1 text-[11px] font-medium text-primary transition-[opacity,transform] duration-500 ease-out ${inView ? 'scale-100 opacity-100' : 'scale-75 opacity-0'}`}
+            className={`shrink-0 rounded-full border px-2.5 py-1 text-[11px] font-medium transition-[opacity,transform] ${tone.chip} ${tone.text} duration-500 ease-out ${inView ? 'scale-100 opacity-100' : 'scale-75 opacity-0'}`}
             style={{ transitionDelay: '1300ms' }}
           >
             {t('Offer accepted', 'Offer diterima')}
@@ -653,16 +665,16 @@ function TestimonialMarquee() {
         {[...testimonials, ...testimonials].map((q, idx) => (
           <figure
             key={`${q.author}-${idx}`}
-            className="relative h-[420px] w-64 shrink-0 overflow-hidden rounded-2xl border border-border sm:h-[480px] sm:w-72"
+            className="relative h-[420px] w-64 shrink-0 overflow-hidden rounded-3xl border border-border sm:h-[480px] sm:w-72"
           >
             <img src={q.photoTall} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
-            <figcaption className="absolute inset-x-0 bottom-0 p-5">
-              <blockquote className="line-clamp-4 text-sm leading-snug text-white/90">
+            {/* Light floating caption instead of a dark gradient over the photo. */}
+            <figcaption className="absolute inset-x-3 bottom-3 rounded-2xl bg-white/90 p-4 backdrop-blur-md">
+              <blockquote className="line-clamp-3 text-sm leading-snug text-neutral-800">
                 “{t(q.textEn, q.textId)}”
               </blockquote>
-              <p className="mt-3 text-sm font-semibold text-white">{q.author}</p>
-              <p className="text-xs text-white/70">{q.role}</p>
+              <p className="mt-2.5 text-sm font-semibold text-neutral-950">{q.author}</p>
+              <p className="text-xs text-neutral-500">{q.role}</p>
             </figcaption>
           </figure>
         ))}
@@ -725,8 +737,12 @@ export default function HomePage() {
   return (
     <AppShell>
       <PageDecor>
+        {/* Dark stage — hero + about render in the `.dark` token scope and sit
+             as one full-bleed block, so the page opens dark and hands over to the
+             light canvas at the ecosystem. */}
+        <div className="dark relative overflow-hidden bg-background">
         {/* 1 ── HERO ------------------------------------------------------- */}
-        <section className="relative flex min-h-screen items-center overflow-hidden">
+        <section className="accent-green relative flex min-h-screen items-center overflow-hidden">
           <img
             src={heroBackground.src}
             alt=""
@@ -755,13 +771,13 @@ export default function HomePage() {
 
             <div className="mt-9 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
               <Link href="/register" className="w-full sm:w-auto">
-                <Button size="lg" className="h-14 w-full gap-1.5 rounded-full px-7 text-base sm:h-11 sm:w-auto sm:text-sm">
-                  {t('Start free', 'Mulai gratis')} <ChevronRight className="h-4 w-4" />
+                <Button size="lg" className="btn-gradient h-14 w-full gap-1.5 rounded-full px-7 text-base font-semibold text-white sm:h-11 sm:w-auto sm:text-sm">
+                  {t('Start free', 'Mulai gratis')}
                 </Button>
               </Link>
               <Link href="/talents" className="w-full sm:w-auto">
                 <Button size="lg" className="h-14 w-full gap-1.5 rounded-full bg-foreground px-7 text-base text-background hover:bg-foreground/90 sm:h-11 sm:w-auto sm:text-sm">
-                  {t('Find Talent', 'Cari Talent')} <ChevronRight className="h-4 w-4" />
+                  {t('Find Talent', 'Cari Talent')}
                 </Button>
               </Link>
             </div>
@@ -774,29 +790,31 @@ export default function HomePage() {
             <div>
               <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">{t('About', 'Tentang')}</p>
               <h2 className="mt-2 font-display text-2xl font-semibold tracking-tight sm:text-3xl">
-                {t('What is masmasit?', 'Apa itu masmasit?')}
+                {t('What is MasmasIT?', 'Apa itu MasmasIT?')}
               </h2>
             </div>
             <div>
               <p className="font-display text-xl font-semibold leading-snug tracking-tight text-balance sm:text-2xl">
                 {t(
-                  'masmasit is the home for Indonesian IT professionals to build their career and business.',
-                  'masmasit adalah rumah bagi praktisi IT Indonesia untuk membangun karier dan bisnis mereka.'
+                  'MasmasIT is the home for Indonesian IT professionals to build their career and business.',
+                  'MasmasIT adalah rumah bagi praktisi IT Indonesia untuk membangun karier dan bisnis mereka.'
                 )}
               </p>
               <p className="mt-4 text-sm leading-relaxed text-muted-foreground text-pretty sm:text-base">
                 {t(
-                  'From job listings and freelance projects, to courses, events, talent bookings, and professional services — masmasit brings everything Indonesian IT practitioners need into one connected platform.',
-                  'Dari lowongan kerja dan proyek freelance, hingga kursus, event, booking talent, dan layanan profesional — masmasit menyatukan semua kebutuhan praktisi IT Indonesia dalam satu platform yang terhubung.'
+                  'From job listings and freelance projects, to courses, events, talent bookings, and professional services — MasmasIT brings everything Indonesian IT practitioners need into one connected platform.',
+                  'Dari lowongan kerja dan proyek freelance, hingga kursus, event, booking talent, dan layanan profesional — MasmasIT menyatukan semua kebutuhan praktisi IT Indonesia dalam satu platform yang terhubung.'
                 )}
               </p>
             </div>
           </div>
         </section>
 
+        </div>
+
         {/* 2 ── EXPLORE THE ECOSYSTEM -------------------------------------- */}
         <section className="relative overflow-hidden bg-background">
-          <div className="relative mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
+          <div className="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
             <SectionHead
               eyebrow={t('Ecosystem', 'Ekosistem')}
               title={t('Everything an Indonesian IT professional needs', 'Semua yang dibutuhkan praktisi IT Indonesia')}
@@ -808,6 +826,7 @@ export default function HomePage() {
                 const lead = i < 1;
                 const flip = !lead && i % 2 === 0;
                 const span = `w-[85vw] max-w-[360px] shrink-0 snap-start sm:w-auto sm:max-w-none sm:shrink sm:snap-align-none ${lead ? 'sm:col-span-2 lg:col-span-6' : 'lg:col-span-2'}`;
+                const tone = tones[e.tone];
                 const header = (
                   <div className={flip ? 'mt-4' : ''}>
                     <p className={`font-display leading-snug tracking-tight ${lead ? 'text-2xl sm:text-3xl' : 'text-xl sm:text-2xl'}`}>
@@ -818,7 +837,7 @@ export default function HomePage() {
                 );
                 const preview = <EcosystemPreview ekey={e.key} flip={flip} />;
                 const inner = (
-                  <div className={`group flex h-full flex-col rounded-lg border border-border bg-card transition-colors hover:bg-secondary ${lead ? 'min-h-[320px] p-6' : 'min-h-[380px] p-5'}`}>
+                  <div className={`group flex h-full flex-col overflow-hidden rounded-xl transition-[box-shadow,transform] duration-300 hover:-translate-y-0.5 hover:shadow-card-hover ${tone.wash} ${lead ? 'min-h-[320px] p-6' : 'min-h-[380px] p-5'}`}>
                     {flip ? <>{preview}{header}</> : <>{header}{preview}</>}
                   </div>
                 );
@@ -833,7 +852,7 @@ export default function HomePage() {
         {/* 2b ── AGENCY — sibling of the ecosystem grid: same card chrome,
              two-tone headline and live preview, in a 4+2 / 2+4 bento. ------ */}
         <section className="relative overflow-hidden bg-background">
-          <div className="relative mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
+          <div className="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
             <div className="mb-8 flex items-end justify-between gap-6">
               <div className="max-w-2xl">
                 <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">Agency</p>
@@ -847,9 +866,9 @@ export default function HomePage() {
                   )}
                 </p>
               </div>
-              <a href={waLink(t("Hi masmasit, I'd like to talk about a project.", 'Halo masmasit, saya ingin diskusi proyek.'))} target="_blank" rel="noreferrer" className="hidden shrink-0 sm:block">
+              <a href={waLink(t("Hi MasmasIT, I'd like to talk about a project.", 'Halo MasmasIT, saya ingin diskusi proyek.'))} target="_blank" rel="noreferrer" className="hidden shrink-0 sm:block">
                 <Button size="lg" className="gap-1.5 rounded-full px-6">
-                  {t('Talk to us', 'Hubungi kami')} <ArrowUpRight className="h-4 w-4" />
+                  {t('Talk to us', 'Hubungi kami')}
                 </Button>
               </a>
             </div>
@@ -863,24 +882,19 @@ export default function HomePage() {
                   rel="noreferrer"
                   className={`w-[85vw] max-w-[360px] shrink-0 snap-start sm:w-auto sm:max-w-none sm:shrink ${c.wide ? 'lg:col-span-4' : 'lg:col-span-2'}`}
                 >
-                  <div className="group flex h-full min-h-[400px] flex-col rounded-lg border border-border bg-card p-5 transition-colors hover:bg-secondary">
-                    <p className="flex items-center gap-2 text-xs font-medium uppercase tracking-widest text-muted-foreground">
-                      <c.icon className="h-3.5 w-3.5 text-primary" strokeWidth={2} /> {t(c.tagEn, c.tagId)}
-                    </p>
+                  <div className={`group flex h-full min-h-[400px] flex-col overflow-hidden rounded-xl p-5 transition-[box-shadow,transform] duration-300 hover:-translate-y-0.5 hover:shadow-card-hover ${tones[c.tone].wash}`}>
+                    <p className="wash-label">{t(c.tagEn, c.tagId)}</p>
                     <p className="mt-3 font-display text-xl leading-snug tracking-tight text-balance sm:text-2xl">
                       <span className="font-normal text-muted-foreground">{t(c.leadEn, c.leadId)} </span>
                       <span className="font-bold text-foreground">{t(c.boldEn, c.boldId)}</span>
                     </p>
 
-                    <AgencyPreview akey={c.key} />
+                    <AgencyPreview akey={c.key} tone={tones[c.tone]} />
 
-                    <div className="mt-4 flex items-center justify-between gap-3 border-t border-border pt-4 text-xs">
-                      <span className="flex items-center gap-1.5 text-muted-foreground">
-                        <CalendarClock className="h-3.5 w-3.5" /> {t(c.metaEn, c.metaId)}
-                      </span>
-                      <span className="flex items-center gap-1 font-medium text-foreground">
+                    <div className="mt-4 flex items-center justify-between gap-3 border-t border-white/20 pt-4 text-xs">
+                      <span className="text-muted-foreground">{t(c.metaEn, c.metaId)}</span>
+                      <span className="font-medium text-foreground underline decoration-white/40 underline-offset-4 transition-colors group-hover:decoration-white">
                         {t('Talk to us', 'Hubungi kami')}
-                        <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
                       </span>
                     </div>
                   </div>
@@ -888,9 +902,9 @@ export default function HomePage() {
               ))}
             </div>
 
-            <a href={waLink(t("Hi masmasit, I'd like to talk about a project.", 'Halo masmasit, saya ingin diskusi proyek.'))} target="_blank" rel="noreferrer" className="mt-6 block sm:hidden">
+            <a href={waLink(t("Hi MasmasIT, I'd like to talk about a project.", 'Halo MasmasIT, saya ingin diskusi proyek.'))} target="_blank" rel="noreferrer" className="mt-6 block sm:hidden">
               <Button size="lg" className="h-14 w-full gap-1.5 rounded-full text-base">
-                {t('Talk to us', 'Hubungi kami')} <ArrowUpRight className="h-4 w-4" />
+                {t('Talk to us', 'Hubungi kami')}
               </Button>
             </a>
           </div>
@@ -905,13 +919,13 @@ export default function HomePage() {
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-base text-muted-foreground text-pretty sm:text-lg">
               {t(
-                'Hundreds of Indonesian IT professionals already build their career and business with masmasit.',
-                'Ratusan praktisi IT Indonesia sudah membangun karier dan bisnis mereka bersama masmasit.'
+                'Hundreds of Indonesian IT professionals already build their career and business with MasmasIT.',
+                'Ratusan praktisi IT Indonesia sudah membangun karier dan bisnis mereka bersama MasmasIT.'
               )}
             </p>
             <Link href="/register" className="mt-8 inline-block">
               <Button size="lg" className="gap-1.5 rounded-full px-8">
-                {t('Join now', 'Gabung sekarang')} <ArrowRight className="h-4 w-4" />
+                {t('Join now', 'Gabung sekarang')}
               </Button>
             </Link>
           </div>
@@ -924,22 +938,22 @@ export default function HomePage() {
         {/* 11c ── LIVE ACTIVITY — a moving feed proves the platform is alive;
              real counters join in once they're worth showing. ------------- */}
         <section className="relative bg-background">
-          <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
+          <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
             <SectionHead
               eyebrow={t('Live activity', 'Aktivitas terkini')}
-              title={t('Happening on masmasit right now', 'Yang sedang terjadi di masmasit')}
+              title={t('Happening on MasmasIT right now', 'Yang sedang terjadi di MasmasIT')}
               desc={t('Jobs, projects, bookings and new members — as they happen.', 'Lowongan, proyek, booking, dan member baru — saat itu juga.')}
               href="/activity"
               cta={t('See all activity', 'Lihat semua aktivitas')}
             />
 
             <div className="grid gap-4 lg:grid-cols-6">
-              <div className="flex flex-col overflow-hidden rounded-lg border border-border bg-card lg:col-span-4">
-                <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-3.5">
+              <div className="wash wash-teal flex flex-col overflow-hidden rounded-xl lg:col-span-4">
+                <div className="flex items-center justify-between gap-3 border-b border-white/15 px-5 py-3.5">
                   <span className="flex items-center gap-2 text-xs font-medium uppercase tracking-widest text-muted-foreground">
                     <span className="relative flex h-2 w-2">
-                      <span className="absolute inset-0 animate-ping rounded-full bg-primary/60" />
-                      <span className="relative h-2 w-2 rounded-full bg-primary" />
+                      <span className="absolute inset-0 animate-ping rounded-full bg-white/60" />
+                      <span className="relative h-2 w-2 rounded-full bg-white" />
                     </span>
                     Live
                   </span>
@@ -947,9 +961,9 @@ export default function HomePage() {
                 </div>
 
                 {showLiveStats && live && (
-                  <div className="grid grid-cols-2 gap-px border-b border-border bg-border sm:grid-cols-4">
+                  <div className="grid grid-cols-2 gap-px border-b border-white/15 bg-white/15 sm:grid-cols-4">
                     {liveActivityLabels.map((a, i) => (
-                      <div key={a.en} className="bg-card px-5 py-4">
+                      <div key={a.en} className="bg-black/10 px-5 py-4">
                         <p className="tnum font-display text-2xl font-semibold tracking-tight">{live[i].toLocaleString('id-ID')}</p>
                         <p className="mt-0.5 truncate text-xs text-muted-foreground">{t(a.en, a.id)}</p>
                       </div>
@@ -960,12 +974,12 @@ export default function HomePage() {
                 <div className="group marquee-fade-y relative h-[340px] overflow-hidden sm:h-[380px]">
                   <ul className="animate-marquee-y group-hover:[animation-play-state:paused]">
                     {[...activityFeed, ...activityFeed].map((a, idx) => (
-                      <li key={`${a.who}-${idx}`} aria-hidden={idx >= activityFeed.length} className="flex items-center gap-3.5 border-b border-border px-5 py-3.5">
+                      <li key={`${a.who}-${idx}`} aria-hidden={idx >= activityFeed.length} className="flex items-center gap-3.5 border-b border-white/15 px-5 py-3.5">
                         {a.avatar ? (
-                          <img src={a.avatar} alt="" loading="lazy" className="h-9 w-9 shrink-0 rounded-full border border-border object-cover" />
+                          <img src={a.avatar} alt="" loading="lazy" className="h-9 w-9 shrink-0 rounded-full border-2 border-white/30 object-cover" />
                         ) : (
-                          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border bg-secondary">
-                            <a.icon className="h-4 w-4 text-primary" strokeWidth={1.75} />
+                          <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-xs font-semibold ${tones[a.tone].text}`}>
+                            {initials(a.who)}
                           </span>
                         )}
                         <p className="min-w-0 flex-1 text-sm leading-snug text-muted-foreground">
@@ -979,7 +993,7 @@ export default function HomePage() {
                 </div>
               </div>
 
-              <div className="flex flex-col rounded-lg border border-border bg-card p-5 lg:col-span-2">
+              <div className="wash wash-orange flex flex-col rounded-xl p-5 lg:col-span-2">
                 <p className="font-display text-xl leading-snug tracking-tight text-balance sm:text-2xl">
                   <span className="font-normal text-muted-foreground">{t('Your move next,', 'Giliranmu berikutnya,')} </span>
                   <span className="font-bold text-foreground">{t('start in a minute.', 'mulai dalam semenit.')}</span>
@@ -989,16 +1003,13 @@ export default function HomePage() {
                     <Link
                       key={a.href}
                       href={a.href}
-                      className="group flex flex-1 items-center gap-3.5 rounded-md border border-border bg-background/40 p-3.5 transition-colors hover:border-muted-foreground/30 hover:bg-secondary"
+                      className="wash-deep group flex flex-1 items-center gap-3.5 rounded-lg p-3.5 transition-transform duration-200 hover:-translate-y-0.5"
                     >
-                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-primary/10">
-                        <a.icon className="h-4 w-4 text-primary" strokeWidth={1.75} />
-                      </span>
                       <span className="min-w-0 flex-1">
-                        <span className="block text-sm font-medium">{t(a.en, a.id)}</span>
+                        <span className="block text-[11px] font-semibold uppercase tracking-widest text-white/75">{t(a.forEn, a.forId)}</span>
+                        <span className="mt-1 block text-sm font-medium">{t(a.en, a.id)}</span>
                         <span className="block text-xs leading-snug text-muted-foreground">{t(a.subEn, a.subId)}</span>
                       </span>
-                      <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-foreground" />
                     </Link>
                   ))}
                 </div>
@@ -1010,7 +1021,7 @@ export default function HomePage() {
         {/* 12 ── FINAL CTA — full-bleed band that bookends the hero artwork.
              Pitch + one primary action on the left, talk-first channels on
              the right; stacks to a single column on mobile. */}
-        <section className="relative overflow-hidden border-t border-border bg-background">
+        <section className="dark accent-green relative overflow-hidden bg-background">
           <img
             src={heroBackground.src}
             alt=""
@@ -1024,7 +1035,7 @@ export default function HomePage() {
             style={{ background: 'linear-gradient(to right, hsl(var(--background) / 0.35), hsl(var(--background) / 0.85) 60%, hsl(var(--background) / 0.95))' }}
           />
 
-          <div className="relative mx-auto grid max-w-6xl items-center gap-10 px-4 py-14 sm:px-6 sm:py-16 md:grid-cols-[1.1fr_0.9fr] md:gap-10 lg:gap-16 lg:px-8">
+          <div className="relative mx-auto grid max-w-7xl items-center gap-10 px-4 py-14 sm:px-6 sm:py-16 md:grid-cols-[1.1fr_0.9fr] md:gap-10 lg:gap-16 lg:px-8">
             <div className="text-center md:text-left">
               <h2 className="text-4xl font-extrabold leading-[1.05] tracking-tighter text-balance sm:text-5xl">
                 {t('Ready to join?', 'Siap bergabung?')}
@@ -1036,8 +1047,8 @@ export default function HomePage() {
                 )}
               </p>
               <Link href="/register" className="mx-auto mt-7 block w-full sm:w-fit md:mx-0">
-                <Button size="lg" className="h-14 w-full gap-1.5 rounded-full px-8 text-base sm:h-12 sm:w-auto">
-                  {t('Join now — it’s free', 'Gabung sekarang — gratis')} <ArrowRight className="h-4 w-4" />
+                <Button size="lg" className="btn-gradient h-14 w-full gap-1.5 rounded-full px-8 text-base font-semibold text-white sm:h-12 sm:w-auto">
+                  {t('Join now — it’s free', 'Gabung sekarang — gratis')}
                 </Button>
               </Link>
             </div>
@@ -1047,25 +1058,20 @@ export default function HomePage() {
                 {t('Prefer to talk first?', 'Mau ngobrol dulu?')}
               </p>
               <div className="grid gap-px overflow-hidden rounded-lg border border-border bg-border">
-                <a href={waLink(t("Hi masmasit, I'd like to know more.", 'Halo masmasit, saya ingin tahu lebih lanjut.'))} target="_blank" rel="noreferrer" className="group flex items-center gap-3 bg-card p-4 transition-colors hover:bg-secondary">
-                  <MessageCircle className="h-5 w-5 shrink-0 text-primary" strokeWidth={1.75} />
+                <a href={waLink(t("Hi MasmasIT, I'd like to know more.", 'Halo MasmasIT, saya ingin tahu lebih lanjut.'))} target="_blank" rel="noreferrer" className="group flex items-center gap-3 bg-card p-4 transition-colors hover:bg-secondary">
                   <span className="min-w-0 flex-1">
                     <span className="block text-sm font-medium">WhatsApp</span>
                     <span className="block truncate text-xs text-muted-foreground">{t('Usually replies within an hour', 'Biasanya dibalas dalam 1 jam')}</span>
                   </span>
-                  <ArrowUpRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-foreground" />
                 </a>
                 <a href="https://calendly.com" target="_blank" rel="noreferrer" className="group flex items-center gap-3 bg-card p-4 transition-colors hover:bg-secondary">
-                  <CalendarClock className="h-5 w-5 shrink-0 text-primary" strokeWidth={1.75} />
                   <span className="min-w-0 flex-1">
                     <span className="block text-sm font-medium">{t('Schedule a call', 'Jadwalkan panggilan')}</span>
                     <span className="block truncate text-xs text-muted-foreground">{t('30 min · Calendly', '30 menit · Calendly')}</span>
                   </span>
-                  <ArrowUpRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-foreground" />
                 </a>
                 <div className="group relative flex items-center gap-3 bg-card p-4 transition-colors hover:bg-secondary">
                   <a href={`mailto:${CONTACT_EMAIL}`} className="absolute inset-0" aria-label={t('Email us', 'Kirim email')} />
-                  <Mail className="h-5 w-5 shrink-0 text-primary" strokeWidth={1.75} />
                   <span className="min-w-0 flex-1">
                     <span className="block text-sm font-medium">{t('Email us', 'Kirim email')}</span>
                     <span className="block truncate text-xs text-muted-foreground">{CONTACT_EMAIL}</span>
@@ -1074,9 +1080,9 @@ export default function HomePage() {
                     type="button"
                     onClick={copyEmail}
                     aria-label={t('Copy email address', 'Salin alamat email')}
-                    className="relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:border-muted-foreground/40 hover:text-foreground"
+                    className="relative z-10 h-8 shrink-0 rounded-md border border-border px-3 text-xs font-medium text-muted-foreground transition-colors hover:border-muted-foreground/40 hover:text-foreground"
                   >
-                    {copied ? <Check className="h-3.5 w-3.5 text-primary" /> : <Copy className="h-3.5 w-3.5" />}
+                    {copied ? t('Copied', 'Disalin') : t('Copy', 'Salin')}
                   </button>
                 </div>
               </div>
