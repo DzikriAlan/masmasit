@@ -1,6 +1,15 @@
 import '@/shared/styles/globals.css';
+// Self-hosted via npm instead of next/font/google — the latter fetches font
+// files from fonts.gstatic.com at compile time, which hangs indefinitely on
+// networks that block that host (seen in dev: endless "Retrying 1/3...").
+import '@fontsource/inter/400.css';
+import '@fontsource/inter/500.css';
+import '@fontsource/inter/600.css';
+import '@fontsource/inter/700.css';
+import '@fontsource/inter/800.css';
+import '@fontsource/space-grotesk/600.css';
+import '@fontsource/space-grotesk/700.css';
 import type { Metadata } from 'next';
-import { Inter, Space_Grotesk } from 'next/font/google';
 import { ThemeProvider } from '@/components/theme-provider';
 import { AuthProvider } from '@/components/auth-provider';
 import { LanguageProvider } from '@/components/language-provider';
@@ -8,9 +17,6 @@ import { QueryProvider } from '@/components/query-provider';
 import { Toaster } from '@/components/ui/sonner';
 
 export const dynamic = 'force-dynamic';
-
-const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
-const spaceGrotesk = Space_Grotesk({ subsets: ['latin'], variable: '--font-display' });
 
 export const metadata: Metadata = {
   title: 'masmasit — Hire Experts & Build Digital Solutions',
@@ -36,7 +42,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
-      <body className={`${inter.className} ${spaceGrotesk.variable} antialiased`}>
+      <body className="antialiased">
         <QueryProvider>
           <ThemeProvider>
             <LanguageProvider>
