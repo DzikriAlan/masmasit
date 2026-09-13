@@ -3,9 +3,18 @@
 @tailwind utilities;
 
 /* ==========================================================================
-   Design system — neutral foundation, one primary, hairline borders.
-   Deliberately no glow blobs, no mesh gradients, no glassmorphism:
-   hierarchy comes from typography, spacing and 1px borders.
+   Design system — neutral canvas, colourful ecosystem.
+
+   MasmasIT brings many things together, so colour carries meaning instead
+   of one brand hue doing everything:
+   - Actions are ink (black on the light canvas, white inside dark stages),
+     so they never compete with content.
+   - Every area of the ecosystem owns an identity colour (--eco-*): Jobs
+     blue, Projects violet, Talents orange, Learn teal, Events pink,
+     Services amber, Community green. Cards, feeds, icons and data viz reuse
+     them, so the page reads as many products in one place.
+   - :root is light; any subtree with `.dark` (hero/about stage, closing
+     CTA, footer) re-declares the tokens, so components need no variants.
    ========================================================================== */
 
 @layer base {
@@ -14,41 +23,126 @@
     --font-display: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
     --font-brand: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
 
-    --background: 220 8% 5%;
-    --foreground: 220 12% 96%;
-    --card: 220 8% 7.5%;
-    --card-foreground: 220 12% 96%;
-    --popover: 220 9% 8%;
-    --popover-foreground: 220 12% 96%;
-    --primary: 152 56% 50%;
-    --primary-foreground: 220 10% 6%;
-    --secondary: 220 7% 13%;
-    --secondary-foreground: 220 12% 92%;
-    --muted: 220 7% 12%;
-    --muted-foreground: 220 6% 60%;
-    --accent: 220 7% 14%;
-    --accent-foreground: 220 12% 96%;
-    --destructive: 0 65% 55%;
-    --destructive-foreground: 220 12% 96%;
-    --border: 220 7% 15%;
-    --input: 220 7% 15%;
-    --ring: 152 56% 50%;
-    --chart-1: 152 56% 50%;
-    --chart-2: 205 70% 58%;
-    --chart-3: 38 85% 60%;
-    --chart-4: 265 50% 62%;
-    --chart-5: 0 65% 58%;
+    --background: 240 14% 98%;
+    --foreground: 240 10% 8%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 8%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 8%;
+    --primary: 240 10% 8%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 240 8% 95%;
+    --secondary-foreground: 240 10% 10%;
+    --muted: 240 8% 95%;
+    --muted-foreground: 240 5% 40%;
+    --accent: 240 8% 94%;
+    --accent-foreground: 240 10% 8%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 240 8% 90%;
+    --input: 240 8% 87%;
+    --ring: 217 91% 53%;
     --radius: 0.5rem;
 
-    --success: 152 56% 46%;
-    --success-foreground: 220 12% 96%;
+    /* Ecosystem identity colours — tuned to hold up as text on white. */
+    --eco-blue: 217 91% 50%;
+    --eco-violet: 262 78% 57%;
+    --eco-orange: 20 92% 50%;
+    --eco-teal: 181 82% 31%;
+    --eco-pink: 330 76% 51%;
+    --eco-amber: 35 92% 45%;
+    --eco-green: 148 66% 34%;
 
-    /* Decorative backlight glow behind the hero. */
-    --backlight: 152 56% 50%;
-    --backlight-boost: 1;
-    --hero-backlight-boost: 0.5;
-    --warning: 38 88% 55%;
-    --warning-foreground: 220 10% 6%;
+    --chart-1: var(--eco-blue);
+    --chart-2: var(--eco-violet);
+    --chart-3: var(--eco-orange);
+    --chart-4: var(--eco-pink);
+    --chart-5: var(--eco-teal);
+
+    --success: 148 66% 34%;
+    --success-foreground: 0 0% 100%;
+    --warning: 35 92% 45%;
+    --warning-foreground: 0 0% 100%;
+
+    /* Interactive cards lift on hover (border + shadow) instead of greying. */
+    --card-hover: 0 0% 100%;
+    --border-strong: 240 6% 78%;
+    --shadow-card: 0 1px 2px hsl(240 20% 10% / 0.05);
+    --shadow-card-hover: 0 1px 2px hsl(240 20% 10% / 0.04), 0 14px 32px -14px hsl(240 20% 10% / 0.18);
+
+    /* Decorative layer (page-decor.tsx). Glows read as stains on a light
+       canvas, so they stay off; dark stages carry the green artwork. */
+    --backlight: 262 78% 60%;
+    --backlight-boost: 0;
+    --hero-backlight-boost: 0;
+    --particle: 240 10% 20%;
+    /* Starfield dots read as dust on the light canvas. */
+    --particle-opacity: 0;
+  }
+
+  .dark {
+    --background: 240 10% 4.5%;
+    --foreground: 0 0% 98%;
+    --card: 240 8% 7.5%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 8% 8%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 240 10% 8%;
+    --secondary: 240 6% 13%;
+    --secondary-foreground: 0 0% 94%;
+    --muted: 240 6% 12%;
+    --muted-foreground: 240 5% 64%;
+    --accent: 240 6% 14%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 72% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 6% 16%;
+    --input: 240 6% 16%;
+    --ring: 213 94% 68%;
+
+    --eco-blue: 213 94% 68%;
+    --eco-violet: 258 90% 76%;
+    --eco-orange: 27 96% 62%;
+    --eco-teal: 174 72% 52%;
+    --eco-pink: 330 86% 70%;
+    --eco-amber: 43 96% 60%;
+    --eco-green: 142 69% 58%;
+
+    /* Re-point here: var() refs resolve where declared, not where used. */
+    --chart-1: var(--eco-blue);
+    --chart-2: var(--eco-violet);
+    --chart-3: var(--eco-orange);
+    --chart-4: var(--eco-pink);
+    --chart-5: var(--eco-teal);
+
+    --success: 142 69% 58%;
+    --success-foreground: 240 10% 8%;
+    --warning: 43 96% 60%;
+    --warning-foreground: 240 10% 8%;
+
+    --card-hover: 240 6% 11%;
+    --border-strong: 240 5% 26%;
+    --shadow-card: 0 0 0 0 transparent;
+    --shadow-card-hover: 0 0 0 0 transparent;
+
+    --particle: 240 20% 92%;
+    --particle-opacity: 1;
+
+    /* Tokens are inherited, but descendants keep the already-computed text
+       colour — reset it at the scope boundary. */
+    color: hsl(var(--foreground));
+    color-scheme: dark;
+  }
+
+  /* Brand green for the hero and the closing CTA/footer stage: those keep
+     MasmasIT's original green artwork and green primary action, while the
+     light canvas in between stays multi-colour. Declared after .dark so it
+     wins when both classes sit on the same element. */
+  .accent-green {
+    --primary: 146 78% 42%;
+    --primary-foreground: 150 40% 6%;
+    --ring: 146 78% 42%;
   }
 }
 
@@ -128,6 +222,102 @@
   .marquee-fade-y {
     -webkit-mask-image: linear-gradient(to bottom, transparent, black 14%, black 86%, transparent);
     mask-image: linear-gradient(to bottom, transparent, black 14%, black 86%, transparent);
+  }
+
+  /* Solid colour cards (ecosystem, agency, live activity). One recipe — a
+     saturated fill with a gentle diagonal falloff — and a different hue per
+     card. Each hue is dark enough to carry white text, and the card
+     re-scopes the text tokens: headlines go white, secondary copy becomes a
+     light tint of the card's own hue. */
+  .wash {
+    background-image: linear-gradient(
+      135deg,
+      hsl(var(--wash-h) var(--wash-s) calc(var(--wash-l) + 6%)) 0%,
+      hsl(var(--wash-h) var(--wash-s) var(--wash-l)) 55%,
+      hsl(var(--wash-h) var(--wash-s) calc(var(--wash-l) - 5%)) 100%
+    );
+    --foreground: 0 0% 100%;
+    --muted-foreground: var(--wash-h) 60% 95%;
+    --border: var(--wash-h) 55% 72%;
+    color: hsl(var(--foreground));
+  }
+  .wash-blue { --wash-h: 221; --wash-s: 90%; --wash-l: 52%; }
+  .wash-violet { --wash-h: 262; --wash-s: 78%; --wash-l: 56%; }
+  .wash-orange { --wash-h: 17; --wash-s: 94%; --wash-l: 50%; }
+  .wash-teal { --wash-h: 182; --wash-s: 92%; --wash-l: 32%; }
+  .wash-pink { --wash-h: 331; --wash-s: 84%; --wash-l: 51%; }
+  .wash-amber { --wash-h: 36; --wash-s: 98%; --wash-l: 43%; }
+  .wash-green { --wash-h: 148; --wash-s: 76%; --wash-l: 34%; }
+
+  /* Title label on a colour card: translucent white pill, white type. */
+  .wash-label {
+    display: inline-flex;
+    width: fit-content;
+    border-radius: 9999px;
+    background-color: hsl(0 0% 100% / 0.2);
+    box-shadow: inset 0 0 0 1px hsl(0 0% 100% / 0.25);
+    padding: 0.25rem 0.625rem;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    line-height: 1rem;
+    text-transform: uppercase;
+    color: #fff;
+  }
+
+  /* White panel inside a colour card. Restores the ink tokens so data
+     (jobs, charts, chat, funnels) reads exactly as on the light canvas. */
+  .wash-panel {
+    --foreground: 240 10% 8%;
+    --muted-foreground: 240 5% 40%;
+    --border: 240 8% 90%;
+    color: hsl(var(--foreground));
+    background-color: hsl(0 0% 100% / 0.97);
+    box-shadow: 0 1px 2px hsl(240 30% 10% / 0.08), 0 6px 18px -10px hsl(240 30% 10% / 0.25);
+  }
+
+  /* Tonal pieces inside a colour card. They read the card's --wash-* values,
+     so each card's inner pieces carry its own hue without per-card classes.
+     - wash-tint / wash-tag / wash-ink: light inner cards (jobs, projects) with
+       hue-tinted tags and prices. Hairline only — they ride the marquees,
+       which stay shadow-free.
+     - wash-deep / wash-chip: deeper shade of the card colour, white type
+       (service/community chips, the "your move next" actions). */
+  .wash-tint {
+    --foreground: 240 10% 8%;
+    --muted-foreground: var(--wash-h) 14% 38%;
+    --border: var(--wash-h) 55% 86%;
+    color: hsl(var(--foreground));
+    background-color: hsl(var(--wash-h) 90% 96.5%);
+    box-shadow: inset 0 0 0 1px hsl(var(--wash-h) 70% 90%);
+  }
+  .wash-tag {
+    background-color: hsl(var(--wash-h) 85% 89%);
+    color: hsl(var(--wash-h) 75% 28%);
+  }
+  .wash-ink {
+    color: hsl(var(--wash-h) 80% 38%);
+  }
+  .wash-deep,
+  .wash-chip {
+    --foreground: 0 0% 100%;
+    --muted-foreground: var(--wash-h) 70% 92%;
+    color: hsl(var(--foreground));
+    background-color: hsl(var(--wash-h) var(--wash-s) calc(var(--wash-l) - 11%));
+    box-shadow: inset 0 0 0 1px hsl(0 0% 100% / 0.16);
+  }
+
+  /* Primary action: a single-hue blue gradient (deep royal → bright azure)
+     with white type. The fill slides on hover instead of darkening. */
+  .btn-gradient {
+    color: #fff;
+    background-image: linear-gradient(95deg, hsl(228 88% 48%) 0%, hsl(218 92% 52%) 50%, hsl(207 92% 50%) 100%);
+    background-size: 140% 100%;
+    background-position: 0% 50%;
+    transition: background-position 0.5s ease, transform 0.2s ease;
+  }
+  .btn-gradient:hover {
+    background-position: 100% 50%;
   }
 
   /* Hairline rule that fades at both ends — used as a section divider. */
@@ -214,6 +404,6 @@ html { scroll-behavior: smooth; }
 ::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground) / 0.5); }
 
 ::selection {
-  background: hsl(var(--primary) / 0.25);
+  background: hsl(var(--eco-blue) / 0.22);
   color: hsl(var(--foreground));
 }

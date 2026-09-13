@@ -16,6 +16,10 @@ const config: Config = {
         'gradient-conic':
           'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
       },
+      boxShadow: {
+        card: 'var(--shadow-card)',
+        'card-hover': 'var(--shadow-card-hover)',
+      },
       borderRadius: {
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',
@@ -60,6 +64,17 @@ const config: Config = {
           DEFAULT: 'hsl(var(--warning))',
           foreground: 'hsl(var(--warning-foreground))',
         },
+        eco: {
+          blue: 'hsl(var(--eco-blue) / <alpha-value>)',
+          violet: 'hsl(var(--eco-violet) / <alpha-value>)',
+          orange: 'hsl(var(--eco-orange) / <alpha-value>)',
+          teal: 'hsl(var(--eco-teal) / <alpha-value>)',
+          pink: 'hsl(var(--eco-pink) / <alpha-value>)',
+          amber: 'hsl(var(--eco-amber) / <alpha-value>)',
+          green: 'hsl(var(--eco-green) / <alpha-value>)',
+        },
+        'card-hover': 'hsl(var(--card-hover))',
+        'border-strong': 'hsl(var(--border-strong))',
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',

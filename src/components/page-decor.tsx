@@ -33,6 +33,12 @@ function SpaceField() {
 
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+    // Particle ink comes from the theme token so the field stays visible
+    // on the light canvas (dark dots) and inside dark scopes (light dots).
+    const rootStyle = getComputedStyle(document.documentElement);
+    const particle = rootStyle.getPropertyValue('--particle').trim() || '220 20% 90%';
+    const particleOpacity = parseFloat(rootStyle.getPropertyValue('--particle-opacity')) || 0;
+
     let width = 0;
     let height = 0;
     let particles: Particle[] = [];
@@ -71,7 +77,7 @@ function SpaceField() {
       for (const p of particles) {
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.r * p.z, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(226, 232, 240, ${0.12 + p.z * 0.32})`;
+        ctx.fillStyle = `hsl(${particle} / ${(0.12 + p.z * 0.32) * particleOpacity})`;
         ctx.fill();
       }
     };
