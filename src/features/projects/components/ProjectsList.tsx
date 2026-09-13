@@ -16,6 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { loginHref } from '@/shared/lib/utils';
 
 export default function ProjectsList() {
   const { t } = useLang();
@@ -41,7 +42,7 @@ export default function ProjectsList() {
   }, [search, statusFilter, setGetProjects]);
 
   const saveProject = async () => {
-    if (!user) { router.push('/login'); return; }
+    if (!user) { router.push(loginHref()); return; }
     try {
       await storeProjects.mutateAsync({
         user_id: user.id,
@@ -93,7 +94,7 @@ export default function ProjectsList() {
             <h1 className="font-display text-3xl font-bold">{t('Project Portal', 'Portal Proyek')}</h1>
             <p className="mt-1 text-muted-foreground">{t('Outsource work or find freelance IT projects — all budgets in Rupiah, no middleman.', 'Outsource pekerjaan atau temukan proyek IT freelance — semua budget dalam Rupiah, tanpa perantara.')}</p>
           </div>
-          <Button onClick={() => user ? setShowPost(!showPost) : router.push('/login')} className="gap-2">
+          <Button onClick={() => user ? setShowPost(!showPost) : router.push(loginHref())} className="gap-2">
             <Plus className="h-4 w-4" /> {t('Post Project', 'Pasang Proyek')}
           </Button>
         </div>

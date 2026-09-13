@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 
 import { useDashboardControllers } from '@/features/dashboard/controllers/dashboardControllers';
+import { loginHref } from '@/shared/lib/utils';
 
 export default function DashboardOverview() {
   const { user, profile, roles, loading, isEmailVerified, resendVerification } = useAuth();
@@ -26,7 +27,7 @@ export default function DashboardOverview() {
   const isAdmin = roles.includes('super_admin') || roles.includes('regional_admin');
 
   useEffect(() => {
-    if (!loading && !user) router.push('/login');
+    if (!loading && !user) router.push(loginHref());
   }, [user, loading, router]);
 
   if (loading) {

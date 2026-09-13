@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
+import { loginHref } from '@/shared/lib/utils';
 
 export default function PostJob() {
   const { user, loading, roles } = useAuth();
@@ -31,7 +32,7 @@ export default function PostJob() {
   const saving = storeJobsCompany.isPending || storeJobsPosting.isPending;
 
   useEffect(() => {
-    if (!loading && !user) router.push('/login');
+    if (!loading && !user) router.push(loginHref());
   }, [user, loading, router]);
 
   useEffect(() => {

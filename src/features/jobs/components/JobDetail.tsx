@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
+import { loginHref } from '@/shared/lib/utils';
 
 export default function JobDetail() {
   const params = useParams();
@@ -34,7 +35,7 @@ export default function JobDetail() {
   const hasApplied = Boolean(fetchJobsApplication.data);
 
   const saveApplication = async () => {
-    if (!user || !job) { router.push('/login'); return; }
+    if (!user || !job) { router.push(loginHref()); return; }
     try {
       await storeJobsApplication.mutateAsync({
         job_id: job.id,
@@ -133,7 +134,7 @@ export default function JobDetail() {
                 </div>
               </div>
             ) : (
-              <Button onClick={() => user ? setShowApply(true) : router.push('/login')} className="w-full gap-2">
+              <Button onClick={() => user ? setShowApply(true) : router.push(loginHref())} className="w-full gap-2">
                 <Send className="h-4 w-4" /> {t('Apply with One Click', 'Lamar Sekali Klik')}
               </Button>
             )}

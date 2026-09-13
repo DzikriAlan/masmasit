@@ -25,6 +25,7 @@ import {
   useMessagesControllers,
   useMessagesPartnerControllers,
 } from '@/features/messages/controllers/messagesControllers';
+import { loginHref } from '@/shared/lib/utils';
 
 export default function MessagesInbox() {
   return (
@@ -75,7 +76,7 @@ function PesanContent() {
   const messages = mergeRealtimeMessages();
 
   useEffect(() => {
-    if (!loading && !user) router.push('/login');
+    if (!loading && !user) router.push(loginHref());
   }, [user, loading, router]);
 
   const loadMessages = useCallback((partner: ConversationPartner) => {

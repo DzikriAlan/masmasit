@@ -26,6 +26,7 @@ import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import { PaymentCard } from '@/features/payments/components/PaymentCard';
+import { loginHref } from '@/shared/lib/utils';
 
 const courseCoverImages: Record<string, string> = {
   'Software Engineering': 'https://images.pexels.com/photos/270404/pexels-photo-270404.jpeg?auto=compress&cs=tinysrgb&h=300&w=800',
@@ -115,7 +116,7 @@ export default function CourseDetail() {
   };
 
   const saveEnrollment = async () => {
-    if (!user || !course) { router.push('/login'); return; }
+    if (!user || !course) { router.push(loginHref()); return; }
     try {
       await storeCoursesEnrollment.mutateAsync({ course_id: course.id, user_id: user.id });
     } catch (error) {
@@ -174,7 +175,7 @@ export default function CourseDetail() {
   };
 
   const saveQuiz = async (quiz: Quiz) => {
-    if (!user) { router.push('/login'); return; }
+    if (!user) { router.push(loginHref()); return; }
 
     const total = quiz.quiz_questions.length || 1;
     const correct = quiz.quiz_questions.filter((q) => quizAnswers[q.id] === q.correct_answer).length;

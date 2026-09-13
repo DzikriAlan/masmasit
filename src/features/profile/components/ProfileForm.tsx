@@ -17,6 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 
 import { useProfileControllers } from '@/features/profile/controllers/profileControllers';
+import { loginHref } from '@/shared/lib/utils';
 
 const jobStatuses = ['Employed', 'Freelancing', 'Looking for work', 'Open to opportunities', 'Student'];
 
@@ -32,7 +33,7 @@ export default function ProfileForm() {
   const [hourlyRate, setHourlyRate] = useState('');
 
   useEffect(() => {
-    if (!loading && !user) router.push('/login');
+    if (!loading && !user) router.push(loginHref());
     if (profile) {
       setForm({
         full_name: profile.full_name ?? '', bio: profile.bio ?? '',

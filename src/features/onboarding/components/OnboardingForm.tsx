@@ -15,6 +15,7 @@ import { toast } from 'sonner';
 import type { Skill } from '@/shared/lib/types';
 
 import { useOnboardingControllers } from '@/features/onboarding/controllers/onboardingControllers';
+import { loginHref } from '@/shared/lib/utils';
 
 const jobStatuses = ['Employed', 'Freelancing', 'Looking for work', 'Open to opportunities', 'Student'];
 
@@ -37,7 +38,7 @@ export default function OnboardingForm() {
   });
 
   useEffect(() => {
-    if (!loading && !user) router.push('/login');
+    if (!loading && !user) router.push(loginHref());
     if (profile) {
       setForm({
         full_name: profile.full_name ?? '',

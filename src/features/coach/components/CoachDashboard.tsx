@@ -32,6 +32,7 @@ import type {
   PayloadPostCoachQuizQuestions,
 } from '@/features/coach/types/coachTypes';
 import { useCoachControllers } from '@/features/coach/controllers/coachControllers';
+import { loginHref } from '@/shared/lib/utils';
 
 export default function CoachDashboard() {
   const { user, profile, loading, refreshProfile } = useAuth();
@@ -62,7 +63,7 @@ export default function CoachDashboard() {
   const [questionForm, setQuestionForm] = useState({ question: '', option_a: '', option_b: '', option_c: '', option_d: '', correct_answer: 'a' });
 
   useEffect(() => {
-    if (!loading && !user) router.push('/login');
+    if (!loading && !user) router.push(loginHref());
   }, [user, loading, router]);
 
   const {

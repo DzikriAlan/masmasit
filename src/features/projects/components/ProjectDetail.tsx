@@ -15,6 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
+import { loginHref } from '@/shared/lib/utils';
 
 export default function ProjectDetail() {
   const params = useParams();
@@ -43,7 +44,7 @@ export default function ProjectDetail() {
   const hasBid = Boolean(user) && bids.some((bid) => bid.user_id === user?.id);
 
   const saveBid = async () => {
-    if (!user || !project) { router.push('/login'); return; }
+    if (!user || !project) { router.push(loginHref()); return; }
     try {
       await storeProjectsBid.mutateAsync({
         project_id: project.id,

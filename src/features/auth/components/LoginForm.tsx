@@ -46,7 +46,13 @@ export default function LoginForm() {
       return;
     }
     toast.success(t('Welcome back!', 'Selamat datang kembali!'));
-    router.push(await fetchAuthLandingRoute());
+    const landing = await fetchAuthLandingRoute();
+    // Return to the page that sent the user here (middleware / guards pass
+    // ?redirect=). Unfinished profiles still go through onboarding first, and
+    // only same-origin paths are honoured to avoid an open redirect.
+    const target = new URLSearchParams(window.location.search).get('redirect');
+    const safeTarget = target && target.startsWith('/') && !target.startsWith('//') ? target : null;
+    router.push(landing === '/onboarding' || !safeTarget ? landing : safeTarget);
   };
 
   return (
