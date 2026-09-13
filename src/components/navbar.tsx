@@ -1,9 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { Menu, X, Moon, Sun, Globe, MessageCircle, LayoutDashboard, LogIn, LogOut, UserPlus, User, ChevronDown, ShieldCheck, Activity } from 'lucide-react';
+import {
+  Menu, X, Globe, MessageCircle, LayoutDashboard, LogIn, LogOut, UserPlus, User, ChevronDown,
+  ShieldCheck, Activity, Briefcase, FolderGit2, Users, GraduationCap, CalendarDays, Wrench,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -14,19 +17,43 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useTheme } from '@/components/theme-provider';
 import { useAuth } from '@/components/auth-provider';
 import { useLang } from '@/components/language-provider';
 import { NotificationBell } from '@/features/notifications/components/NotificationBell';
 import { GlobalSearch } from '@/features/search/components/GlobalSearch';
 import { cn } from '@/shared/lib/utils';
 
+const ecosystemColumns = [
+  {
+    eyebrowEn: 'Career', eyebrowId: 'Karier',
+    items: [
+      { href: '/jobs', icon: Briefcase, en: 'Jobs', id: 'Lowongan', descEn: 'Full-time & freelance roles', descId: 'Peran full-time & freelance' },
+      { href: '/projects', icon: FolderGit2, en: 'Projects', id: 'Proyek', descEn: 'Real projects, real companies', descId: 'Proyek nyata, perusahaan nyata' },
+    ],
+  },
+  {
+    eyebrowEn: 'Grow', eyebrowId: 'Berkembang',
+    items: [
+      { href: '/talents', icon: Users, en: 'Talents', id: 'Talent', descEn: 'Vetted IT professionals', descId: 'Praktisi IT terverifikasi' },
+      { href: '/courses', icon: GraduationCap, en: 'Learn', id: 'Belajar', descEn: 'Courses by practitioners', descId: 'Kursus dari para praktisi' },
+    ],
+  },
+  {
+    eyebrowEn: 'Connect', eyebrowId: 'Terhubung',
+    items: [
+      { href: '/events', icon: CalendarDays, en: 'Events', id: 'Event', descEn: 'Meetups & hackathons', descId: 'Meetup & hackathon' },
+      { href: '/services', icon: Wrench, en: 'Services', id: 'Layanan', descEn: 'Professional IT services', descId: 'Layanan IT profesional' },
+    ],
+  },
+];
+
 export function Navbar() {
   const [open, setOpen] = useState(false);
-  // Hidden while scrolling down, shown again while scrolling up — mirrors the
-  // reference layout's floating bar that tucks away to give content room.
-  const [hidden, setHidden] = useState(false);
-  const { theme, toggleTheme } = useTheme();
+  const [menuOpen, setMenuOpen] = useState(false);
+  // Transparent over the hero; solid black once the page has scrolled.
+  const [scrolled, setScrolled] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { user, profile, roles, signOut } = useAuth();
 
   const isAdmin = roles.includes('super_admin') || roles.includes('regional_admin');
@@ -44,28 +71,11 @@ export function Navbar() {
   };
   const pathname = usePathname();
 
-  // Mobile menu opening should always reveal the bar it hangs off of.
   useEffect(() => {
-    if (open) setHidden(false);
-  }, [open]);
-
-  useEffect(() => {
-    let lastY = window.scrollY;
     let ticking = false;
 
     const update = () => {
-      const y = window.scrollY;
-      const delta = y - lastY;
-
-      if (!open) {
-        // Stay visible near the top so the bar doesn't vanish right after load,
-        // and ignore sub-pixel jitter so it doesn't flicker on tiny deltas.
-        if (y < 96) setHidden(false);
-        else if (delta > 4) setHidden(true);
-        else if (delta < -4) setHidden(false);
-      }
-
-      lastY = y;
+      setScrolled(window.scrollY > 8);
       ticking = false;
     };
 
@@ -76,9 +86,48 @@ export function Navbar() {
       }
     };
 
+    update();
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
-  }, [open]);
+  }, []);
+
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false);
+    };
+    const onEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMenuOpen(false);
+    };
+    document.addEventListener('mousedown', onOutside);
+    document.addEventListener('keydown', onEscape);
+    return () => {
+      document.removeEventListener('mousedown', onOutside);
+      document.removeEventListener('keydown', onEscape);
+    };
+  }, [menuOpen]);
+
+  // Mouse users open the menu by hovering, so their click on the trigger
+  // must not toggle it straight back closed. Touch and keyboard still toggle.
+  const lastPointer = useRef<string>('');
+  const openMenu = (e: React.PointerEvent) => {
+    if (e.pointerType !== 'mouse') return;
+    if (closeTimer.current) clearTimeout(closeTimer.current);
+    setMenuOpen(true);
+  };
+  const scheduleCloseMenu = (e: React.PointerEvent) => {
+    if (e.pointerType !== 'mouse') return;
+    if (closeTimer.current) clearTimeout(closeTimer.current);
+    closeTimer.current = setTimeout(() => setMenuOpen(false), 150);
+  };
+  const onTriggerClick = (e: React.MouseEvent) => {
+    const viaMouse = e.detail > 0 && lastPointer.current === 'mouse';
+    setMenuOpen((v) => (viaMouse ? true : !v));
+  };
 
   const navLinks = [
     { href: '/directory', label: t('Members', 'Member') },
@@ -93,12 +142,12 @@ export function Navbar() {
   return (
     <header
       className={cn(
-        'sticky top-0 z-50 w-full px-3 pt-3 transition-transform duration-300 ease-in-out will-change-transform sm:px-4 sm:pt-4',
-        hidden ? '-translate-y-[200%]' : 'translate-y-0'
+        'fixed inset-x-0 top-0 z-50 w-full transition-colors duration-300',
+        scrolled ? 'bg-background' : 'bg-transparent'
       )}
     >
       <div className="mx-auto max-w-7xl">
-        <div className="flex h-16 items-center justify-between rounded-2xl border border-border bg-card px-4 sm:px-6 lg:px-8">
+        <div className="flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
           <Link href="/" className="flex items-center gap-2 transition-transform hover:scale-[1.02]">
             <img
               src="/icon-192.webp"
@@ -113,21 +162,68 @@ export function Navbar() {
           </Link>
 
           <nav className="hidden items-center gap-0.5 lg:flex">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
+            <div
+              ref={menuRef}
+              className="relative"
+              onPointerEnter={openMenu}
+              onPointerLeave={scheduleCloseMenu}
+            >
+              <button
+                type="button"
+                onPointerDown={(e) => { lastPointer.current = e.pointerType; }}
+                onClick={onTriggerClick}
+                aria-expanded={menuOpen}
                 className={cn(
-                  'relative rounded-md px-3 py-2 text-sm font-medium transition-all hover:bg-muted/50 hover:text-foreground',
-                  pathname === link.href ? 'text-primary' : 'text-muted-foreground'
+                  'flex items-center gap-1 rounded-md px-3 py-2 text-sm font-medium transition-all hover:bg-muted/50 hover:text-foreground',
+                  menuOpen ? 'text-foreground' : 'text-muted-foreground'
                 )}
               >
-                {link.label}
-                {pathname === link.href && (
-                  <span className="absolute -bottom-px left-3 right-3 h-0.5 rounded-full bg-primary" />
-                )}
-              </Link>
-            ))}
+                {t('Ecosystem', 'Ekosistem')}
+                <ChevronDown className={cn('h-3.5 w-3.5 transition-transform', menuOpen && 'rotate-180')} />
+              </button>
+
+              {menuOpen && (
+                <div className="absolute left-1/2 top-full z-50 mt-2 w-[600px] -translate-x-1/2 animate-fade-up rounded-xl border border-border bg-card p-6 shadow-xl">
+                  <div className="grid grid-cols-3 gap-6">
+                    {ecosystemColumns.map((col) => (
+                      <div key={col.eyebrowEn}>
+                        <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
+                          {t(col.eyebrowEn, col.eyebrowId)}
+                        </p>
+                        <div className="mt-3 flex flex-col gap-1">
+                          {col.items.map((item) => (
+                            <Link
+                              key={item.href}
+                              href={item.href}
+                              className="group flex items-start gap-2.5 rounded-md p-2 -mx-2 transition-colors hover:bg-muted/50"
+                            >
+                              <item.icon className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                              <span>
+                                <span className="block text-sm font-medium text-foreground">{t(item.en, item.id)}</span>
+                                <span className="block text-xs text-muted-foreground">{t(item.descEn, item.descId)}</span>
+                              </span>
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <Link
+              href="/directory"
+              className={cn(
+                'relative rounded-md px-3 py-2 text-sm font-medium transition-all hover:bg-muted/50 hover:text-foreground',
+                pathname === '/directory' ? 'text-primary' : 'text-muted-foreground'
+              )}
+            >
+              {t('Members', 'Member')}
+              {pathname === '/directory' && (
+                <span className="absolute -bottom-px left-3 right-3 h-0.5 rounded-full bg-primary" />
+              )}
+            </Link>
           </nav>
 
           <div className="hidden items-center gap-1.5 lg:flex">
@@ -143,15 +239,12 @@ export function Navbar() {
             {user && <NotificationBell />}
             <button
               onClick={toggleLang}
-              className="flex items-center gap-1.5 rounded-md px-2.5 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              className="flex items-center gap-1.5 rounded-md px-2.5 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-transparent hover:text-foreground"
               aria-label="Toggle language"
             >
               <Globe className="h-4 w-4" />
               <span className="uppercase text-xs">{lang}</span>
             </button>
-            <Button variant="ghost" size="icon" onClick={toggleTheme} aria-label="Toggle theme">
-              {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-            </Button>
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -199,7 +292,7 @@ export function Navbar() {
             ) : (
               <>
                 <Link href="/login">
-                  <Button variant="ghost" size="sm" className="gap-1.5">
+                  <Button variant="ghost" size="sm" className="gap-1.5 hover:bg-transparent">
                     <LogIn className="h-3.5 w-3.5" />
                     {t('Sign in', 'Masuk')}
                   </Button>
@@ -220,7 +313,7 @@ export function Navbar() {
         </div>
 
         {open && (
-          <div className="mt-2 rounded-2xl border border-border bg-card lg:hidden animate-fade-up">
+          <div className="border-t border-border bg-background lg:hidden animate-fade-up">
             <nav className="flex flex-col gap-0.5 px-4 py-4">
               {navLinks.map((link) => (
                 <Link
@@ -279,14 +372,11 @@ export function Navbar() {
                 {user && <NotificationBell />}
                 <button
                   onClick={toggleLang}
-                  className="flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                  className="flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-transparent hover:text-foreground"
                 >
                   <Globe className="h-4 w-4" />
                   <span className="uppercase text-xs">{lang}</span>
                 </button>
-                <Button variant="ghost" size="icon" onClick={toggleTheme}>
-                  {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-                </Button>
                 {user ? (
                   <Link href="/dashboard" onClick={() => setOpen(false)} className="flex-1">
                     <Button size="sm" className="w-full gap-2">
@@ -297,7 +387,7 @@ export function Navbar() {
                 ) : (
                   <>
                     <Link href="/login" onClick={() => setOpen(false)} className="flex-1">
-                      <Button variant="ghost" size="sm" className="w-full">{t('Sign in', 'Masuk')}</Button>
+                      <Button variant="ghost" size="sm" className="w-full hover:bg-transparent">{t('Sign in', 'Masuk')}</Button>
                     </Link>
                     <Link href="/register" onClick={() => setOpen(false)} className="flex-1">
                       <Button size="sm" className="w-full">{t('Get started', 'Daftar')}</Button>
