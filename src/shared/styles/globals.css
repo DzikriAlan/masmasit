@@ -117,6 +117,18 @@
     background-size: 22px 22px;
   }
 
+  /* Fades both edges of a horizontal marquee so items scroll in/out softly. */
+  .marquee-fade {
+    -webkit-mask-image: linear-gradient(to right, transparent, black 12%, black 88%, transparent);
+    mask-image: linear-gradient(to right, transparent, black 12%, black 88%, transparent);
+  }
+
+  /* Vertical counterpart of .marquee-fade, for feeds that scroll upward. */
+  .marquee-fade-y {
+    -webkit-mask-image: linear-gradient(to bottom, transparent, black 14%, black 86%, transparent);
+    mask-image: linear-gradient(to bottom, transparent, black 14%, black 86%, transparent);
+  }
+
   /* Hairline rule that fades at both ends — used as a section divider. */
   .rule-fade {
     height: 1px;
@@ -159,6 +171,10 @@
   from { transform: translateX(0); }
   to { transform: translateX(-50%); }
 }
+@keyframes marquee-y {
+  from { transform: translateY(0); }
+  to { transform: translateY(-50%); }
+}
 @keyframes pulse-dot {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.35; }
@@ -166,6 +182,8 @@
 
 .animate-fade-up { animation: fade-up 0.25s ease-out forwards; }
 .animate-marquee { animation: marquee 45s linear infinite; }
+.animate-marquee-reverse { animation: marquee 45s linear infinite reverse; }
+.animate-marquee-y { animation: marquee-y 40s linear infinite; }
 .animate-pulse-soft { animation: pulse-dot 2.4s ease-in-out infinite; }
 
 /* Legacy animation hooks — no-ops so old markup stays calm. */

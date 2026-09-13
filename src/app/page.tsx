@@ -3,46 +3,34 @@
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import {
-  ArrowRight, ArrowUpRight, Search, BookOpen, Briefcase, FolderGit2, Users,
-  GraduationCap, CalendarDays, Wrench, MessagesSquare, Bookmark, Eye,
-  MapPin, Clock, Star, Circle, Plus,
-  UserPlus, Compass, Handshake, Sprout, Code2, Brain, Palette, Cloud,
-  Shield, Bug, UsersRound, Megaphone, Blocks, TrendingUp, Quote,
-  ChevronLeft, ChevronRight, Activity, MessageCircle, Mail, CalendarClock,
+  ArrowRight, ArrowUpRight, ChevronRight, Briefcase, FolderGit2, Users,
+  GraduationCap, CalendarDays, Wrench, MessagesSquare, Star,
+  MessageCircle, Mail, CalendarClock, Cloud, Sparkles, Palette, UsersRound, Copy, Check,
 } from 'lucide-react';
+import { toast } from 'sonner';
 
 import { AppShell } from '@/components/app-shell';
 import { PageDecor } from '@/components/page-decor';
 import { useLang } from '@/components/language-provider';
 import { supabase } from '@/shared/lib/supabase';
 import { Button } from '@/components/ui/button';
+import heroBackground from '@/shared/images/backgorundhero.png';
 
 const px = (id: string, w: number, h: number) =>
   `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&h=${h}&w=${w}`;
 
-const heroImage = px('7652188', 1200, 900);
-const ctaImage = px('8518816', 1600, 700);
+const CONTACT_EMAIL = 'hello@masmasit.online';
 
 /* ---------------------------------------------------------------- content */
 
 const ecosystem = [
-  { key: 'resources', href: null, icon: BookOpen, en: 'Resources', id: 'Resource', descEn: 'Guides, tools, documentation, templates, repositories, references.', descId: 'Panduan, tools, dokumentasi, template, repository, referensi.' },
-  { key: 'jobs', href: '/jobs', icon: Briefcase, en: 'Jobs', id: 'Lowongan', descEn: 'Full-time, contract, freelance, remote and onsite opportunities.', descId: 'Full-time, kontrak, freelance, remote dan onsite.' },
-  { key: 'projects', href: '/projects', icon: FolderGit2, en: 'Projects', id: 'Proyek', descEn: 'Real projects posted by companies, founders, and individuals.', descId: 'Proyek nyata dari perusahaan, founder, dan individu.' },
-  { key: 'talents', href: '/talents', icon: Users, en: 'Talents', id: 'Talent', descEn: 'Discover Indonesian IT professionals by skills and experience.', descId: 'Temukan praktisi IT Indonesia berdasarkan skill dan pengalaman.' },
-  { key: 'learn', href: '/courses', icon: GraduationCap, en: 'Learn', id: 'Belajar', descEn: 'Courses, tutorials, workshops, mentoring, and certifications.', descId: 'Kursus, tutorial, workshop, mentoring, dan sertifikasi.' },
-  { key: 'events', href: '/events', icon: CalendarDays, en: 'Events', id: 'Event', descEn: 'Meetups, conferences, workshops, hackathons, and tech events.', descId: 'Meetup, konferensi, workshop, hackathon, dan acara teknologi.' },
-  { key: 'services', href: '/services', icon: Wrench, en: 'Services', id: 'Layanan', descEn: 'Professional IT services offered by agencies and practitioners.', descId: 'Layanan IT profesional dari agency dan praktisi.' },
-  { key: 'community', href: null, icon: MessagesSquare, en: 'Community', id: 'Komunitas', descEn: 'Discussions, knowledge sharing, networking, and collaboration.', descId: 'Diskusi, berbagi pengetahuan, networking, dan kolaborasi.' },
-];
-
-const trendingResources = [
-  { title: 'System Design Interview Guide', cat: 'Software Engineering', level: 'Intermediate', views: '12.4K', saves: '2.1K', updated: '2d' },
-  { title: 'Golang Concurrency Patterns', cat: 'Backend', level: 'Advanced', views: '9.8K', saves: '1.7K', updated: '4d' },
-  { title: 'Next.js App Router Playbook', cat: 'Frontend', level: 'Intermediate', views: '8.6K', saves: '1.5K', updated: '1w' },
-  { title: 'Kubernetes untuk Tim Kecil', cat: 'DevOps', level: 'Intermediate', views: '7.2K', saves: '1.3K', updated: '1w' },
-  { title: 'Benchmark Gaji Developer Indonesia 2026', cat: 'Career', level: 'Beginner', views: '24.1K', saves: '5.9K', updated: '3d' },
-  { title: 'Prompt Engineering & LLM Ops', cat: 'Data & AI', level: 'Advanced', views: '6.4K', saves: '1.1K', updated: '5d' },
+  { key: 'jobs', href: '/jobs', icon: Briefcase, en: 'Jobs', id: 'Lowongan', leadEn: 'Find your next role,', leadId: 'Temukan peran berikutnya,', boldEn: 'full-time or freelance.', boldId: 'full-time atau freelance.' },
+  { key: 'projects', href: '/projects', icon: FolderGit2, en: 'Projects', id: 'Proyek', leadEn: 'Real projects,', leadId: 'Proyek nyata,', boldEn: 'posted by real companies.', boldId: 'dari perusahaan sungguhan.' },
+  { key: 'talents', href: '/talents', icon: Users, en: 'Talents', id: 'Talent', leadEn: 'Discover IT professionals,', leadId: 'Temukan praktisi IT,', boldEn: 'vetted and ready.', boldId: 'terverifikasi dan siap.' },
+  { key: 'learn', href: '/courses', icon: GraduationCap, en: 'Learn', id: 'Belajar', leadEn: 'Courses and workshops,', leadId: 'Kursus dan workshop,', boldEn: 'built by practitioners.', boldId: 'dibuat oleh praktisi.' },
+  { key: 'events', href: '/events', icon: CalendarDays, en: 'Events', id: 'Event', leadEn: 'Meetups and hackathons,', leadId: 'Meetup dan hackathon,', boldEn: 'happening near you.', boldId: 'di dekatmu.' },
+  { key: 'services', href: '/services', icon: Wrench, en: 'Services', id: 'Layanan', leadEn: 'Professional IT services,', leadId: 'Layanan IT profesional,', boldEn: 'from trusted agencies.', boldId: 'dari agency terpercaya.' },
+  { key: 'community', href: '/directory', icon: MessagesSquare, en: 'Community', id: 'Komunitas', leadEn: 'Discussions and networking,', leadId: 'Diskusi dan networking,', boldEn: 'all in one place.', boldId: 'dalam satu tempat.' },
 ];
 
 const opportunityTabs = ['jobs', 'projects', 'freelance', 'internships'] as const;
@@ -57,11 +45,18 @@ const opportunities: Record<OpportunityTab, {
     { role: 'Backend Engineer (Go)', company: 'Payungi', location: 'Bandung', setup: 'Hybrid', type: 'Full-time', level: 'Mid', stack: ['Go', 'gRPC', 'PostgreSQL'], pay: 'Rp 15–24jt', posted: '5 jam lalu' },
     { role: 'Data Engineer', company: 'Semesta Analytics', location: 'Surabaya', setup: 'Onsite', type: 'Full-time', level: 'Mid', stack: ['Python', 'Airflow', 'BigQuery'], pay: 'Rp 14–22jt', posted: '1 hari lalu' },
     { role: 'Product Designer', company: 'Warung Digital', location: 'Yogyakarta', setup: 'Remote', type: 'Full-time', level: 'Mid', stack: ['Figma', 'Design System'], pay: 'Rp 12–18jt', posted: '1 hari lalu' },
+    { role: 'Mobile Engineer (Flutter)', company: 'Sahabat Finansial', location: 'Jakarta', setup: 'Hybrid', type: 'Full-time', level: 'Mid', stack: ['Flutter', 'Dart', 'Firebase'], pay: 'Rp 16–24jt', posted: '3 jam lalu' },
+    { role: 'DevOps Engineer', company: 'Nusantara Cloud', location: 'Bandung', setup: 'Remote', type: 'Full-time', level: 'Senior', stack: ['Kubernetes', 'Terraform', 'AWS'], pay: 'Rp 22–32jt', posted: '7 jam lalu' },
+    { role: 'QA Engineer', company: 'Solusi Data', location: 'Jakarta', setup: 'Onsite', type: 'Full-time', level: 'Mid', stack: ['Playwright', 'CI/CD'], pay: 'Rp 12–18jt', posted: '1 hari lalu' },
+    { role: 'Frontend Engineer', company: 'Ruang Belajar', location: 'Yogyakarta', setup: 'Remote', type: 'Full-time', level: 'Mid', stack: ['React', 'TypeScript', 'Next.js'], pay: 'Rp 14–20jt', posted: '2 hari lalu' },
   ],
   projects: [
     { role: 'Payment Infrastructure Revamp', company: 'Koperasi Nusantara', location: 'Jakarta', setup: 'Remote', type: 'Project', level: 'Senior', stack: ['Go', 'Kafka', 'PostgreSQL'], pay: 'Rp 85–120jt', posted: '6 jam lalu' },
     { role: 'Company Profile + CMS', company: 'CV Adiwangsa', location: 'Semarang', setup: 'Remote', type: 'Project', level: 'Mid', stack: ['Next.js', 'Sanity'], pay: 'Rp 25–40jt', posted: '1 hari lalu' },
     { role: 'Dashboard Analitik Retail', company: 'Toko Sinar Jaya', location: 'Medan', setup: 'Hybrid', type: 'Project', level: 'Mid', stack: ['React', 'Metabase'], pay: 'Rp 35–55jt', posted: '2 hari lalu' },
+    { role: 'Aplikasi Mobile Koperasi', company: 'Koperasi Sejahtera', location: 'Malang', setup: 'Remote', type: 'Project', level: 'Mid', stack: ['Flutter', 'Firebase'], pay: 'Rp 30–45jt', posted: '3 hari lalu' },
+    { role: 'Sistem Inventori Gudang', company: 'PT Mitra Logistik', location: 'Surabaya', setup: 'Onsite', type: 'Project', level: 'Senior', stack: ['Laravel', 'MySQL'], pay: 'Rp 40–60jt', posted: '4 hari lalu' },
+    { role: 'Landing Page + SEO', company: 'Kopi Kita', location: 'Bali', setup: 'Remote', type: 'Project', level: 'Junior', stack: ['Next.js', 'Tailwind'], pay: 'Rp 8–15jt', posted: '5 hari lalu' },
   ],
   freelance: [
     { role: 'Flutter Developer', company: 'Bali Trip Co', location: 'Bali', setup: 'Remote', type: 'Freelance', level: 'Mid', stack: ['Flutter', 'Firebase'], pay: 'Rp 9jt / bulan', posted: '3 jam lalu' },
@@ -81,20 +76,12 @@ const demoTalents = [
   { id: 'd4', full_name: 'Maya Santoso', role: 'DevOps Engineer', location: 'Yogyakarta', skills: ['Terraform', 'AWS', 'CI/CD'], years: 7, available: true, avatar_url: px('1130626', 200, 200) as string | null },
 ];
 
-const learnCategories = ['Software Engineering', 'Data & AI', 'DevOps', 'Cybersecurity', 'UI/UX', 'Product', 'Career', 'Leadership'];
-
 const courses = [
   { title: 'Backend Scalable dengan Go', instructor: 'Rizky Pratama', level: 'Intermediate', duration: '8j 40m', rating: 4.8, learners: '1.2K', thumb: px('270404', 240, 160) },
   { title: 'Design System dari Nol', instructor: 'Sarah Widodo', level: 'Beginner', duration: '5j 10m', rating: 4.9, learners: '2.4K', thumb: px('1966452', 240, 160) },
   { title: 'MLOps untuk Data Scientist', instructor: 'Aditya Nugroho', level: 'Advanced', duration: '11j 05m', rating: 4.7, learners: '860', thumb: px('8386440', 240, 160) },
-];
-
-const activity = [
-  { kind: 'discussion', en: 'New discussion', id: 'Diskusi baru', text: 'Best approach for structuring a large Next.js application?', meta: 'Frontend · 24 balasan', time: '12m' },
-  { kind: 'resource', en: 'New resource', id: 'Resource baru', text: 'Indonesian Developer Salary Benchmark 2026', meta: 'Career · 5.9K saves', time: '1j' },
-  { kind: 'project', en: 'New project', id: 'Proyek baru', text: 'Need a backend engineer for payment infrastructure', meta: 'Jakarta · Rp 85–120jt', time: '3j' },
-  { kind: 'event', en: 'New event', id: 'Event baru', text: 'Jakarta Cloud Native Meetup', meta: '18 Sep · 240 peserta', time: '5j' },
-  { kind: 'discussion', en: 'New discussion', id: 'Diskusi baru', text: 'Pengalaman migrasi monolith ke microservices di tim kecil', meta: 'Backend · 41 balasan', time: '7j' },
+  { title: 'React & Next.js Mendalam', instructor: 'Maya Santoso', level: 'Intermediate', duration: '9j 20m', rating: 4.8, learners: '1.8K', thumb: px('1181244', 240, 160) },
+  { title: 'Fundamental Keamanan Aplikasi Web', instructor: 'Bayu Prakoso', level: 'Beginner', duration: '6j 30m', rating: 4.6, learners: '950', thumb: px('60504', 240, 160) },
 ];
 
 const events = [
@@ -102,6 +89,8 @@ const events = [
   { day: '24', month: 'Sep', title: 'Hackathon Fintech Nusantara', org: 'Fintech ID', place: 'Bandung · Onsite', cat: 'Hackathon', attendees: 512, thumb: px('17724731', 320, 200) },
   { day: '02', month: 'Okt', title: 'Workshop: Observability 101', org: 'DevOps Indonesia', place: 'Online', cat: 'Workshop', attendees: 890, thumb: px('9301872', 320, 200) },
   { day: '11', month: 'Okt', title: 'UI/UX Conference Surabaya', org: 'Designudy', place: 'Surabaya · Onsite', cat: 'Conference', attendees: 320, thumb: px('8761524', 320, 200) },
+  { day: '19', month: 'Okt', title: 'Bootcamp AI untuk Developer', org: 'AI Indonesia', place: 'Yogyakarta · Onsite', cat: 'Bootcamp', attendees: 410, thumb: px('8438922', 320, 200) },
+  { day: '27', month: 'Okt', title: 'Meetup Rust & Systems Programming', org: 'Rust Jakarta', place: 'Jakarta · Onsite', cat: 'Meetup', attendees: 180, thumb: px('1181677', 320, 200) },
 ];
 
 const serviceCategories = [
@@ -109,87 +98,83 @@ const serviceCategories = [
   'Cybersecurity', 'Data Engineering', 'Digital Product Development', 'IT Consulting',
 ];
 
-const scattered = [
-  { tool: 'LinkedIn', forWhat: { en: 'networking', id: 'networking' } },
-  { tool: 'Job portals', forWhat: { en: 'jobs', id: 'lowongan' } },
-  { tool: 'GitHub', forWhat: { en: 'code', id: 'kode' } },
-  { tool: 'Discord / Telegram', forWhat: { en: 'communities', id: 'komunitas' } },
-  { tool: 'YouTube', forWhat: { en: 'learning', id: 'belajar' } },
-  { tool: 'Event platforms', forWhat: { en: 'meetups', id: 'meetup' } },
-  { tool: 'Freelance marketplaces', forWhat: { en: 'projects', id: 'proyek' } },
-];
-
-const galleryImages = [
-  { id: '7652188', en: 'Team collaboration', idn: 'Kolaborasi tim' },
-  { id: '8101931', en: 'Deep work', idn: 'Fokus mendalam' },
-  { id: '8761524', en: 'Conference', idn: 'Konferensi' },
-  { id: '17724731', en: 'Brainstorm sessions', idn: 'Sesi brainstorm' },
-  { id: '9301872', en: 'Creative workshop', idn: 'Workshop kreatif' },
-  { id: '7643736', en: 'Community meetup', idn: 'Meetup komunitas' },
-  { id: '10375906', en: 'Diverse teams', idn: 'Tim beragam' },
-  { id: '8518816', en: 'Shipping together', idn: 'Shipping bersama' },
-  { id: '7534107', en: 'Mentoring session', idn: 'Sesi mentoring' },
-];
-
 const liveActivityLabels = [
-  { icon: Briefcase, en: 'New jobs today', id: 'Lowongan baru hari ini' },
-  { icon: Users, en: 'New members this week', id: 'Member baru minggu ini' },
-  { icon: FolderGit2, en: 'New projects this week', id: 'Proyek baru minggu ini' },
-  { icon: Star, en: 'Talent bookings this month', id: 'Booking talent bulan ini' },
+  { en: 'New jobs today', id: 'Lowongan baru hari ini' },
+  { en: 'New members this week', id: 'Member baru minggu ini' },
+  { en: 'New projects this week', id: 'Proyek baru minggu ini' },
+  { en: 'Talent bookings this month', id: 'Booking talent bulan ini' },
 ];
 
-const platformCounts = [
-  { en: 'Members', id: 'Member' },
-  { en: 'Open Jobs', id: 'Lowongan Terbuka' },
-  { en: 'Projects', id: 'Proyek' },
-  { en: 'Courses', id: 'Kursus' },
+/* What the live feed cycles through. `avatar` rows are people, the rest
+   are organisations and get their activity icon instead. */
+const activityFeed = [
+  { icon: Briefcase, avatar: null, who: 'Payungi', en: 'posted a job', id: 'memposting lowongan', what: 'Backend Engineer (Go)', timeEn: '2m', timeId: '2 mnt' },
+  { icon: Users, avatar: demoTalents[1].avatar_url, who: 'Sarah Widodo', en: 'joined as', id: 'bergabung sebagai', what: 'Product Designer', timeEn: '5m', timeId: '5 mnt' },
+  { icon: FolderGit2, avatar: null, who: 'Koperasi Nusantara', en: 'opened a project', id: 'membuka proyek', what: 'Payment Infrastructure Revamp', timeEn: '12m', timeId: '12 mnt' },
+  { icon: Star, avatar: demoTalents[0].avatar_url, who: 'Rizky Pratama', en: 'was booked by', id: 'dibooking oleh', what: 'PT Kirana Teknologi', timeEn: '18m', timeId: '18 mnt' },
+  { icon: GraduationCap, avatar: demoTalents[2].avatar_url, who: 'Aditya Nugroho', en: 'finished', id: 'menyelesaikan', what: 'MLOps untuk Data Scientist', timeEn: '26m', timeId: '26 mnt' },
+  { icon: CalendarDays, avatar: demoTalents[3].avatar_url, who: 'Maya Santoso', en: 'is attending', id: 'akan hadir di', what: 'Jakarta Cloud Native Meetup', timeEn: '34m', timeId: '34 mnt' },
+  { icon: Wrench, avatar: null, who: 'Nusantara Cloud', en: 'listed a service', id: 'menambahkan layanan', what: 'Cloud & DevOps', timeEn: '41m', timeId: '41 mnt' },
+  { icon: Briefcase, avatar: null, who: 'Sahabat Finansial', en: 'posted a job', id: 'memposting lowongan', what: 'Mobile Engineer (Flutter)', timeEn: '1h', timeId: '1 jam' },
 ];
 
-const howItWorks = [
-  { icon: UserPlus, en: 'Create Profile', id: 'Buat Profil', descEn: 'Sign up, add your skills, experience, and portfolio.', descId: 'Daftar, tambahkan skill, pengalaman, dan portofolio.' },
-  { icon: Compass, en: 'Explore', id: 'Jelajahi', descEn: 'Browse jobs, projects, talents, and courses.', descId: 'Jelajahi lowongan, proyek, talent, dan kursus.' },
-  { icon: Handshake, en: 'Connect', id: 'Terhubung', descEn: 'Apply, bid, book sessions, or message members.', descId: 'Lamar, tawar, pesan sesi, atau chat member.' },
-  { icon: Sprout, en: 'Grow', id: 'Tumbuh', descEn: 'Learn, earn, and advance your career.', descId: 'Belajar, hasilkan, dan kembangkan karier.' },
-];
-
-const skillCategories = [
-  { icon: Code2, label: 'Software Engineering' },
-  { icon: Brain, label: 'Data & AI' },
-  { icon: Compass, label: 'Product Management' },
-  { icon: Palette, label: 'UI/UX & Creative' },
-  { icon: Cloud, label: 'DevOps & Infrastructure' },
-  { icon: Shield, label: 'Cybersecurity' },
-  { icon: Bug, label: 'QA & Testing' },
-  { icon: UsersRound, label: 'HR & People' },
-  { icon: Megaphone, label: 'Digital Marketing & Growth' },
-  { icon: Blocks, label: 'No-Code/Low-Code' },
-  { icon: Handshake, label: 'Sales & Business Development' },
-];
-
-const platformFeatures = [
-  { icon: Users, href: '/directory', en: 'Member Directory', id: 'Direktori Member', descEn: 'Find IT practitioners by skill & location.', descId: 'Cari praktisi IT berdasarkan skill & lokasi.' },
-  { icon: Briefcase, href: '/jobs', en: 'Job Portal', id: 'Job Portal', descEn: 'Post jobs, apply with one click.', descId: 'Pasang lowongan, lamar sekali klik.' },
-  { icon: FolderGit2, href: '/projects', en: 'Project Portal', id: 'Project Portal', descEn: 'Post projects, receive bids, hire.', descId: 'Pasang proyek, terima penawaran, rekrut.' },
-  { icon: GraduationCap, href: '/courses', en: 'LMS + Coaching', id: 'LMS + Coaching', descEn: 'Courses with quizzes & certificates.', descId: 'Kursus dengan kuis & sertifikat.' },
-  { icon: CalendarDays, href: '/events', en: 'Events', id: 'Event', descEn: 'Meetups, workshops & hackathons.', descId: 'Meetup, workshop & hackathon.' },
-  { icon: TrendingUp, href: '/services', en: 'Agency Services', id: 'Layanan Agency', descEn: 'End-to-end digital product delivery.', descId: 'Pengiriman produk digital end-to-end.' },
-];
-
-const agencyServices = [
-  { icon: Code2, title: 'SaaS', en: 'Product & cloud platforms', id: 'Produk & platform cloud' },
-  { icon: Brain, title: 'AI', en: 'Chatbots, ML & data pipelines', id: 'Chatbot, ML & data pipeline' },
-  { icon: Palette, title: 'Creative', en: 'Design, brand & UI kits', id: 'Desain, brand & UI kit' },
-  { icon: UsersRound, title: 'HR', en: 'Recruitment & HRIS', id: 'Rekrutmen & HRIS' },
+/* Turns the activity FOMO into a next step, one per audience. */
+const joinActions = [
+  { href: '/jobs/post', icon: Briefcase, en: 'Post a job', id: 'Pasang lowongan', subEn: 'Reach vetted IT talent in days.', subId: 'Jangkau talent IT terverifikasi dalam hitungan hari.' },
+  { href: '/services', icon: Wrench, en: 'Offer your services', id: 'Tawarkan layanan', subEn: 'Get discovered by companies that need you.', subId: 'Ditemukan perusahaan yang butuh keahlianmu.' },
+  { href: '/register', icon: Users, en: 'Build your profile', id: 'Buat profil', subEn: 'Show real work, get booked.', subId: 'Tunjukkan karya nyata, dapatkan booking.' },
 ];
 
 const testimonials = [
-  { textEn: 'Every interaction feels intentional. This platform gave me clarity I’d been searching for.', textId: 'Setiap interaksi terasa intentional. Platform ini memberi kejelasan yang saya cari.', author: 'Rizky Pratama', role: 'Backend Dev · Jakarta', photo: px('5308640', 200, 200) },
-  { textEn: 'It goes beyond functionality — it offers direction. The authenticity is unmatched.', textId: 'Melampaui fungsionalitas — ia memberi arah. Keasliannya tak tertandingi.', author: 'Sarah Wijaya', role: 'Founder · Bandung', photo: px('7752820', 200, 200) },
-  { textEn: 'Simple and deep. I could focus on meaningful outcomes, not processes.', textId: 'Simpel dan mendalam. Saya bisa fokus pada hasil, bukan proses.', author: 'Aditya Nugroho', role: 'Data Scientist · Surabaya', photo: px('6942776', 200, 200) },
-  { textEn: 'It doesn’t overwhelm, yet delivers depth where it matters. Professional and personal.', textId: 'Tidak berlebihan, tapi memberi kedalaman di tempat penting. Profesional dan personal.', author: 'Maya Sari', role: 'Product Designer · Yogya', photo: px('15014092', 200, 200) },
-  { textEn: 'I hired two engineers here in under a week. The profiles actually show the work, not just job titles.', textId: 'Saya merekrut dua engineer di sini kurang dari seminggu. Profilnya menunjukkan karya, bukan sekadar jabatan.', author: 'Bayu Prakoso', role: 'CTO · PT Kirana Teknologi', photo: px('749091', 200, 200) },
-  { textEn: 'The courses and the community feed keep me current without ten tabs open all day.', textId: 'Kursus dan feed komunitasnya bikin saya tetap update tanpa buka sepuluh tab seharian.', author: 'Nadia Rahmawati', role: 'DevOps Engineer · Semarang', photo: px('7534107', 200, 200) },
+  { textEn: 'Every interaction feels intentional. This platform gave me clarity I’d been searching for since I started freelancing — from finding real clients to actually getting paid on time, every single step just makes sense.', textId: 'Setiap interaksi terasa intentional. Platform ini memberi kejelasan yang saya cari sejak mulai freelance — mulai dari menemukan klien sungguhan sampai dibayar tepat waktu, semuanya terasa masuk akal.', author: 'Rizky Pratama', role: 'Backend Dev · Jakarta', photo: px('5308640', 200, 200), photoTall: px('5308640', 480, 640) },
+  { textEn: 'It goes beyond functionality — it offers direction. The authenticity is unmatched, and honestly it changed how I hire. I used to post jobs on five different sites; now I only need one place to find people who actually fit.', textId: 'Melampaui fungsionalitas — ia memberi arah. Keasliannya tak tertandingi, dan sejujurnya ini mengubah cara saya merekrut. Dulu saya posting lowongan di lima situs berbeda, sekarang cukup satu tempat untuk menemukan orang yang benar-benar cocok.', author: 'Sarah Wijaya', role: 'Founder · Bandung', photo: px('7752820', 200, 200), photoTall: px('7752820', 480, 640) },
+  { textEn: 'Simple and deep. I could focus on meaningful outcomes, not processes. Every course, every project brief, every conversation in the community feels like it was built by someone who actually does this work every day.', textId: 'Simpel dan mendalam. Saya bisa fokus pada hasil, bukan proses. Setiap kursus, setiap brief proyek, setiap obrolan di komunitas terasa dibuat oleh orang yang benar-benar menjalani pekerjaan ini setiap hari.', author: 'Aditya Nugroho', role: 'Data Scientist · Surabaya', photo: px('6942776', 200, 200), photoTall: px('6942776', 480, 640) },
+  { textEn: 'It doesn’t overwhelm, yet delivers depth where it matters. Professional and personal at the same time — I’ve tried a handful of other platforms before, and none of them got that balance right the way this one does.', textId: 'Tidak berlebihan, tapi memberi kedalaman di tempat penting. Profesional dan personal di saat yang sama — saya sudah coba beberapa platform lain sebelumnya, dan tidak ada yang menemukan keseimbangan itu seperti di sini.', author: 'Maya Sari', role: 'Product Designer · Yogya', photo: px('15014092', 200, 200), photoTall: px('15014092', 480, 640) },
+  { textEn: 'I hired two engineers here in under a week. The profiles actually show the work, not just job titles, and the whole process from shortlisting to interview scheduling took a fraction of the time we normally spend.', textId: 'Saya merekrut dua engineer di sini kurang dari seminggu. Profilnya menunjukkan karya nyata, bukan sekadar jabatan, dan seluruh proses dari shortlist sampai jadwal interview jauh lebih cepat dari biasanya.', author: 'Bayu Prakoso', role: 'CTO · PT Kirana Teknologi', photo: px('749091', 200, 200), photoTall: px('749091', 480, 640) },
+  { textEn: 'The courses and the community feed keep me current without ten tabs open all day. I check one dashboard in the morning and I already know what’s happening across jobs, events, and everyone I follow.', textId: 'Kursus dan feed komunitasnya bikin saya tetap update tanpa buka sepuluh tab seharian. Cukup buka satu dashboard di pagi hari, saya sudah tahu apa yang terjadi di lowongan, event, dan orang-orang yang saya ikuti.', author: 'Nadia Rahmawati', role: 'DevOps Engineer · Semarang', photo: px('7534107', 200, 200), photoTall: px('7534107', 480, 640) },
 ];
+
+/* Agency service lines. Same two-tone headline as the ecosystem cards;
+   `wide` drives the 4+2 / 2+4 bento rhythm on desktop, `meta` is the
+   engagement hint buyers look for, `waEn/waId` pre-fills the WhatsApp chat
+   so the conversation starts with the service already named. */
+const agencyCards = [
+  {
+    key: 'saas', icon: Cloud, wide: true,
+    tagEn: 'SaaS', tagId: 'SaaS',
+    leadEn: 'Product & cloud platforms,', leadId: 'Produk & platform cloud,',
+    boldEn: 'from MVP to millions of requests.', boldId: 'dari MVP sampai jutaan request.',
+    metaEn: 'MVP in 6–10 weeks', metaId: 'MVP dalam 6–10 minggu',
+    waEn: "Hi masmasit, I'd like to build a SaaS product with your team.", waId: 'Halo masmasit, saya ingin membangun produk SaaS bersama tim Anda.',
+  },
+  {
+    key: 'ai', icon: Sparkles, wide: false,
+    tagEn: 'AI', tagId: 'AI',
+    leadEn: 'Chatbots, ML & data pipelines,', leadId: 'Chatbot, ML & data pipeline,',
+    boldEn: 'shipped to real users.', boldId: 'dirilis ke pengguna nyata.',
+    metaEn: 'Pilot in 4 weeks', metaId: 'Pilot dalam 4 minggu',
+    waEn: "Hi masmasit, I'd like to discuss an AI project.", waId: 'Halo masmasit, saya ingin diskusi proyek AI.',
+  },
+  {
+    key: 'creative', icon: Palette, wide: false,
+    tagEn: 'Creative', tagId: 'Kreatif',
+    leadEn: 'Design, brand & UI kits,', leadId: 'Desain, brand & UI kit,',
+    boldEn: 'as good as it works.', boldId: 'secantik performanya.',
+    metaEn: 'Brand kit in 3 weeks', metaId: 'Brand kit dalam 3 minggu',
+    waEn: "Hi masmasit, I'd like help with design & branding.", waId: 'Halo masmasit, saya butuh bantuan desain & branding.',
+  },
+  {
+    key: 'hr', icon: UsersRound, wide: true,
+    tagEn: 'HR', tagId: 'HR',
+    leadEn: 'Recruitment & HRIS,', leadId: 'Rekrutmen & HRIS,',
+    boldEn: 'hire faster without the spreadsheets.', boldId: 'rekrut lebih cepat tanpa spreadsheet.',
+    metaEn: 'Shortlist in 7 days', metaId: 'Shortlist dalam 7 hari',
+    waEn: "Hi masmasit, I'd like support with recruitment / HRIS.", waId: 'Halo masmasit, saya butuh dukungan rekrutmen / HRIS.',
+  },
+];
+
+const WA_NUMBER = '6281234567890';
+const waLink = (text: string) => `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(text)}`;
 
 /* -------------------------------------------------------------- components */
 
@@ -218,9 +203,471 @@ function Meta({ children }: { children: React.ReactNode }) {
 
 function Chip({ children }: { children: React.ReactNode }) {
   return (
-    <span className="rounded border border-border px-1.5 py-0.5 text-[11px] leading-4 text-muted-foreground">
+    <span className="shrink-0 rounded border border-border px-1.5 py-0.5 text-[11px] leading-4 text-muted-foreground">
       {children}
     </span>
+  );
+}
+
+/* Ecosystem card footer — a live preview of that section's real data, sized
+   to consume all leftover card height (flex-1) so nothing sits empty.
+   Talents keeps its auto-scrolling marquee; the rest are user-swipeable
+   (overflow-x-auto), edges softly faded, scrollbar hidden either way.
+   `flip` bleeds the strip to the card's top edge instead of its bottom,
+   for cards whose header renders below the preview. */
+const chunk = <T,>(arr: T[], size: number) =>
+  Array.from({ length: Math.ceil(arr.length / size) }, (_, i) => arr.slice(i * size, i * size + size));
+
+function EcosystemPreview({ ekey, flip }: { ekey: string; flip: boolean }) {
+
+  if (ekey === 'talents') {
+    return (
+      <div className={`flex-1 min-h-0 marquee-fade -mx-5 overflow-hidden ${flip ? '-mt-5' : '-mb-5'}`}>
+        <div className={`animate-marquee flex h-full w-max gap-2.5 px-5 ${flip ? 'pb-3 pt-5' : 'pb-5 pt-4'}`}>
+          {[...demoTalents, ...demoTalents].map((tal, idx) => (
+            <img
+              key={`${tal.id}-${idx}`}
+              src={tal.avatar_url ?? ''}
+              alt=""
+              loading="lazy"
+              className="h-full w-32 shrink-0 rounded-xl border border-border object-cover"
+            />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (ekey === 'jobs') {
+    const half = Math.ceil(opportunities.jobs.length / 2);
+    const rowA = opportunities.jobs.slice(0, half);
+    const rowB = opportunities.jobs.slice(half);
+    const card = (j: (typeof opportunities.jobs)[number], idx: number) => (
+      <div key={`${j.role}-${idx}`} className="flex h-full w-48 shrink-0 flex-col justify-center rounded-md border border-border bg-background/40 p-3.5">
+        <p className="truncate text-sm font-medium">{j.role}</p>
+        <p className="mt-1 truncate text-xs text-muted-foreground">{j.company} · {j.location}</p>
+        <div className="mt-2.5 flex flex-wrap gap-1.5">
+          {j.stack.slice(0, 2).map((s) => <Chip key={s}>{s}</Chip>)}
+        </div>
+        <p className="mt-2.5 truncate text-sm font-medium text-primary">{j.pay}</p>
+      </div>
+    );
+    return (
+      <div className={`flex flex-1 min-h-0 flex-col gap-2.5 marquee-fade -mx-5 overflow-hidden ${flip ? '-mt-5' : '-mb-5'}`}>
+        <div className={`min-h-0 flex-1 overflow-hidden ${flip ? 'pt-5' : 'pt-4'}`}>
+          <div className="animate-marquee flex h-full w-max gap-2.5 px-5">
+            {[...rowA, ...rowA].map((item, idx) => card(item, idx))}
+          </div>
+        </div>
+        <div className={`min-h-0 flex-1 overflow-hidden ${flip ? 'pb-3' : 'pb-5'}`}>
+          <div className="animate-marquee-reverse flex h-full w-max gap-2.5 px-5">
+            {[...rowB, ...rowB].map((item, idx) => card(item, idx))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (ekey === 'projects') {
+    const half = Math.ceil(opportunities.projects.length / 2);
+    const rowA = opportunities.projects.slice(0, half);
+    const rowB = opportunities.projects.slice(half);
+    const card = (p: (typeof opportunities.projects)[number], idx: number) => (
+      <div key={`${p.role}-${idx}`} className="flex h-full w-40 shrink-0 flex-col justify-center rounded-md border border-border bg-background/40 p-3.5">
+        <p className="truncate text-sm font-medium">{p.role}</p>
+        <p className="mt-1 truncate text-xs text-muted-foreground">{p.company}</p>
+        <p className="mt-2.5 truncate text-xs font-medium text-primary">{p.pay}</p>
+      </div>
+    );
+    return (
+      <div className={`flex flex-1 min-h-0 flex-col gap-2.5 marquee-fade -mx-5 overflow-hidden ${flip ? '-mt-5' : '-mb-5'}`}>
+        <div className={`min-h-0 flex-1 overflow-hidden ${flip ? 'pt-5' : 'pt-4'}`}>
+          <div className="animate-marquee flex h-full w-max gap-2.5 px-5">
+            {[...rowA, ...rowA].map((item, idx) => card(item, idx))}
+          </div>
+        </div>
+        <div className={`min-h-0 flex-1 overflow-hidden ${flip ? 'pb-3' : 'pb-5'}`}>
+          <div className="animate-marquee-reverse flex h-full w-max gap-2.5 px-5">
+            {[...rowB, ...rowB].map((item, idx) => card(item, idx))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (ekey === 'learn') {
+    return (
+      <div className={`flex-1 min-h-0 marquee-fade -mx-5 overflow-hidden ${flip ? '-mt-5' : '-mb-5'}`}>
+        <div className={`animate-marquee flex h-full w-max gap-2.5 px-5 ${flip ? 'pb-3 pt-5' : 'pb-5 pt-4'}`}>
+          {[...courses, ...courses].map((c, idx) => (
+            <div key={`${c.title}-${idx}`} className="relative h-full w-40 shrink-0 overflow-hidden rounded-lg border border-border">
+              <img src={c.thumb} alt="" loading="lazy" className="h-full w-full object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-t from-background via-background/10 to-transparent" />
+              <p className="absolute inset-x-0 bottom-0 line-clamp-2 p-3 text-xs font-medium leading-snug">{c.title}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (ekey === 'events') {
+    return (
+      <div className={`flex-1 min-h-0 marquee-fade -mx-5 overflow-hidden ${flip ? '-mt-5' : '-mb-5'}`}>
+        <div className={`animate-marquee flex h-full w-max gap-2.5 px-5 ${flip ? 'pb-3 pt-5' : 'pb-5 pt-4'}`}>
+          {[...events, ...events].map((ev, idx) => (
+            <div key={`${ev.title}-${idx}`} className="relative h-full w-40 shrink-0 overflow-hidden rounded-lg border border-border">
+              <img src={ev.thumb} alt="" loading="lazy" className="h-full w-full object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-t from-background via-background/10 to-transparent" />
+              <div className="absolute left-1.5 top-1.5 rounded bg-background/80 px-1.5 py-0.5 leading-none">
+                <span className="tnum block text-xs font-semibold">{ev.day}</span>
+              </div>
+              <p className="absolute inset-x-0 bottom-0 line-clamp-2 p-3 text-xs font-medium leading-snug">{ev.title}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (ekey === 'services') {
+    return (
+      <div className="mt-4 flex flex-1 min-h-0 flex-wrap content-start gap-2.5">
+        {serviceCategories.map((c) => (
+          <span
+            key={c}
+            className="flex h-fit shrink-0 items-center rounded-full border border-border bg-background/40 px-4 py-2.5 text-xs font-medium"
+          >
+            {c}
+          </span>
+        ))}
+      </div>
+    );
+  }
+
+  if (ekey === 'community') {
+    const topics = ['Discussions', 'Knowledge Sharing', 'Networking', 'Collaboration', 'Mentoring', 'Career Advice'];
+    return (
+      <div className="mt-4 flex flex-1 min-h-0 flex-wrap content-start gap-2.5">
+        {topics.map((c) => (
+          <span
+            key={c}
+            className="flex h-fit shrink-0 items-center rounded-full border border-border bg-background/40 px-4 py-2.5 text-xs font-medium"
+          >
+            {c}
+          </span>
+        ))}
+      </div>
+    );
+  }
+
+  return null;
+}
+
+/* Agency card body — a small, believable artefact of each service's output
+   (dashboard, chat, UI kit, hiring funnel) instead of a paragraph describing
+   it. Built in markup so it stays crisp, themed and translatable. Surfaces
+   reuse the ecosystem preview tokens (bg-background/40 + hairline border). */
+const surface = 'rounded-md border border-border bg-background/40';
+
+const prefersReducedMotion = () =>
+  typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* Flips to true the first time the element is ~35% on screen, then stops
+   observing — entrance animations play once, never on every scroll pass.
+   Clipping by the mobile carousel counts, so off-screen cards wait to be
+   swiped in. */
+function useInViewOnce<T extends Element>(threshold = 0.35) {
+  const ref = useRef<T>(null);
+  const [inView, setInView] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    if (!('IntersectionObserver' in window) || prefersReducedMotion()) {
+      setInView(true);
+      return;
+    }
+    const io = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        setInView(true);
+        io.disconnect();
+      }
+    }, { threshold });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [threshold]);
+  return [ref, inView] as const;
+}
+
+/* Eased count-up from 0; tabular figures keep the width from jittering. */
+function CountUp({ to, run, decimals = 0, suffix = '', duration = 1400, delay = 0 }: {
+  to: number; run: boolean; decimals?: number; suffix?: string; duration?: number; delay?: number;
+}) {
+  const [v, setV] = useState(0);
+  useEffect(() => {
+    if (!run) return;
+    if (prefersReducedMotion()) { setV(to); return; }
+    let raf = 0;
+    const timer = setTimeout(() => {
+      const start = performance.now();
+      const tick = (now: number) => {
+        const p = Math.min(1, (now - start) / duration);
+        setV(to * (1 - Math.pow(1 - p, 3)));
+        if (p < 1) raf = requestAnimationFrame(tick);
+      };
+      raf = requestAnimationFrame(tick);
+    }, delay);
+    return () => { clearTimeout(timer); cancelAnimationFrame(raf); };
+  }, [run, to, duration, delay]);
+  return <>{v.toFixed(decimals)}{suffix}</>;
+}
+
+/* Fade-and-rise used by the smaller preview pieces. */
+const rise = (on: boolean) =>
+  `transition-[opacity,transform] duration-700 ease-out ${on ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0'}`;
+
+function AgencyPreview({ akey }: { akey: string }) {
+  const { t } = useLang();
+  const [ref, inView] = useInViewOnce<HTMLDivElement>();
+
+  // Chat choreography: question → typing → answer → typing again.
+  const [chatStep, setChatStep] = useState(0);
+  useEffect(() => {
+    if (akey !== 'ai' || !inView) return;
+    if (prefersReducedMotion()) { setChatStep(4); return; }
+    const timers = [300, 1000, 2300, 3000].map((ms, i) => setTimeout(() => setChatStep(i + 1), ms));
+    return () => timers.forEach(clearTimeout);
+  }, [akey, inView]);
+
+  if (akey === 'saas') {
+    const line = 'M0,52 C18,50 28,44 44,45 S70,36 88,37 S116,26 134,27 S162,14 178,13 S194,6 200,5';
+    const metrics = [
+      { en: 'Uptime', id: 'Uptime', to: 99.98, dec: 2, suffix: '%' },
+      { en: 'p95', id: 'p95', to: 118, dec: 0, suffix: 'ms' },
+      { en: 'Deploys', id: 'Deploy', to: 42, dec: 0, suffix: '/wk' },
+    ];
+    return (
+      <div ref={ref} className="mt-5 flex flex-1 min-h-0 flex-col gap-2.5 lg:flex-row">
+        <div className={`${surface} flex min-h-[150px] flex-1 flex-col p-3.5`}>
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-xs text-muted-foreground">{t('Requests / min', 'Request / menit')}</span>
+            <span className={`tnum text-xs font-medium text-primary transition-opacity delay-1000 duration-500 ${inView ? 'opacity-100' : 'opacity-0'}`}>+38%</span>
+          </div>
+          <p className="tnum mt-1 text-lg font-semibold tracking-tight">
+            <CountUp to={24.6} decimals={1} suffix="K" run={inView} duration={1600} />
+          </p>
+          <div className="relative mt-2 min-h-[56px] flex-1">
+            {/* Left-to-right wipe via clip-path; stroke dash tricks break with
+                non-scaling strokes on a stretched viewBox. */}
+            <svg
+              viewBox="0 0 200 60"
+              preserveAspectRatio="none"
+              aria-hidden
+              className="absolute inset-0 h-full w-full"
+              style={{
+                clipPath: inView ? 'inset(0 0 0 0)' : 'inset(0 100% 0 0)',
+                transition: 'clip-path 1.6s cubic-bezier(0.65, 0, 0.35, 1)',
+              }}
+            >
+              <defs>
+                <linearGradient id="agency-saas-fill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.28" />
+                  <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0" />
+                </linearGradient>
+              </defs>
+              <path d={`${line} L200,60 L0,60 Z`} fill="url(#agency-saas-fill)" />
+              <path d={line} fill="none" stroke="hsl(var(--primary))" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
+            </svg>
+          </div>
+          <div className="mt-3 flex items-center gap-2 border-t border-border pt-3 text-xs text-muted-foreground">
+            <span className="animate-pulse-soft h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+            <span className="truncate"><span className="text-foreground">main</span> · {t('deployed 2m ago', 'dirilis 2 menit lalu')}</span>
+          </div>
+        </div>
+        <div className="grid grid-cols-3 gap-2.5 lg:w-40 lg:grid-cols-1">
+          {metrics.map((m, i) => (
+            <div
+              key={m.en}
+              className={`${surface} flex flex-col justify-center p-3 ${rise(inView)}`}
+              style={{ transitionDelay: `${300 + i * 150}ms` }}
+            >
+              <span className="truncate text-[11px] text-muted-foreground">{t(m.en, m.id)}</span>
+              <span className="tnum mt-1 truncate text-sm font-semibold sm:text-base">
+                <CountUp to={m.to} decimals={m.dec} suffix={m.suffix} run={inView} delay={300 + i * 150} />
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (akey === 'ai') {
+    const typing = (
+      <span className="flex w-fit items-center gap-1 rounded-2xl rounded-bl-sm bg-secondary px-3 py-2.5 animate-fade-up" aria-hidden>
+        {[0, 1, 2].map((d) => (
+          <span key={d} className="animate-pulse-soft h-1.5 w-1.5 rounded-full bg-muted-foreground" style={{ animationDelay: `${d * 0.3}s` }} />
+        ))}
+      </span>
+    );
+    return (
+      <div ref={ref} className={`${surface} mt-5 flex flex-1 min-h-0 flex-col p-3.5`}>
+        <div className="flex items-center gap-2 border-b border-border pb-3">
+          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/15">
+            <Sparkles className="h-3.5 w-3.5 text-primary" />
+          </span>
+          <span className="truncate text-xs font-medium">{t('Store assistant', 'Asisten toko')}</span>
+          <span className="ml-auto flex items-center gap-1.5 text-[11px] text-muted-foreground">
+            <span className="h-1.5 w-1.5 rounded-full bg-primary" /> online
+          </span>
+        </div>
+        {/* min-height reserves the final layout so the card never jumps. */}
+        <div className="flex min-h-[132px] flex-1 flex-col justify-end gap-2 pt-3 text-xs leading-snug">
+          {chatStep >= 1 && (
+            <p className="ml-auto max-w-[85%] animate-fade-up rounded-2xl rounded-br-sm bg-secondary px-3 py-2">
+              {t('Where is order #4821?', 'Pesanan #4821 sudah sampai mana?')}
+            </p>
+          )}
+          {chatStep >= 3 && (
+            <p className="max-w-[85%] animate-fade-up rounded-2xl rounded-bl-sm border border-primary/20 bg-primary/10 px-3 py-2">
+              {t('Out for delivery — arriving tomorrow by 2 PM.', 'Sedang dikirim — estimasi tiba besok pukul 14.00.')}
+            </p>
+          )}
+          {(chatStep === 2 || chatStep >= 4) && typing}
+        </div>
+      </div>
+    );
+  }
+
+  if (akey === 'creative') {
+    const swatches = ['--primary', '--chart-2', '--chart-3', '--chart-4', '--foreground'];
+    return (
+      <div ref={ref} className="mt-5 flex flex-1 min-h-0 flex-col gap-2.5">
+        <div className={`${surface} flex flex-1 items-center gap-4 p-3.5`}>
+          <span
+            className={`font-display text-5xl font-bold leading-none tracking-tight transition-[opacity,letter-spacing] duration-1000 ease-out ${inView ? 'opacity-100' : 'opacity-0'}`}
+            style={{ letterSpacing: inView ? '-0.025em' : '0.3em' }}
+          >
+            Aa
+          </span>
+          <div className={`min-w-0 text-xs ${rise(inView)}`} style={{ transitionDelay: '300ms' }}>
+            <p className="truncate font-medium">Space Grotesk</p>
+            <p className="truncate text-muted-foreground">Inter · 400—800</p>
+          </div>
+        </div>
+        <div className="flex h-10 overflow-hidden rounded-md border border-border">
+          {swatches.map((s, i) => (
+            <span
+              key={s}
+              className="flex-1 origin-bottom transition-transform duration-500 ease-out"
+              style={{ background: `hsl(var(${s}))`, transform: inView ? 'scaleY(1)' : 'scaleY(0)', transitionDelay: `${400 + i * 90}ms` }}
+            />
+          ))}
+        </div>
+        <div className={`${surface} flex items-center gap-2.5 p-3`}>
+          <span className={`rounded-full bg-primary px-3 py-1.5 text-[11px] font-medium text-primary-foreground ${rise(inView)}`} style={{ transitionDelay: '800ms' }}>Button</span>
+          <span
+            className={`flex h-5 w-9 shrink-0 items-center rounded-full p-0.5 transition-colors duration-300 ${inView ? 'bg-primary' : 'bg-secondary'}`}
+            style={{ transitionDelay: '1200ms' }}
+            aria-hidden
+          >
+            <span
+              className="h-4 w-4 rounded-full bg-primary-foreground transition-transform duration-300 ease-out"
+              style={{ transform: inView ? 'translateX(16px)' : 'translateX(0)', transitionDelay: '1200ms' }}
+            />
+          </span>
+          <span className={`truncate rounded-full border border-border px-2.5 py-1 text-[11px] text-muted-foreground ${rise(inView)}`} style={{ transitionDelay: '950ms' }}>Chip</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (akey === 'hr') {
+    const stages = [
+      { en: 'Applied', id: 'Melamar', n: 128 },
+      { en: 'Screening', id: 'Screening', n: 46 },
+      { en: 'Interview', id: 'Interview', n: 14 },
+      { en: 'Offer', id: 'Offer', n: 4 },
+    ];
+    const hire = demoTalents[3];
+    return (
+      <div ref={ref} className="mt-5 flex flex-1 min-h-0 flex-col gap-2.5 lg:flex-row">
+        <div className={`${surface} flex flex-1 flex-col justify-center gap-2 p-3.5`}>
+          {stages.map((s, i) => (
+            <div key={s.en} className="flex items-center gap-3">
+              <span className="w-16 shrink-0 truncate text-xs text-muted-foreground sm:w-20">{t(s.en, s.id)}</span>
+              <div className="h-7 flex-1 overflow-hidden rounded bg-secondary/60">
+                <div
+                  className="flex h-full items-center justify-end rounded border-r-2 border-primary bg-primary/15 pr-2 transition-[width] duration-1000 ease-out"
+                  style={{
+                    width: inView ? `${Math.max(18, (s.n / stages[0].n) * 100)}%` : '0%',
+                    transitionDelay: `${i * 160}ms`,
+                  }}
+                >
+                  <span className="tnum text-xs font-medium">
+                    <CountUp to={s.n} run={inView} delay={i * 160} duration={1000} />
+                  </span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div
+          className={`${surface} flex items-center gap-3 p-3.5 lg:w-52 lg:flex-col lg:items-start lg:justify-center ${rise(inView)}`}
+          style={{ transitionDelay: '700ms' }}
+        >
+          <img src={hire.avatar_url ?? ''} alt="" loading="lazy" className="h-10 w-10 shrink-0 rounded-full border border-border object-cover lg:h-12 lg:w-12" />
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-medium">{hire.full_name}</p>
+            <p className="truncate text-xs text-muted-foreground">{hire.role}</p>
+          </div>
+          <span
+            className={`shrink-0 rounded-full border border-primary/25 bg-primary/10 px-2.5 py-1 text-[11px] font-medium text-primary transition-[opacity,transform] duration-500 ease-out ${inView ? 'scale-100 opacity-100' : 'scale-75 opacity-0'}`}
+            style={{ transitionDelay: '1300ms' }}
+          >
+            {t('Offer accepted', 'Offer diterima')}
+          </span>
+          <p className="hidden text-xs text-muted-foreground lg:block">
+            {t('Time to hire', 'Waktu rekrut')}{' '}
+            <span className="tnum font-medium text-foreground">
+              <CountUp to={11} run={inView} delay={900} duration={900} /> {t('days', 'hari')}
+            </span>
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return null;
+}
+
+/* Testimonials — a non-stop infinite marquee of tall portrait cards (photo
+   full-bleed, quote overlaid on a bottom gradient). Same duplicated-array
+   marquee technique used across the Ecosystem previews, never pauses. */
+function TestimonialMarquee() {
+  const { t } = useLang();
+
+  return (
+    <div className="marquee-fade -mx-4 overflow-hidden sm:-mx-6 lg:-mx-8">
+      <div className="animate-marquee flex w-max gap-5 px-4 sm:gap-6 sm:px-6 lg:px-8">
+        {[...testimonials, ...testimonials].map((q, idx) => (
+          <figure
+            key={`${q.author}-${idx}`}
+            className="relative h-[420px] w-64 shrink-0 overflow-hidden rounded-2xl border border-border sm:h-[480px] sm:w-72"
+          >
+            <img src={q.photoTall} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
+            <figcaption className="absolute inset-x-0 bottom-0 p-5">
+              <blockquote className="line-clamp-4 text-sm leading-snug text-white/90">
+                “{t(q.textEn, q.textId)}”
+              </blockquote>
+              <p className="mt-3 text-sm font-semibold text-white">{q.author}</p>
+              <p className="text-xs text-white/70">{q.role}</p>
+            </figcaption>
+          </figure>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -228,35 +675,25 @@ function Chip({ children }: { children: React.ReactNode }) {
 
 export default function HomePage() {
   const { t } = useLang();
-  const [tab, setTab] = useState<OpportunityTab>('jobs');
-  const [talents, setTalents] = useState(demoTalents);
-  const [live, setLive] = useState<number[]>([0, 0, 0, 0]);
-  const [totals, setTotals] = useState<number[]>([0, 0, 0, 0]);
+  // null until counted — so a loading page never flashes a row of zeros.
+  const [live, setLive] = useState<number[] | null>(null);
+  // Zeros read as "nobody is here"; only surface the counters once real
+  // activity exists, otherwise the demo feed carries the section alone.
+  const showLiveStats = !!live && live.some((n) => n > 0);
 
-  useEffect(() => {
-    (async () => {
-      const { data } = await supabase
-        .from('profiles')
-        .select('id, full_name, bio, avatar_url, location')
-        .eq('is_talent', true)
-        .eq('talent_approved', 'approved')
-        .limit(4);
-      if (data && data.length > 0) {
-        setTalents(
-          data.map((p: Record<string, unknown>, i) => ({
-            id: String(p.id),
-            full_name: (p.full_name as string) ?? demoTalents[i % 4].full_name,
-            role: (p.bio as string)?.slice(0, 40) ?? demoTalents[i % 4].role,
-            location: (p.location as string) ?? demoTalents[i % 4].location,
-            skills: demoTalents[i % 4].skills,
-            years: demoTalents[i % 4].years,
-            available: true,
-            avatar_url: (p.avatar_url as string) ?? null,
-          }))
-        );
-      }
-    })();
-  }, []);
+  // mailto: silently does nothing without a desktop mail client — copying
+  // the address is the reliable fallback.
+  const [copied, setCopied] = useState(false);
+  const copyEmail = async () => {
+    try {
+      await navigator.clipboard.writeText(CONTACT_EMAIL);
+      setCopied(true);
+      toast.success(t('Email address copied', 'Alamat email disalin'));
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      window.location.href = `mailto:${CONTACT_EMAIL}`;
+    }
+  };
 
   /* Live counters — real rows, counted head-only so nothing is downloaded. */
   useEffect(() => {
@@ -282,170 +719,107 @@ export default function HomePage() {
       ]).catch(() => null);
 
       if (results) setLive(results);
-
-      const total = async (table: string, filter?: [string, string]) => {
-        let q = supabase.from(table).select('*', { count: 'exact', head: true });
-        if (filter) q = q.eq(filter[0], filter[1]);
-        const { count: n } = await q;
-        return n ?? 0;
-      };
-
-      const totalResults = await Promise.all([
-        total('profiles'),
-        total('jobs', ['status', 'open']),
-        total('projects', ['status', 'open']),
-        total('courses'),
-      ]).catch(() => null);
-
-      if (totalResults) setTotals(totalResults);
     })();
   }, []);
-
-  const rows = opportunities[tab];
-
-  /* Stories slider: scrolls by one card, one row on every breakpoint. */
-  const storiesRef = useRef<HTMLDivElement>(null);
-  const slideStories = (dir: 1 | -1) => {
-    const el = storiesRef.current;
-    if (!el) return;
-    const card = el.firstElementChild as HTMLElement | null;
-    const step = card ? card.offsetWidth + 16 : el.clientWidth * 0.8;
-    el.scrollBy({ left: dir * step, behavior: 'smooth' });
-  };
 
   return (
     <AppShell>
       <PageDecor>
         {/* 1 ── HERO ------------------------------------------------------- */}
-        <section className="relative overflow-hidden border-b border-border">
+        <section className="relative flex min-h-screen items-center overflow-hidden">
+          <img
+            src={heroBackground.src}
+            alt=""
+            aria-hidden
+            className="pointer-events-none absolute inset-0 h-full w-full object-cover"
+          />
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0"
+            style={{
+              background:
+                'linear-gradient(to bottom, hsl(var(--background)) 0%, transparent 30%, transparent 55%, hsl(var(--background)) 92%)',
+            }}
+          />
+          <div className="relative mx-auto w-full max-w-5xl px-4 py-20 text-center sm:px-6 lg:px-8">
+            <h1 className="mx-auto text-4xl font-extrabold leading-[1.05] tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl">
+              <span className="block lg:whitespace-nowrap">{t("Indonesia's IT ecosystem,", 'Ekosistem IT Indonesia,')}</span>
+              <span className="block">{t('in one place.', 'dalam satu tempat.')}</span>
+            </h1>
+            <p className="mx-auto mt-6 max-w-xl text-base leading-relaxed text-muted-foreground text-pretty sm:text-lg">
+              {t(
+                'Discover resources, opportunities, talent, learning, projects, and communities built for Indonesian IT professionals.',
+                'Temukan resource, peluang, talent, materi belajar, proyek, dan komunitas untuk praktisi IT Indonesia.'
+              )}
+            </p>
 
-          <div className="relative mx-auto grid max-w-6xl gap-10 px-4 pb-14 pt-16 sm:px-6 sm:pb-20 sm:pt-24 lg:grid-cols-[1.08fr_0.92fr] lg:items-center lg:gap-14 lg:px-8">
-            <div>
-              <h1 className="mt-5 max-w-3xl font-display text-4xl font-semibold leading-[1.08] tracking-tight text-balance sm:text-5xl lg:text-6xl">
-                {t("Indonesia's IT ecosystem, in one place.", 'Ekosistem IT Indonesia, dalam satu tempat.')}
-              </h1>
-              <p className="mt-5 max-w-2xl text-base leading-relaxed text-muted-foreground text-pretty sm:text-lg">
-                {t(
-                  'Discover resources, opportunities, talent, learning, projects, and communities built for Indonesian IT professionals.',
-                  'Temukan resource, peluang, talent, materi belajar, proyek, dan komunitas untuk praktisi IT Indonesia.'
-                )}
-              </p>
-
-              {/* Global search — the platform is searchable end to end */}
-              <div className="mt-8 max-w-2xl">
-                <div className="flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 transition-colors focus-within:border-muted-foreground/40">
-                  <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
-                  <input
-                    className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-                    placeholder={t('Search jobs, projects, people, courses, resources…', 'Cari lowongan, proyek, orang, kursus, resource…')}
-                  />
-                  <kbd className="hidden shrink-0 rounded border border-border px-1.5 py-0.5 text-[11px] text-muted-foreground sm:block">⌘K</kbd>
-                </div>
-              </div>
-
-              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                <Link href="/register">
-                  <Button size="lg" className="w-full gap-2 sm:w-auto">
-                    {t('Join Community', 'Gabung Komunitas')} <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </Link>
-                <Link href="/talents">
-                  <Button size="lg" variant="outline" className="w-full gap-2 sm:w-auto">
-                    <Star className="h-4 w-4" /> {t('Find Talent', 'Cari Talent')}
-                  </Button>
-                </Link>
-              </div>
-
-              {/* Trust line — member count and satisfaction. */}
-              <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-3 text-sm text-muted-foreground">
-                <div className="flex items-center gap-2.5">
-                  <div className="flex -space-x-2">
-                    {demoTalents.map((m) => (
-                      <img
-                        key={m.id}
-                        src={m.avatar_url ?? ''}
-                        alt=""
-                        loading="lazy"
-                        className="h-7 w-7 rounded-full border-2 border-background object-cover"
-                      />
-                    ))}
-                  </div>
-                  <span>
-                    <span className="tnum">{totals[0].toLocaleString('id-ID')}</span>+ {t('members', 'member')}
-                  </span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <Star className="h-4 w-4 fill-warning text-warning" />
-                  <span><span className="tnum">98%</span> {t('satisfaction', 'puas')}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Visual asset — framed, scrimmed so it sits in the dark surface. */}
-            <div className="relative">
-              <div className="relative overflow-hidden rounded-xl border border-border">
-                <img
-                  src={heroImage}
-                  alt={t('Indonesian IT practitioners collaborating', 'Praktisi IT Indonesia berkolaborasi')}
-                  loading="lazy"
-                  className="h-[220px] w-full object-cover sm:h-[300px] lg:h-[380px]"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-background via-background/25 to-transparent" />
-                <div className="absolute inset-x-0 bottom-0 flex flex-wrap items-center gap-x-4 gap-y-1 p-4">
-                  <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <Circle className="h-1.5 w-1.5 animate-pulse-soft fill-primary text-primary" />
-                    <span className="tnum">248</span> {t('online now', 'sedang online')}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    <span className="tnum">36</span> {t('new opportunities today', 'peluang baru hari ini')}
-                  </span>
-                </div>
-              </div>
+            <div className="mt-9 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
+              <Link href="/register" className="w-full sm:w-auto">
+                <Button size="lg" className="h-14 w-full gap-1.5 rounded-full px-7 text-base sm:h-11 sm:w-auto sm:text-sm">
+                  {t('Start free', 'Mulai gratis')} <ChevronRight className="h-4 w-4" />
+                </Button>
+              </Link>
+              <Link href="/talents" className="w-full sm:w-auto">
+                <Button size="lg" className="h-14 w-full gap-1.5 rounded-full bg-foreground px-7 text-base text-background hover:bg-foreground/90 sm:h-11 sm:w-auto sm:text-sm">
+                  {t('Find Talent', 'Cari Talent')} <ChevronRight className="h-4 w-4" />
+                </Button>
+              </Link>
             </div>
           </div>
         </section>
 
-        {/* 10 ── STATISTICS (moved up: credibility before the tour) --------- */}
-        <section className="border-b border-border">
-          <div className="mx-auto grid max-w-6xl grid-cols-2 px-4 sm:px-6 lg:grid-cols-4 lg:px-8">
-            {platformCounts.map((s, i) => (
-              <div
-                key={s.en}
-                className={`py-7 ${i % 2 === 1 ? 'border-l border-border pl-6' : ''} ${i >= 2 ? 'border-t border-border lg:border-t-0' : ''} ${i === 2 ? 'lg:border-l lg:pl-6' : ''} ${i === 3 ? 'lg:pl-6' : ''}`}
-              >
-                <div className="tnum font-display text-2xl font-semibold tracking-tight sm:text-3xl">
-                  {totals[i].toLocaleString('id-ID')}
-                </div>
-                <div className="mt-1 text-sm text-muted-foreground">{t(s.en, s.id)}</div>
-              </div>
-            ))}
+        {/* 1b ── ABOUT / WHAT IS MASMASIT ------------------------------------ */}
+        <section className="relative overflow-hidden bg-background">
+          <div className="mx-auto grid max-w-6xl gap-8 px-4 py-16 sm:px-6 sm:py-20 lg:grid-cols-[0.7fr_1.3fr] lg:gap-16 lg:px-8">
+            <div>
+              <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">{t('About', 'Tentang')}</p>
+              <h2 className="mt-2 font-display text-2xl font-semibold tracking-tight sm:text-3xl">
+                {t('What is masmasit?', 'Apa itu masmasit?')}
+              </h2>
+            </div>
+            <div>
+              <p className="font-display text-xl font-semibold leading-snug tracking-tight text-balance sm:text-2xl">
+                {t(
+                  'masmasit is the home for Indonesian IT professionals to build their career and business.',
+                  'masmasit adalah rumah bagi praktisi IT Indonesia untuk membangun karier dan bisnis mereka.'
+                )}
+              </p>
+              <p className="mt-4 text-sm leading-relaxed text-muted-foreground text-pretty sm:text-base">
+                {t(
+                  'From job listings and freelance projects, to courses, events, talent bookings, and professional services — masmasit brings everything Indonesian IT practitioners need into one connected platform.',
+                  'Dari lowongan kerja dan proyek freelance, hingga kursus, event, booking talent, dan layanan profesional — masmasit menyatukan semua kebutuhan praktisi IT Indonesia dalam satu platform yang terhubung.'
+                )}
+              </p>
+            </div>
           </div>
         </section>
 
         {/* 2 ── EXPLORE THE ECOSYSTEM -------------------------------------- */}
-        <section className="relative overflow-hidden border-b border-border">
+        <section className="relative overflow-hidden bg-background">
           <div className="relative mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
             <SectionHead
               eyebrow={t('Ecosystem', 'Ekosistem')}
               title={t('Everything an Indonesian IT professional needs', 'Semua yang dibutuhkan praktisi IT Indonesia')}
-              desc={t('Eight connected areas, one account. Start anywhere.', 'Delapan area yang saling terhubung, satu akun. Mulai dari mana saja.')}
+              desc={t('Seven connected areas, one account. Start anywhere.', 'Tujuh area yang saling terhubung, satu akun. Mulai dari mana saja.')}
             />
 
-            <div className="grid gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-2 lg:grid-cols-6">
+            <div className="no-scrollbar flex snap-x gap-4 overflow-x-auto pb-1 sm:grid sm:snap-none sm:overflow-visible sm:pb-0 sm:grid-cols-2 lg:grid-cols-6">
               {ecosystem.map((e, i) => {
-                const lead = i < 2;
-                const span = lead ? 'sm:col-span-2 lg:col-span-3' : 'lg:col-span-2';
-                const inner = (
-                  <div className={`group flex h-full flex-col bg-card transition-colors hover:bg-secondary ${lead ? 'p-6' : 'p-5'}`}>
-                    <e.icon className={`text-primary ${lead ? 'h-6 w-6' : 'h-5 w-5'}`} strokeWidth={1.75} />
-                    <div className={`mt-4 flex items-center gap-1.5 font-medium ${lead ? 'text-lg' : 'text-sm'}`}>
-                      {t(e.en, e.id)}
-                      {e.href && <ArrowUpRight className="h-3.5 w-3.5 -translate-x-1 opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100" />}
-                      {!e.href && <span className="rounded border border-border px-1.5 py-0.5 text-[10px] font-normal text-muted-foreground">{t('soon', 'segera')}</span>}
-                    </div>
-                    <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
-                      {t(e.descEn, e.descId)}
+                const lead = i < 1;
+                const flip = !lead && i % 2 === 0;
+                const span = `w-[85vw] max-w-[360px] shrink-0 snap-start sm:w-auto sm:max-w-none sm:shrink sm:snap-align-none ${lead ? 'sm:col-span-2 lg:col-span-6' : 'lg:col-span-2'}`;
+                const header = (
+                  <div className={flip ? 'mt-4' : ''}>
+                    <p className={`font-display leading-snug tracking-tight ${lead ? 'text-2xl sm:text-3xl' : 'text-xl sm:text-2xl'}`}>
+                      <span className="font-normal text-muted-foreground">{t(e.leadEn, e.leadId)} </span>
+                      <span className="font-bold text-foreground">{t(e.boldEn, e.boldId)}</span>
                     </p>
+                  </div>
+                );
+                const preview = <EcosystemPreview ekey={e.key} flip={flip} />;
+                const inner = (
+                  <div className={`group flex h-full flex-col rounded-lg border border-border bg-card transition-colors hover:bg-secondary ${lead ? 'min-h-[320px] p-6' : 'min-h-[380px] p-5'}`}>
+                    {flip ? <>{preview}{header}</> : <>{header}{preview}</>}
                   </div>
                 );
                 return e.href
@@ -456,590 +830,255 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* 2b ── HOW IT WORKS ---------------------------------------------- */}
-        <section className="border-b border-border">
-          <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
-            <SectionHead
-              eyebrow={t('How It Works', 'Cara Kerja')}
-              title={t('Four steps to success', 'Empat langkah menuju sukses')}
-              desc={t(
-                'From signing up to landing your first gig — it only takes a few minutes.',
-                'Dari mendaftar sampai dapat pekerjaan pertama — hanya butuh beberapa menit.'
-              )}
-            />
-
-            <ol className="grid gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-2 lg:grid-cols-4">
-              {howItWorks.map((s, i) => (
-                <li key={s.en} className="flex h-full flex-col bg-card p-5">
-                  <div className="flex items-center gap-3">
-                    <s.icon className="h-5 w-5 shrink-0 text-primary" strokeWidth={1.75} />
-                    <span className="text-sm font-medium">{t(s.en, s.id)}</span>
-                    <span className="tnum ml-auto text-xs text-muted-foreground">{String(i + 1).padStart(2, '0')}</span>
-                  </div>
-                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{t(s.descEn, s.descId)}</p>
-                </li>
-              ))}
-            </ol>
-          </div>
-        </section>
-
-        {/* 3 ── TRENDING RESOURCES ----------------------------------------- */}
-        <section className="border-b border-border">
-          <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
-            <SectionHead
-              eyebrow={t('Resources', 'Resource')}
-              title={t('What the community is reading', 'Yang sedang dibaca komunitas')}
-              desc={t('Guides, references and tools saved most this week.', 'Panduan, referensi dan tools yang paling banyak disimpan minggu ini.')}
-              href="/directory" cta={t('All resources', 'Semua resource')}
-            />
-
-            <div className="overflow-hidden rounded-lg border border-border">
-              {trendingResources.map((r, i) => (
-                <div
-                  key={r.title}
-                  className={`group flex items-center gap-4 px-4 py-3.5 transition-colors hover:bg-secondary ${i > 0 ? 'border-t border-border' : ''}`}
-                >
-                  <span className="tnum w-5 shrink-0 text-xs text-muted-foreground">{String(i + 1).padStart(2, '0')}</span>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium">{r.title}</p>
-                    <p className="mt-0.5 truncate text-xs text-muted-foreground">{r.cat} · {r.level}</p>
-                  </div>
-                  <div className="hidden shrink-0 items-center gap-4 sm:flex">
-                    <Meta><span className="inline-flex items-center gap-1"><Eye className="h-3 w-3" />{r.views}</span></Meta>
-                    <Meta><span className="inline-flex items-center gap-1"><Bookmark className="h-3 w-3" />{r.saves}</span></Meta>
-                    <Meta>{r.updated}</Meta>
-                  </div>
-                  <ArrowUpRight className="h-4 w-4 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* 4 ── LATEST OPPORTUNITIES --------------------------------------- */}
-        <section className="relative overflow-hidden border-b border-border">
+        {/* 2b ── AGENCY — sibling of the ecosystem grid: same card chrome,
+             two-tone headline and live preview, in a 4+2 / 2+4 bento. ------ */}
+        <section className="relative overflow-hidden bg-background">
           <div className="relative mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
-            <SectionHead
-              eyebrow={t('Opportunities', 'Peluang')}
-              title={t('Latest opportunities', 'Peluang terbaru')}
-              href="/jobs" cta={t('Browse all', 'Lihat semua')}
-            />
-
-            <div className="mb-4 flex gap-1 overflow-x-auto no-scrollbar" role="tablist">
-              {opportunityTabs.map((tb) => (
-                <button
-                  key={tb}
-                  role="tab"
-                  aria-selected={tab === tb}
-                  onClick={() => setTab(tb)}
-                  className={`shrink-0 rounded px-3 py-1.5 text-sm capitalize transition-colors ${tab === tb ? 'bg-secondary text-foreground' : 'text-muted-foreground hover:text-foreground'
-                    }`}
-                >
-                  {tb}
-                  <span className="tnum ml-1.5 text-xs text-muted-foreground">{opportunities[tb].length}</span>
-                </button>
-              ))}
-            </div>
-
-            <div className="overflow-hidden rounded-lg border border-border">
-              {rows.map((o, i) => (
-                <div key={o.role} className={`group px-4 py-4 transition-colors hover:bg-secondary ${i > 0 ? 'border-t border-border' : ''}`}>
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium">{o.role}</p>
-                      <p className="mt-0.5 text-xs text-muted-foreground">{o.company}</p>
-                    </div>
-                    <div className="shrink-0 text-right">
-                      <p className="tnum text-sm font-medium text-primary">{o.pay}</p>
-                      <p className="mt-0.5 text-xs text-muted-foreground">{o.posted}</p>
-                    </div>
-                  </div>
-                  <div className="mt-3 flex flex-wrap items-center gap-1.5">
-                    <Chip>{o.setup}</Chip>
-                    <Chip>{o.type}</Chip>
-                    <Chip>{o.level}</Chip>
-                    <span className="mx-1 hidden h-3 w-px bg-border sm:block" />
-                    {o.stack.map((s) => <Chip key={s}>{s}</Chip>)}
-                    <span className="ml-auto inline-flex items-center gap-1 text-xs text-muted-foreground">
-                      <MapPin className="h-3 w-3" />{o.location}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* 5 ── TALENT DISCOVERY ------------------------------------------- */}
-        <section className="relative overflow-hidden border-b border-border">
-          <div className="relative mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
-            <SectionHead
-              eyebrow={t('Talent', 'Talent')}
-              title={t('Discover people, not just profiles', 'Temukan orangnya, bukan sekadar profil')}
-              desc={t('Filter by role, skill, experience, location and availability.', 'Saring berdasarkan peran, skill, pengalaman, lokasi dan ketersediaan.')}
-              href="/talents" cta={t('Talent directory', 'Direktori talent')}
-            />
-
-            <div className="no-scrollbar flex snap-x gap-4 overflow-x-auto pb-1 lg:grid lg:grid-cols-4 lg:overflow-visible">
-              {talents.map((p) => (
-                <Link
-                  key={p.id}
-                  href={`/talents/${p.id}`}
-                  className="flex w-[78vw] max-w-[300px] shrink-0 snap-start flex-col rounded-lg border border-border bg-card p-5 transition-colors hover:border-muted-foreground/30 lg:w-auto lg:max-w-none"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-secondary text-sm font-medium">
-                      {p.avatar_url
-                        ? <img src={p.avatar_url} alt="" className="h-full w-full object-cover" />
-                        : p.full_name.charAt(0)}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium">{p.full_name}</p>
-                      <p className="truncate text-xs text-muted-foreground">{p.role}</p>
-                    </div>
-                  </div>
-                  <div className="mt-4 flex flex-wrap gap-1.5">
-                    {p.skills.slice(0, 4).map((s) => <Chip key={s}>{s}</Chip>)}
-                  </div>
-                  <div className="mt-auto flex items-center justify-between border-t border-border pt-3">
-                    <Meta><span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3" />{p.location}</span></Meta>
-                    <Meta>
-                      <span className="inline-flex items-center gap-1.5">
-                        <Circle className={`h-1.5 w-1.5 ${p.available ? 'fill-primary text-primary' : 'fill-muted-foreground text-muted-foreground'}`} />
-                        {p.available ? t('Available', 'Tersedia') : t('Busy', 'Sibuk')}
-                      </span>
-                    </Meta>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* 5b ── SKILL CATEGORIES ------------------------------------------ */}
-        <section className="border-b border-border">
-          <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
-            <SectionHead
-              eyebrow={t('Skills', 'Skill')}
-              title={t('Explore by category', 'Jelajahi per kategori')}
-              desc={t(
-                '11 specialized skill categories with verified sub-skills.',
-                '11 kategori skill spesialis dengan sub-skill terverifikasi.'
-              )}
-              href="/directory" cta={t('All categories', 'Semua kategori')}
-            />
-
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
-              {skillCategories.map((c) => (
-                <Link
-                  key={c.label}
-                  href="/directory"
-                  className="group flex items-center gap-3 rounded-lg border border-border px-3.5 py-3 transition-colors hover:border-muted-foreground/30 hover:bg-secondary"
-                >
-                  <c.icon className="h-[18px] w-[18px] shrink-0 text-primary" strokeWidth={1.75} />
-                  <span className="text-sm leading-tight">{c.label}</span>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* 6 ── LEARNING + 7 ── COMMUNITY ACTIVITY (two columns) ----------- */}
-        <section className="relative overflow-hidden border-b border-border">
-          <div className="relative mx-auto grid max-w-6xl gap-12 px-4 py-16 sm:px-6 sm:py-20 lg:grid-cols-[1.15fr_0.85fr] lg:gap-16 lg:px-8">
-            {/* Learning */}
-            <div>
-              <SectionHead
-                eyebrow={t('Learn', 'Belajar')}
-                title={t('Learning built by practitioners', 'Materi belajar dari praktisi')}
-                href="/courses" cta={t('All courses', 'Semua kursus')}
-              />
-              <div className="mb-5 flex flex-wrap gap-1.5">
-                {learnCategories.map((c) => (
-                  <button key={c} className="rounded border border-border px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:border-muted-foreground/40 hover:text-foreground">
-                    {c}
-                  </button>
-                ))}
-              </div>
-              <div className="overflow-hidden rounded-lg border border-border">
-                {courses.map((c, i) => (
-                  <div key={c.title} className={`flex items-center gap-4 px-4 py-4 transition-colors hover:bg-secondary ${i > 0 ? 'border-t border-border' : ''}`}>
-                    <img
-                      src={c.thumb}
-                      alt=""
-                      loading="lazy"
-                      className="h-11 w-16 shrink-0 rounded border border-border object-cover"
-                    />
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium">{c.title}</p>
-                      <p className="mt-0.5 text-xs text-muted-foreground">{c.instructor} · {c.level}</p>
-                    </div>
-                    <div className="hidden shrink-0 items-center gap-4 sm:flex">
-                      <Meta><span className="inline-flex items-center gap-1"><Clock className="h-3 w-3" />{c.duration}</span></Meta>
-                      <Meta><span className="inline-flex items-center gap-1"><Star className="h-3 w-3 fill-current" />{c.rating}</span></Meta>
-                      <Meta>{c.learners}</Meta>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Community activity */}
-            <div>
-              <SectionHead
-                eyebrow={t('Community', 'Komunitas')}
-                title={t('Happening now', 'Sedang berlangsung')}
-              />
-              <div className="space-y-0">
-                {activity.map((a, i) => (
-                  <div key={a.text} className={`flex gap-3 py-3.5 ${i > 0 ? 'border-t border-border' : ''}`}>
-                    <div className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[11px] uppercase tracking-wider text-muted-foreground">{t(a.en, a.id)}</p>
-                      <p className="mt-0.5 text-sm leading-snug">{a.text}</p>
-                      <p className="mt-1 text-xs text-muted-foreground">{a.meta}</p>
-                    </div>
-                    <Meta>{a.time}</Meta>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* 8 ── EVENTS ------------------------------------------------------ */}
-        <section className="relative overflow-hidden border-b border-border">
-          <div className="relative mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
-            <SectionHead
-              eyebrow={t('Events', 'Event')}
-              title={t('Upcoming in the Indonesian tech scene', 'Akan datang di skena teknologi Indonesia')}
-              href="/events" cta={t('All events', 'Semua event')}
-            />
-            <div className="grid gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-2">
-              {events.map((e) => (
-                <div key={e.title} className="flex gap-4 bg-card p-5 transition-colors hover:bg-secondary">
-                  <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded border border-border">
-                    <img src={e.thumb} alt="" loading="lazy" className="h-full w-full object-cover" />
-                    <div className="absolute inset-0 bg-background/55" />
-                    <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      <span className="tnum text-lg font-semibold leading-none">{e.day}</span>
-                      <span className="mt-0.5 text-[11px] uppercase text-muted-foreground">{e.month}</span>
-                    </div>
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium">{e.title}</p>
-                    <p className="mt-0.5 text-xs text-muted-foreground">{e.org} · {e.place}</p>
-                    <div className="mt-2.5 flex items-center gap-2">
-                      <Chip>{e.cat}</Chip>
-                      <Meta><span className="tnum">{e.attendees}</span> {t('attending', 'peserta')}</Meta>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* 8c ── COMMUNITY GALLERY ------------------------------------------ */}
-        <section className="border-b border-border">
-          <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
-            <SectionHead
-              eyebrow={t('Community', 'Komunitas')}
-              title={t('Real people, real work', 'Orang nyata, kerja nyata')}
-              desc={t(
-                'Meetups, workshops and everyday collaboration across Indonesian tech.',
-                'Meetup, workshop dan kolaborasi sehari-hari di dunia teknologi Indonesia.'
-              )}
-              href="/events" cta={t('See events', 'Lihat event')}
-            />
-
-            {/*
-              9 tiles with the first one spanning 2x2 fills 12 cells exactly —
-              so the grid stays flush at 2, 3 and 4 columns with no ragged row.
-            */}
-            <div className="grid auto-rows-[110px] grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border sm:auto-rows-[130px] sm:grid-cols-3 lg:auto-rows-[150px] lg:grid-cols-4">
-              {galleryImages.map((img, i) => (
-                <figure
-                  key={img.id}
-                  className={`group relative overflow-hidden bg-card ${i === 0 ? 'col-span-2 row-span-2' : ''}`}
-                >
-                  <img
-                    src={px(img.id, 800, 600)}
-                    alt={t(img.en, img.idn)}
-                    loading="lazy"
-                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
-                  />
-                  <div
-                    aria-hidden
-                    className="pointer-events-none absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-background/85 via-background/25 to-transparent"
-                  />
-                  <figcaption className="absolute inset-x-0 bottom-0 truncate px-3 pb-2.5 text-[11px] font-medium text-foreground/90">
-                    {t(img.en, img.idn)}
-                  </figcaption>
-                </figure>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* 8b ── PLATFORM FEATURES ----------------------------------------- */}
-        <section className="border-b border-border">
-          <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
-            <SectionHead
-              eyebrow={t('Platform', 'Platform')}
-              title={t('Everything in one place', 'Semua dalam satu tempat')}
-            />
-
-            <div className="grid gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-2 lg:grid-cols-3">
-              {platformFeatures.map((f) => (
-                <Link key={f.en} href={f.href} className="group flex h-full flex-col bg-card p-5 transition-colors hover:bg-secondary">
-                  <div className="flex items-center gap-3">
-                    <f.icon className="h-5 w-5 shrink-0 text-primary" strokeWidth={1.75} />
-                    <span className="text-sm font-medium">{t(f.en, f.id)}</span>
-                    <ArrowUpRight className="ml-auto h-3.5 w-3.5 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
-                  </div>
-                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{t(f.descEn, f.descId)}</p>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* 9 ── SERVICES ---------------------------------------------------- */}
-        <section className="relative overflow-hidden border-b border-border">
-          <div className="relative mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
-            <SectionHead
-              eyebrow={t('Services', 'Layanan')}
-              title={t('Hire agencies and independent practitioners', 'Sewa agency dan praktisi independen')}
-              href="/services" cta={t('Browse services', 'Lihat layanan')}
-            />
-            <div className="flex flex-wrap gap-2">
-              {serviceCategories.map((c) => (
-                <Link
-                  key={c}
-                  href="/services"
-                  className="group inline-flex items-center gap-2 rounded-lg border border-border px-3.5 py-2.5 text-sm transition-colors hover:border-muted-foreground/30 hover:bg-secondary"
-                >
-                  {c}
-                  <Plus className="h-3.5 w-3.5 text-muted-foreground transition-transform group-hover:rotate-90" />
-                </Link>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* 9b ── AGENCY ----------------------------------------------------- */}
-        <section className="border-b border-border">
-          <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
-            <SectionHead
-              eyebrow={t('Agency', 'Agency')}
-              title={t('Build with our team', 'Bangun bersama tim kami')}
-              href="/services" cta={t('Talk to us', 'Hubungi kami')}
-            />
-
-            <div className="grid gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-2 lg:grid-cols-4">
-              {agencyServices.map((s) => (
-                <div key={s.title} className="flex h-full flex-col bg-card p-5">
-                  <div className="flex items-center gap-3">
-                    <s.icon className="h-5 w-5 shrink-0 text-primary" strokeWidth={1.75} />
-                    <span className="text-sm font-medium">{s.title}</span>
-                  </div>
-                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{t(s.en, s.id)}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* 11 ── WHY THIS PLATFORM ------------------------------------------ */}
-        <section className="border-b border-border">
-          <div className="mx-auto grid max-w-6xl gap-12 px-4 py-16 sm:px-6 sm:py-20 lg:grid-cols-2 lg:gap-16 lg:px-8">
-            <div>
-              <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">{t('Why', 'Kenapa')}</p>
-              <h2 className="mt-2 font-display text-2xl font-semibold tracking-tight text-balance sm:text-3xl">
-                {t('Seven tabs open, one career.', 'Tujuh tab terbuka, satu karier.')}
-              </h2>
-              <p className="mt-4 text-sm leading-relaxed text-muted-foreground text-pretty">
-                {t(
-                  'Indonesian IT professionals juggle a different platform for every need. Context, reputation and history stay scattered across all of them.',
-                  'Praktisi IT Indonesia memakai platform berbeda untuk tiap kebutuhan. Konteks, reputasi dan riwayat tercecer di semuanya.'
-                )}
-              </p>
-              <p className="mt-3 text-sm leading-relaxed text-muted-foreground text-pretty">
-                {t(
-                  'masmasit brings those professional resources into one ecosystem — with a single profile that carries your work, skills and standing.',
-                  'masmasit menyatukan resource profesional itu dalam satu ekosistem — dengan satu profil yang membawa karya, skill dan reputasimu.'
-                )}
-              </p>
-            </div>
-
-            <div className="rounded-lg border border-border">
-              {scattered.map((s, i) => (
-                <div key={s.tool} className={`flex items-center justify-between px-4 py-3 ${i > 0 ? 'border-t border-border' : ''}`}>
-                  <span className="text-sm text-muted-foreground line-through decoration-border">{s.tool}</span>
-                  <span className="text-xs text-muted-foreground">{t(s.forWhat.en, s.forWhat.id)}</span>
-                </div>
-              ))}
-              <div className="flex items-center justify-between border-t border-border bg-secondary px-4 py-3.5">
-                <span className="text-sm font-medium">masmasit</span>
-                <span className="text-xs text-primary">{t('all of the above', 'semuanya di atas')}</span>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* 11b ── TESTIMONIALS (slider) ------------------------------------- */}
-        <section className="border-b border-border">
-          <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
             <div className="mb-8 flex items-end justify-between gap-6">
               <div className="max-w-2xl">
-                <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">{t('Stories', 'Cerita')}</p>
+                <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">Agency</p>
                 <h2 className="mt-2 font-display text-2xl font-semibold tracking-tight sm:text-3xl">
-                  {t('From our community', 'Dari komunitas kami')}
+                  {t('Build with our team', 'Bangun bersama tim kami')}
                 </h2>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground text-pretty">
+                  {t(
+                    'One vetted team for product, AI, design and hiring — instead of stitching a dozen freelancers together.',
+                    'Satu tim terverifikasi untuk produk, AI, desain, dan rekrutmen — tanpa perlu merangkai belasan freelancer sendiri.'
+                  )}
+                </p>
               </div>
-              <div className="hidden shrink-0 gap-2 sm:flex">
-                <button
-                  type="button"
-                  aria-label={t('Previous stories', 'Cerita sebelumnya')}
-                  onClick={() => slideStories(-1)}
-                  className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:border-muted-foreground/30 hover:text-foreground"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </button>
-                <button
-                  type="button"
-                  aria-label={t('More stories', 'Cerita berikutnya')}
-                  onClick={() => slideStories(1)}
-                  className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:border-muted-foreground/30 hover:text-foreground"
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </button>
-              </div>
+              <a href={waLink(t("Hi masmasit, I'd like to talk about a project.", 'Halo masmasit, saya ingin diskusi proyek.'))} target="_blank" rel="noreferrer" className="hidden shrink-0 sm:block">
+                <Button size="lg" className="gap-1.5 rounded-full px-6">
+                  {t('Talk to us', 'Hubungi kami')} <ArrowUpRight className="h-4 w-4" />
+                </Button>
+              </a>
             </div>
 
-            <div ref={storiesRef} className="no-scrollbar flex snap-x snap-mandatory gap-4 overflow-x-auto pb-1">
-              {testimonials.map((q) => (
-                <figure
-                  key={q.author}
-                  className="flex w-[85vw] max-w-[420px] shrink-0 snap-start flex-col rounded-lg border border-border bg-card p-6 sm:w-[400px]"
+            <div className="no-scrollbar flex snap-x gap-4 overflow-x-auto pb-1 sm:grid sm:snap-none sm:overflow-visible sm:pb-0 sm:grid-cols-2 lg:grid-cols-6">
+              {agencyCards.map((c) => (
+                <a
+                  key={c.key}
+                  href={waLink(t(c.waEn, c.waId))}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={`w-[85vw] max-w-[360px] shrink-0 snap-start sm:w-auto sm:max-w-none sm:shrink ${c.wide ? 'lg:col-span-4' : 'lg:col-span-2'}`}
                 >
-                  <Quote className="h-4 w-4 shrink-0 text-primary" strokeWidth={2} />
-                  <blockquote className="mt-3 text-sm leading-relaxed text-pretty">
-                    {t(q.textEn, q.textId)}
-                  </blockquote>
-                  <figcaption className="mt-auto flex items-center gap-3 pt-5">
-                    <img
-                      src={q.photo}
-                      alt=""
-                      loading="lazy"
-                      className="h-9 w-9 shrink-0 rounded-full border border-border object-cover"
-                    />
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium">{q.author}</p>
-                      <p className="truncate text-xs text-muted-foreground">{q.role}</p>
+                  <div className="group flex h-full min-h-[400px] flex-col rounded-lg border border-border bg-card p-5 transition-colors hover:bg-secondary">
+                    <p className="flex items-center gap-2 text-xs font-medium uppercase tracking-widest text-muted-foreground">
+                      <c.icon className="h-3.5 w-3.5 text-primary" strokeWidth={2} /> {t(c.tagEn, c.tagId)}
+                    </p>
+                    <p className="mt-3 font-display text-xl leading-snug tracking-tight text-balance sm:text-2xl">
+                      <span className="font-normal text-muted-foreground">{t(c.leadEn, c.leadId)} </span>
+                      <span className="font-bold text-foreground">{t(c.boldEn, c.boldId)}</span>
+                    </p>
+
+                    <AgencyPreview akey={c.key} />
+
+                    <div className="mt-4 flex items-center justify-between gap-3 border-t border-border pt-4 text-xs">
+                      <span className="flex items-center gap-1.5 text-muted-foreground">
+                        <CalendarClock className="h-3.5 w-3.5" /> {t(c.metaEn, c.metaId)}
+                      </span>
+                      <span className="flex items-center gap-1 font-medium text-foreground">
+                        {t('Talk to us', 'Hubungi kami')}
+                        <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+                      </span>
                     </div>
-                  </figcaption>
-                </figure>
+                  </div>
+                </a>
               ))}
+            </div>
+
+            <a href={waLink(t("Hi masmasit, I'd like to talk about a project.", 'Halo masmasit, saya ingin diskusi proyek.'))} target="_blank" rel="noreferrer" className="mt-6 block sm:hidden">
+              <Button size="lg" className="h-14 w-full gap-1.5 rounded-full text-base">
+                {t('Talk to us', 'Hubungi kami')} <ArrowUpRight className="h-4 w-4" />
+              </Button>
+            </a>
+          </div>
+        </section>
+
+        {/* 11b ── TESTIMONIALS ------------------------------------------------ */}
+        <section className="relative overflow-hidden bg-background py-16 sm:py-20">
+          <div className="mx-auto max-w-3xl px-4 text-center sm:px-6 lg:px-8">
+            <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">{t('Stories', 'Cerita')}</p>
+            <h2 className="mx-auto mt-3 text-4xl font-extrabold tracking-tighter sm:text-6xl">
+              {t('Loved by the community', 'Dicintai komunitas')}
+            </h2>
+            <p className="mx-auto mt-4 max-w-xl text-base text-muted-foreground text-pretty sm:text-lg">
+              {t(
+                'Hundreds of Indonesian IT professionals already build their career and business with masmasit.',
+                'Ratusan praktisi IT Indonesia sudah membangun karier dan bisnis mereka bersama masmasit.'
+              )}
+            </p>
+            <Link href="/register" className="mt-8 inline-block">
+              <Button size="lg" className="gap-1.5 rounded-full px-8">
+                {t('Join now', 'Gabung sekarang')} <ArrowRight className="h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
+
+          <div className="mt-14 sm:mt-16">
+            <TestimonialMarquee />
+          </div>
+        </section>
+
+        {/* 11c ── LIVE ACTIVITY — a moving feed proves the platform is alive;
+             real counters join in once they're worth showing. ------------- */}
+        <section className="relative bg-background">
+          <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
+            <SectionHead
+              eyebrow={t('Live activity', 'Aktivitas terkini')}
+              title={t('Happening on masmasit right now', 'Yang sedang terjadi di masmasit')}
+              desc={t('Jobs, projects, bookings and new members — as they happen.', 'Lowongan, proyek, booking, dan member baru — saat itu juga.')}
+              href="/activity"
+              cta={t('See all activity', 'Lihat semua aktivitas')}
+            />
+
+            <div className="grid gap-4 lg:grid-cols-6">
+              <div className="flex flex-col overflow-hidden rounded-lg border border-border bg-card lg:col-span-4">
+                <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-3.5">
+                  <span className="flex items-center gap-2 text-xs font-medium uppercase tracking-widest text-muted-foreground">
+                    <span className="relative flex h-2 w-2">
+                      <span className="absolute inset-0 animate-ping rounded-full bg-primary/60" />
+                      <span className="relative h-2 w-2 rounded-full bg-primary" />
+                    </span>
+                    Live
+                  </span>
+                  <span className="text-xs text-muted-foreground">{t('Updated in real time', 'Diperbarui real time')}</span>
+                </div>
+
+                {showLiveStats && live && (
+                  <div className="grid grid-cols-2 gap-px border-b border-border bg-border sm:grid-cols-4">
+                    {liveActivityLabels.map((a, i) => (
+                      <div key={a.en} className="bg-card px-5 py-4">
+                        <p className="tnum font-display text-2xl font-semibold tracking-tight">{live[i].toLocaleString('id-ID')}</p>
+                        <p className="mt-0.5 truncate text-xs text-muted-foreground">{t(a.en, a.id)}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div className="group marquee-fade-y relative h-[340px] overflow-hidden sm:h-[380px]">
+                  <ul className="animate-marquee-y group-hover:[animation-play-state:paused]">
+                    {[...activityFeed, ...activityFeed].map((a, idx) => (
+                      <li key={`${a.who}-${idx}`} aria-hidden={idx >= activityFeed.length} className="flex items-center gap-3.5 border-b border-border px-5 py-3.5">
+                        {a.avatar ? (
+                          <img src={a.avatar} alt="" loading="lazy" className="h-9 w-9 shrink-0 rounded-full border border-border object-cover" />
+                        ) : (
+                          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border bg-secondary">
+                            <a.icon className="h-4 w-4 text-primary" strokeWidth={1.75} />
+                          </span>
+                        )}
+                        <p className="min-w-0 flex-1 text-sm leading-snug text-muted-foreground">
+                          <span className="font-medium text-foreground">{a.who}</span> {t(a.en, a.id)}{' '}
+                          <span className="font-medium text-foreground">{a.what}</span>
+                        </p>
+                        <span className="tnum shrink-0 text-xs text-muted-foreground">{t(a.timeEn, a.timeId)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+
+              <div className="flex flex-col rounded-lg border border-border bg-card p-5 lg:col-span-2">
+                <p className="font-display text-xl leading-snug tracking-tight text-balance sm:text-2xl">
+                  <span className="font-normal text-muted-foreground">{t('Your move next,', 'Giliranmu berikutnya,')} </span>
+                  <span className="font-bold text-foreground">{t('start in a minute.', 'mulai dalam semenit.')}</span>
+                </p>
+                <div className="mt-5 flex flex-1 flex-col gap-2.5">
+                  {joinActions.map((a) => (
+                    <Link
+                      key={a.href}
+                      href={a.href}
+                      className="group flex flex-1 items-center gap-3.5 rounded-md border border-border bg-background/40 p-3.5 transition-colors hover:border-muted-foreground/30 hover:bg-secondary"
+                    >
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-primary/10">
+                        <a.icon className="h-4 w-4 text-primary" strokeWidth={1.75} />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-sm font-medium">{t(a.en, a.id)}</span>
+                        <span className="block text-xs leading-snug text-muted-foreground">{t(a.subEn, a.subId)}</span>
+                      </span>
+                      <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-foreground" />
+                    </Link>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </section>
 
-        {/* 11c ── LIVE ACTIVITY --------------------------------------------- */}
-      <section className="border-b border-border">
-        <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
-          <div className="mb-8 flex items-end justify-between gap-6">
-            <div className="max-w-2xl">
-              <p className="flex items-center gap-2 text-xs font-medium uppercase tracking-widest text-muted-foreground">
-                <Circle className="h-1.5 w-1.5 animate-pulse-soft fill-primary text-primary" />
-                {t('Live', 'Langsung')}
-              </p>
-              <h2 className="mt-2 flex items-center gap-2.5 font-display text-2xl font-semibold tracking-tight sm:text-3xl">
-                <Activity className="h-6 w-6 shrink-0 text-primary" strokeWidth={1.75} />
-                {t('Live Activity', 'Aktivitas Terkini')}
-              </h2>
-            </div>
-          </div>
-
-          <div className="grid gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-2 lg:grid-cols-4">
-            {liveActivityLabels.map((a, i) => (
-              <div key={a.en} className="flex h-full flex-col bg-card p-5">
-                <a.icon className="h-5 w-5 shrink-0 text-primary" strokeWidth={1.75} />
-                <div className="tnum mt-4 font-display text-3xl font-semibold tracking-tight">
-                  {live[i].toLocaleString('id-ID')}
-                </div>
-                <p className="mt-1 text-sm text-muted-foreground">{t(a.en, a.id)}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* 12 ── FINAL CTA -------------------------------------------------- */}
-        <section className="relative overflow-hidden">
+        {/* 12 ── FINAL CTA — full-bleed band that bookends the hero artwork.
+             Pitch + one primary action on the left, talk-first channels on
+             the right; stacks to a single column on mobile. */}
+        <section className="relative overflow-hidden border-t border-border bg-background">
           <img
-            src={ctaImage}
+            src={heroBackground.src}
             alt=""
             aria-hidden
             loading="lazy"
-            className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-[0.14]"
+            className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-50"
           />
           <div
             aria-hidden
-            className="pointer-events-none absolute inset-0 bg-gradient-to-b from-background via-background/70 to-background"
+            className="pointer-events-none absolute inset-0"
+            style={{ background: 'linear-gradient(to right, hsl(var(--background) / 0.35), hsl(var(--background) / 0.85) 60%, hsl(var(--background) / 0.95))' }}
           />
-          <div className="relative mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-24 lg:px-8">
-            <div className="grid gap-10 lg:grid-cols-[1.15fr_0.85fr] lg:items-center lg:gap-16">
-              <div>
-                <h2 className="font-display text-2xl font-semibold tracking-tight text-balance sm:text-4xl">
-                  {t('Ready to join?', 'Siap bergabung?')}
-                </h2>
-                <p className="mt-4 text-sm leading-relaxed text-muted-foreground text-pretty sm:text-base">
-                  {t(
-                    "Whether you're hiring, offering services, or growing your career — we're here.",
-                    'Baik merekrut, menawarkan layanan, atau mengembangkan karier — kami di sini.'
-                  )}
-                </p>
-                <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                  <Link href="/register">
-                    <Button size="lg" className="w-full gap-2 sm:w-auto">
-                      {t('Join now', 'Gabung sekarang')} <ArrowRight className="h-4 w-4" />
-                    </Button>
-                  </Link>
-                  <a href="https://wa.me/6281234567890" target="_blank" rel="noreferrer">
-                    <Button size="lg" variant="outline" className="w-full gap-2 sm:w-auto">
-                      <MessageCircle className="h-4 w-4" /> WhatsApp
-                    </Button>
-                  </a>
-                </div>
-              </div>
 
+          <div className="relative mx-auto grid max-w-6xl items-center gap-10 px-4 py-14 sm:px-6 sm:py-16 md:grid-cols-[1.1fr_0.9fr] md:gap-10 lg:gap-16 lg:px-8">
+            <div className="text-center md:text-left">
+              <h2 className="text-4xl font-extrabold leading-[1.05] tracking-tighter text-balance sm:text-5xl">
+                {t('Ready to join?', 'Siap bergabung?')}
+              </h2>
+              <p className="mx-auto mt-4 max-w-md text-base leading-relaxed text-muted-foreground text-pretty md:mx-0">
+                {t(
+                  "Whether you're hiring, offering services, or growing your career — we're here.",
+                  'Baik merekrut, menawarkan layanan, atau mengembangkan karier — kami di sini.'
+                )}
+              </p>
+              <Link href="/register" className="mx-auto mt-7 block w-full sm:w-fit md:mx-0">
+                <Button size="lg" className="h-14 w-full gap-1.5 rounded-full px-8 text-base sm:h-12 sm:w-auto">
+                  {t('Join now — it’s free', 'Gabung sekarang — gratis')} <ArrowRight className="h-4 w-4" />
+                </Button>
+              </Link>
+            </div>
+
+            <div>
+              <p className="mb-3 text-center text-xs font-medium uppercase tracking-widest text-muted-foreground md:text-left">
+                {t('Prefer to talk first?', 'Mau ngobrol dulu?')}
+              </p>
               <div className="grid gap-px overflow-hidden rounded-lg border border-border bg-border">
-                <a
-                  href="https://calendly.com"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="group flex items-center gap-3 bg-card p-4 transition-colors hover:bg-secondary"
-                >
+                <a href={waLink(t("Hi masmasit, I'd like to know more.", 'Halo masmasit, saya ingin tahu lebih lanjut.'))} target="_blank" rel="noreferrer" className="group flex items-center gap-3 bg-card p-4 transition-colors hover:bg-secondary">
+                  <MessageCircle className="h-5 w-5 shrink-0 text-primary" strokeWidth={1.75} />
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-medium">WhatsApp</span>
+                    <span className="block truncate text-xs text-muted-foreground">{t('Usually replies within an hour', 'Biasanya dibalas dalam 1 jam')}</span>
+                  </span>
+                  <ArrowUpRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-foreground" />
+                </a>
+                <a href="https://calendly.com" target="_blank" rel="noreferrer" className="group flex items-center gap-3 bg-card p-4 transition-colors hover:bg-secondary">
                   <CalendarClock className="h-5 w-5 shrink-0 text-primary" strokeWidth={1.75} />
-                  <div className="min-w-0">
-                    <div className="text-sm font-medium">{t('Schedule a call', 'Jadwalkan panggilan')}</div>
-                    <div className="truncate text-xs text-muted-foreground">Calendly</div>
-                  </div>
-                  <ArrowUpRight className="ml-auto h-4 w-4 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-medium">{t('Schedule a call', 'Jadwalkan panggilan')}</span>
+                    <span className="block truncate text-xs text-muted-foreground">{t('30 min · Calendly', '30 menit · Calendly')}</span>
+                  </span>
+                  <ArrowUpRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-foreground" />
                 </a>
-                <a
-                  href="mailto:hello@masmasit.online"
-                  className="group flex items-center gap-3 bg-card p-4 transition-colors hover:bg-secondary"
-                >
+                <div className="group relative flex items-center gap-3 bg-card p-4 transition-colors hover:bg-secondary">
+                  <a href={`mailto:${CONTACT_EMAIL}`} className="absolute inset-0" aria-label={t('Email us', 'Kirim email')} />
                   <Mail className="h-5 w-5 shrink-0 text-primary" strokeWidth={1.75} />
-                  <div className="min-w-0">
-                    <div className="text-sm font-medium">{t('Email us', 'Kirim email')}</div>
-                    <div className="truncate text-xs text-muted-foreground">hello@masmasit.online</div>
-                  </div>
-                  <ArrowUpRight className="ml-auto h-4 w-4 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
-                </a>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-medium">{t('Email us', 'Kirim email')}</span>
+                    <span className="block truncate text-xs text-muted-foreground">{CONTACT_EMAIL}</span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={copyEmail}
+                    aria-label={t('Copy email address', 'Salin alamat email')}
+                    className="relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:border-muted-foreground/40 hover:text-foreground"
+                  >
+                    {copied ? <Check className="h-3.5 w-3.5 text-primary" /> : <Copy className="h-3.5 w-3.5" />}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
