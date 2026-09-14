@@ -70,7 +70,7 @@ export function Footer() {
           <nav className="grid grid-cols-2 gap-8 sm:grid-cols-3 lg:col-span-8" aria-label={t('Footer', 'Footer')}>
             {groups.map((g) => (
               <div key={g.title} className={g.title === t('Contact', 'Kontak') ? 'col-span-2 sm:col-span-1' : ''}>
-                <h4 className="text-xs font-medium uppercase tracking-widest text-muted-foreground">{g.title}</h4>
+                <h4 className="eyebrow text-muted-foreground">{g.title}</h4>
                 <ul className="mt-4 space-y-2.5 text-sm">
                   {g.links.map((l) => (
                     <li key={l.href}>
@@ -114,7 +114,7 @@ export function Footer() {
       {/* Oversized ink wordmark as the sign-off; decorative only. */}
       <div aria-hidden className="pointer-events-none select-none overflow-hidden">
         <p
-          className="-mb-[0.22em] text-center font-display font-bold leading-none tracking-tighter text-transparent"
+          className="-mb-[0.22em] text-center font-display font-semibold leading-none tracking-tight text-transparent"
           style={{
             fontSize: 'min(21vw, 17rem)',
             // Smooth ink: near-black easing to a softer charcoal at the clipped base.

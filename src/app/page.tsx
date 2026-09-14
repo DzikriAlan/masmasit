@@ -196,7 +196,7 @@ function SectionHead({ eyebrow, title, desc, href, cta }: {
   return (
     <div className="mb-8 flex items-end justify-between gap-6">
       <div className="max-w-2xl">
-        <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">{eyebrow}</p>
+        <p className="eyebrow text-muted-foreground">{eyebrow}</p>
         <h2 className="mt-2 font-display text-2xl font-semibold tracking-tight sm:text-3xl">{title}</h2>
         {desc && <p className="mt-2 text-sm leading-relaxed text-muted-foreground text-pretty">{desc}</p>}
       </div>
@@ -557,7 +557,7 @@ function AgencyPreview({ akey, tone }: { akey: string; tone: (typeof tones)[Tone
       <div ref={ref} className="mt-5 flex flex-1 min-h-0 flex-col gap-2.5">
         <div className={`${surface} flex flex-1 items-center gap-4 p-3.5`}>
           <span
-            className={`font-display text-5xl font-bold leading-none tracking-tight transition-[opacity,letter-spacing] duration-1000 ease-out ${inView ? 'opacity-100' : 'opacity-0'}`}
+            className={`font-display text-5xl font-semibold leading-none transition-[opacity,letter-spacing] duration-1000 ease-out ${inView ? 'opacity-100' : 'opacity-0'}`}
             style={{ letterSpacing: inView ? '-0.025em' : '0.3em' }}
           >
             Aa
@@ -758,7 +758,7 @@ export default function HomePage() {
             }}
           />
           <div className="relative mx-auto w-full max-w-5xl px-4 py-20 text-center sm:px-6 lg:px-8">
-            <h1 className="mx-auto text-4xl font-extrabold leading-[1.05] tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl">
+            <h1 className="mx-auto font-display text-4xl font-bold leading-[1.05] sm:text-5xl md:text-6xl lg:text-7xl">
               <span className="block lg:whitespace-nowrap">{t("Indonesia's IT ecosystem,", 'Ekosistem IT Indonesia,')}</span>
               <span className="block">{t('in one place.', 'dalam satu tempat.')}</span>
             </h1>
@@ -788,7 +788,7 @@ export default function HomePage() {
         <section className="relative overflow-hidden bg-background">
           <div className="mx-auto grid max-w-6xl gap-8 px-4 py-16 sm:px-6 sm:py-20 lg:grid-cols-[0.7fr_1.3fr] lg:gap-16 lg:px-8">
             <div>
-              <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">{t('About', 'Tentang')}</p>
+              <p className="eyebrow text-muted-foreground">{t('About', 'Tentang')}</p>
               <h2 className="mt-2 font-display text-2xl font-semibold tracking-tight sm:text-3xl">
                 {t('What is MasmasIT?', 'Apa itu MasmasIT?')}
               </h2>
@@ -855,7 +855,7 @@ export default function HomePage() {
           <div className="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
             <div className="mb-8 flex items-end justify-between gap-6">
               <div className="max-w-2xl">
-                <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">Agency</p>
+                <p className="eyebrow text-muted-foreground">Agency</p>
                 <h2 className="mt-2 font-display text-2xl font-semibold tracking-tight sm:text-3xl">
                   {t('Build with our team', 'Bangun bersama tim kami')}
                 </h2>
@@ -913,8 +913,8 @@ export default function HomePage() {
         {/* 11b ── TESTIMONIALS ------------------------------------------------ */}
         <section className="relative overflow-hidden bg-background py-16 sm:py-20">
           <div className="mx-auto max-w-3xl px-4 text-center sm:px-6 lg:px-8">
-            <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">{t('Stories', 'Cerita')}</p>
-            <h2 className="mx-auto mt-3 text-4xl font-extrabold tracking-tighter sm:text-6xl">
+            <p className="eyebrow text-muted-foreground">{t('Stories', 'Cerita')}</p>
+            <h2 className="mx-auto mt-3 font-display text-4xl font-bold sm:text-6xl">
               {t('Loved by the community', 'Dicintai komunitas')}
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-base text-muted-foreground text-pretty sm:text-lg">
@@ -950,7 +950,7 @@ export default function HomePage() {
             <div className="grid gap-4 lg:grid-cols-6">
               <div className="wash wash-teal flex flex-col overflow-hidden rounded-xl lg:col-span-4">
                 <div className="flex items-center justify-between gap-3 border-b border-white/15 px-5 py-3.5">
-                  <span className="flex items-center gap-2 text-xs font-medium uppercase tracking-widest text-muted-foreground">
+                  <span className="flex items-center gap-2 eyebrow text-muted-foreground">
                     <span className="relative flex h-2 w-2">
                       <span className="absolute inset-0 animate-ping rounded-full bg-white/60" />
                       <span className="relative h-2 w-2 rounded-full bg-white" />
@@ -964,7 +964,7 @@ export default function HomePage() {
                   <div className="grid grid-cols-2 gap-px border-b border-white/15 bg-white/15 sm:grid-cols-4">
                     {liveActivityLabels.map((a, i) => (
                       <div key={a.en} className="bg-black/10 px-5 py-4">
-                        <p className="tnum font-display text-2xl font-semibold tracking-tight">{live[i].toLocaleString('id-ID')}</p>
+                        <p className="tnum font-display text-2xl font-semibold">{live[i].toLocaleString('id-ID')}</p>
                         <p className="mt-0.5 truncate text-xs text-muted-foreground">{t(a.en, a.id)}</p>
                       </div>
                     ))}
@@ -1006,7 +1006,7 @@ export default function HomePage() {
                       className="wash-deep group flex flex-1 items-center gap-3.5 rounded-lg p-3.5 transition-transform duration-200 hover:-translate-y-0.5"
                     >
                       <span className="min-w-0 flex-1">
-                        <span className="block text-[11px] font-semibold uppercase tracking-widest text-white/75">{t(a.forEn, a.forId)}</span>
+                        <span className="block eyebrow text-white/75">{t(a.forEn, a.forId)}</span>
                         <span className="mt-1 block text-sm font-medium">{t(a.en, a.id)}</span>
                         <span className="block text-xs leading-snug text-muted-foreground">{t(a.subEn, a.subId)}</span>
                       </span>
@@ -1037,7 +1037,7 @@ export default function HomePage() {
 
           <div className="relative mx-auto grid max-w-7xl items-center gap-10 px-4 py-14 sm:px-6 sm:py-16 md:grid-cols-[1.1fr_0.9fr] md:gap-10 lg:gap-16 lg:px-8">
             <div className="text-center md:text-left">
-              <h2 className="text-4xl font-extrabold leading-[1.05] tracking-tighter text-balance sm:text-5xl">
+              <h2 className="font-display text-4xl font-bold leading-[1.05] text-balance sm:text-5xl">
                 {t('Ready to join?', 'Siap bergabung?')}
               </h2>
               <p className="mx-auto mt-4 max-w-md text-base leading-relaxed text-muted-foreground text-pretty md:mx-0">
@@ -1054,7 +1054,7 @@ export default function HomePage() {
             </div>
 
             <div>
-              <p className="mb-3 text-center text-xs font-medium uppercase tracking-widest text-muted-foreground md:text-left">
+              <p className="mb-3 text-center eyebrow text-muted-foreground md:text-left">
                 {t('Prefer to talk first?', 'Mau ngobrol dulu?')}
               </p>
               <div className="grid gap-px overflow-hidden rounded-lg border border-border bg-border">
