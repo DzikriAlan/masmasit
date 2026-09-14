@@ -8,8 +8,27 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
+        sans: ['var(--font-sans)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
         display: ['var(--font-display)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        mono: ['var(--font-mono)', 'ui-monospace', 'monospace'],
         brand: ['var(--font-brand)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+      },
+      // Type scale: xs lifts to 13px so metadata stops reading as fine print;
+      // base is 15px; sizes above 2xl grow slower than Tailwind's default and
+      // carry a little negative tracking (Familjen is already compact, so it
+      // stays light) — headings don't need extra tracking classes.
+      fontSize: {
+        xs: ['0.8125rem', { lineHeight: '1.125rem' }],
+        sm: ['0.875rem', { lineHeight: '1.25rem' }],
+        base: ['0.9375rem', { lineHeight: '1.5rem' }],
+        lg: ['1.0625rem', { lineHeight: '1.625rem' }],
+        xl: ['1.1875rem', { lineHeight: '1.625rem', letterSpacing: '-0.005em' }],
+        '2xl': ['1.375rem', { lineHeight: '1.75rem', letterSpacing: '-0.01em' }],
+        '3xl': ['1.6875rem', { lineHeight: '2rem', letterSpacing: '-0.015em' }],
+        '4xl': ['2.125rem', { lineHeight: '2.375rem', letterSpacing: '-0.015em' }],
+        '5xl': ['2.625rem', { lineHeight: '2.875rem', letterSpacing: '-0.015em' }],
+        '6xl': ['3.25rem', { lineHeight: '3.375rem', letterSpacing: '-0.02em' }],
+        '7xl': ['3.875rem', { lineHeight: '3.875rem', letterSpacing: '-0.02em' }],
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',

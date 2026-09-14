@@ -2,14 +2,16 @@ import '@/shared/styles/globals.css';
 // Self-hosted via npm instead of next/font/google — the latter fetches font
 // files from fonts.gstatic.com at compile time, which hangs indefinitely on
 // networks that block that host (seen in dev: endless "Retrying 1/3...").
-import '@fontsource/inter/400.css';
-import '@fontsource/inter/500.css';
-import '@fontsource/inter/600.css';
-import '@fontsource/inter/700.css';
-import '@fontsource/inter/800.css';
-import '@fontsource/space-grotesk/600.css';
-import '@fontsource/space-grotesk/700.css';
-// Wordmark face — Plus Jakarta Sans, by Indonesian foundry Tokotype.
+// Two faces, both variable:
+// - Golos Text (text/UI): drawn for interfaces — large x-height, compact
+//   width, tabular figures — so dense cards and navigation stay legible at
+//   13–15px.
+// - Familjen Grotesk (headings): a compact Swedish grotesk with real
+//   character in the bowls and terminals; carries the hero and section
+//   titles at 600–700 without needing extra weight or tracking.
+import '@fontsource-variable/golos-text';
+import '@fontsource-variable/familjen-grotesk';
+// Wordmark face only — Plus Jakarta Sans, by Indonesian foundry Tokotype.
 import '@fontsource/plus-jakarta-sans/800.css';
 import type { Metadata } from 'next';
 import { AuthProvider } from '@/components/auth-provider';
