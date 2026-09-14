@@ -157,7 +157,7 @@ export function Navbar() {
                 onClick={onTriggerClick}
                 aria-expanded={menuOpen}
                 className={cn(
-                  'rounded-md px-3.5 py-2 text-[15px] font-semibold transition-all hover:bg-muted/50 hover:text-foreground',
+                  'rounded-md px-3.5 py-2 text-base font-medium transition-all hover:bg-muted/50 hover:text-foreground',
                   menuOpen ? 'bg-muted/60 text-foreground' : 'text-foreground/70'
                 )}
               >
@@ -169,7 +169,7 @@ export function Navbar() {
                   <div className="grid grid-cols-3 gap-6">
                     {ecosystemColumns.map((col) => (
                       <div key={col.eyebrowEn}>
-                        <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
+                        <p className="eyebrow text-muted-foreground">
                           {t(col.eyebrowEn, col.eyebrowId)}
                         </p>
                         <div className="mt-3 flex flex-col gap-1">
@@ -180,7 +180,7 @@ export function Navbar() {
                               className="group -mx-2 block rounded-md p-2 transition-colors hover:bg-muted/50"
                             >
                               <span>
-                                <span className="block text-[15px] font-semibold text-foreground">{t(item.en, item.id)}</span>
+                                <span className="block text-base font-medium text-foreground">{t(item.en, item.id)}</span>
                                 <span className="block text-xs text-muted-foreground">{t(item.descEn, item.descId)}</span>
                               </span>
                             </Link>
@@ -196,7 +196,7 @@ export function Navbar() {
             <Link
               href="/directory"
               className={cn(
-                'relative rounded-md px-3.5 py-2 text-[15px] font-semibold transition-all hover:bg-muted/50 hover:text-foreground',
+                'relative rounded-md px-3.5 py-2 text-base font-medium transition-all hover:bg-muted/50 hover:text-foreground',
                 pathname === '/directory' ? 'text-foreground' : 'text-foreground/70'
               )}
             >
@@ -210,7 +210,7 @@ export function Navbar() {
           <div className="hidden items-center justify-self-end gap-1.5 lg:flex">
             {user && (
               <Link href="/pesan">
-                <Button variant="ghost" size="sm" className="h-10 text-[15px] font-semibold text-foreground/70">
+                <Button variant="ghost" size="sm" className="h-10 text-base font-medium text-foreground/70">
                   <StableLabel en="Messages" id="Pesan" />
                 </Button>
               </Link>
@@ -218,7 +218,7 @@ export function Navbar() {
             {user && <NotificationBell />}
             <button
               onClick={toggleLang}
-              className="rounded-md px-2.5 py-2 text-[13px] font-semibold tracking-wide"
+              className="rounded-md px-2.5 py-2 text-xs font-semibold"
               aria-label={t('Switch to Bahasa Indonesia', 'Ganti ke English')}
             >
               <span className={lang === 'en' ? 'text-foreground' : 'text-muted-foreground'}>EN</span>
@@ -228,7 +228,7 @@ export function Navbar() {
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="flex items-center gap-2 rounded-full border border-border/50 py-1 pl-1 pr-3 text-[15px] font-semibold transition-colors hover:bg-muted">
+                  <button className="flex items-center gap-2 rounded-full border border-border/50 py-1 pl-1 pr-3 text-base font-medium transition-colors hover:bg-muted">
                     <Avatar className="h-7 w-7">
                       {profile?.avatar_url && <AvatarImage src={profile.avatar_url} alt={displayName} />}
                       <AvatarFallback className="bg-primary/15 text-xs text-primary">{initial}</AvatarFallback>
@@ -271,12 +271,12 @@ export function Navbar() {
             ) : (
               <>
                 <Link href="/login">
-                  <Button variant="ghost" size="sm" className="h-10 px-3.5 text-[15px] font-semibold hover:bg-muted/50">
+                  <Button variant="ghost" size="sm" className="h-10 px-3.5 text-base font-medium hover:bg-muted/50">
                     <StableLabel en="Sign in" id="Masuk" />
                   </Button>
                 </Link>
                 <Link href="/register">
-                  <Button size="sm" className="h-10 rounded-full px-5 text-[15px] font-semibold">
+                  <Button size="sm" className="h-10 rounded-full px-5 text-base font-medium">
                     <StableLabel en="Get started" id="Daftar" />
                   </Button>
                 </Link>
@@ -285,7 +285,7 @@ export function Navbar() {
           </div>
 
           <button
-            className="rounded-md px-2 py-1.5 text-[15px] font-semibold lg:hidden"
+            className="rounded-md px-2 py-1.5 text-base font-medium lg:hidden"
             onClick={() => setOpen(!open)}
             aria-expanded={open}
           >
@@ -302,7 +302,7 @@ export function Navbar() {
                   href={link.href}
                   onClick={() => setOpen(false)}
                   className={cn(
-                    'rounded-md px-3 py-2.5 text-[15px] font-semibold transition-colors hover:bg-muted',
+                    'rounded-md px-3 py-2.5 text-base font-medium transition-colors hover:bg-muted',
                     pathname === link.href ? 'text-primary bg-primary/5' : 'text-muted-foreground'
                   )}
                 >
@@ -314,7 +314,7 @@ export function Navbar() {
                   href="/pesan"
                   onClick={() => setOpen(false)}
                   className={cn(
-                    'rounded-md px-3 py-2.5 text-[15px] font-semibold transition-colors hover:bg-muted',
+                    'rounded-md px-3 py-2.5 text-base font-medium transition-colors hover:bg-muted',
                     pathname === '/pesan' ? 'text-primary bg-primary/5' : 'text-muted-foreground'
                   )}
                 >
@@ -326,7 +326,7 @@ export function Navbar() {
                   href="/profile"
                   onClick={() => setOpen(false)}
                   className={cn(
-                    'rounded-md px-3 py-2.5 text-[15px] font-semibold transition-colors hover:bg-muted',
+                    'rounded-md px-3 py-2.5 text-base font-medium transition-colors hover:bg-muted',
                     pathname === '/profile' ? 'text-primary bg-primary/5' : 'text-muted-foreground'
                   )}
                 >
@@ -352,7 +352,7 @@ export function Navbar() {
                 {user && <NotificationBell />}
                 <button
                   onClick={toggleLang}
-                  className="rounded-md px-2.5 py-2 text-[13px] font-semibold tracking-wide"
+                  className="rounded-md px-2.5 py-2 text-xs font-semibold"
                   aria-label={t('Switch to Bahasa Indonesia', 'Ganti ke English')}
                 >
                   <span className={lang === 'en' ? 'text-foreground' : 'text-muted-foreground'}>EN</span>
@@ -368,10 +368,10 @@ export function Navbar() {
                 ) : (
                   <>
                     <Link href="/login" onClick={() => setOpen(false)} className="flex-1">
-                      <Button variant="ghost" size="sm" className="h-10 w-full text-[15px] font-semibold hover:bg-transparent">{t('Sign in', 'Masuk')}</Button>
+                      <Button variant="ghost" size="sm" className="h-10 w-full text-base font-medium hover:bg-transparent">{t('Sign in', 'Masuk')}</Button>
                     </Link>
                     <Link href="/register" onClick={() => setOpen(false)} className="flex-1">
-                      <Button size="sm" className="h-10 w-full rounded-full text-[15px] font-semibold">{t('Get started', 'Daftar')}</Button>
+                      <Button size="sm" className="h-10 w-full rounded-full text-base font-medium">{t('Get started', 'Daftar')}</Button>
                     </Link>
                   </>
                 )}

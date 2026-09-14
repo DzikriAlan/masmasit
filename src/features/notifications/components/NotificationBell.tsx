@@ -82,7 +82,7 @@ export function NotificationBell() {
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen(!open)}
-        className="flex h-10 items-center gap-1.5 rounded-md px-3 text-[15px] font-semibold text-foreground/70 transition-colors hover:bg-muted hover:text-foreground"
+        className="flex h-10 items-center gap-1.5 rounded-md px-3 text-base font-medium text-foreground/70 transition-colors hover:bg-muted hover:text-foreground"
       >
         <StableLabel en="Notifications" id="Notifikasi" />
         {unreadCount > 0 && (

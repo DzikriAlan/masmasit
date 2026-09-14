@@ -57,10 +57,10 @@ export function GlobalSearch() {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="flex h-10 items-center gap-2 rounded-md px-3 text-[15px] font-semibold text-foreground/70 transition-colors hover:bg-muted hover:text-foreground"
+        className="flex h-10 items-center gap-2 rounded-md px-3 text-base font-medium text-foreground/70 transition-colors hover:bg-muted hover:text-foreground"
       >
         <StableLabel en="Search" id="Cari" className="justify-items-end" />
-        <kbd className="hidden rounded border border-border px-1.5 py-0.5 font-sans text-[10px] leading-none text-muted-foreground lg:inline">⌘K</kbd>
+        <kbd className="hidden rounded border border-border px-1.5 py-0.5 font-mono text-[10px] leading-none text-muted-foreground lg:inline">⌘K</kbd>
       </button>
 
       <Dialog open={open} onOpenChange={setOpen}>
