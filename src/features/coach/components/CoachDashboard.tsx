@@ -267,7 +267,7 @@ export default function CoachDashboard() {
                 {selectedCourse.category && <Badge variant="outline" className="text-xs">{selectedCourse.category}</Badge>}
                 {selectedCourse.price === 0 ? <Badge variant="default">Free</Badge> : <Badge variant="outline">Rp {(selectedCourse.price / 1000).toFixed(0)}K</Badge>}
               </div>
-              <h1 className="mt-3 font-display text-2xl font-bold">{selectedCourse.title}</h1>
+              <h1 className="mt-3 font-display text-2xl font-semibold">{selectedCourse.title}</h1>
               <p className="mt-1 text-sm text-muted-foreground">{selectedCourse.enrollments?.length ?? 0} {t('enrolled', 'terdaftar')}</p>
             </CardContent>
           </Card>
@@ -553,7 +553,7 @@ export default function CoachDashboard() {
     <AppShell>
       <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-8">
-          <h1 className="font-display text-3xl font-bold flex items-center gap-3">
+          <h1 className="font-display text-3xl font-semibold flex items-center gap-3">
             <GraduationCap className="h-8 w-8 text-primary" /> {t('Coach Dashboard', 'Dashboard Coach')}
           </h1>
           <p className="mt-1 text-muted-foreground">{t('Create courses, manage modules & quizzes, and track enrollments.', 'Buat kursus, kelola modul & kuis, dan lacak pendaftaran.')}</p>
@@ -563,7 +563,7 @@ export default function CoachDashboard() {
           <Card className="glass">
             <CardContent className="p-8 text-center">
               <GraduationCap className="mx-auto mb-4 h-10 w-10 text-primary" />
-              <h2 className="font-display text-xl font-bold">{t('Become a Coach', 'Jadilah Coach')}</h2>
+              <h2 className="font-display text-xl font-semibold">{t('Become a Coach', 'Jadilah Coach')}</h2>
               <p className="mt-2 text-muted-foreground">{t('Share your expertise with the community. Apply to become a coach — admin approval required.', 'Bagikan keahlian Anda dengan komunitas. Daftar sebagai coach — approval admin diperlukan.')}</p>
               <Button onClick={saveCoachApplication} disabled={saving} className="mt-4 gap-2">
                 {saving && <Loader2 className="h-4 w-4 animate-spin" />} <Send className="h-4 w-4" /> {t('Apply Now', 'Daftar Sekarang')}
@@ -574,7 +574,7 @@ export default function CoachDashboard() {
           <Card className="glass">
             <CardContent className="p-8 text-center">
               <Loader2 className="mx-auto mb-4 h-8 w-8 animate-spin text-amber-400" />
-              <h2 className="font-display text-xl font-bold">{t('Application Pending', 'Pendaftaran Menunggu')}</h2>
+              <h2 className="font-display text-xl font-semibold">{t('Application Pending', 'Pendaftaran Menunggu')}</h2>
               <p className="mt-2 text-muted-foreground">{t('Your coach application is awaiting admin approval.', 'Pendaftaran coach Anda menunggu approval admin.')}</p>
               <Badge variant="secondary" className="mt-3">{t('Status: Pending', 'Status: Menunggu')}</Badge>
             </CardContent>

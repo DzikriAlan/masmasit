@@ -68,7 +68,7 @@ export default function JobApplicants() {
       <AppShell>
         <div className="mx-auto max-w-2xl px-4 py-20 text-center">
           <Briefcase className="mx-auto mb-4 h-10 w-10 text-muted-foreground" />
-          <h1 className="font-display text-2xl font-bold">{t('No company yet', 'Belum ada perusahaan')}</h1>
+          <h1 className="font-display text-2xl font-semibold">{t('No company yet', 'Belum ada perusahaan')}</h1>
           <p className="mt-2 text-muted-foreground">
             {t('Register a company before you can post jobs and review applicants.', 'Daftarkan perusahaan sebelum dapat memasang lowongan dan meninjau pelamar.')}
           </p>
@@ -88,7 +88,7 @@ export default function JobApplicants() {
         </Button>
 
         <div className="mb-8">
-          <h1 className="font-display text-3xl font-bold">{t('Applicants', 'Pelamar')}</h1>
+          <h1 className="font-display text-3xl font-semibold">{t('Applicants', 'Pelamar')}</h1>
           <p className="mt-1 text-muted-foreground">{company.name}</p>
         </div>
 

@@ -50,7 +50,7 @@ export default function DirectoryDetail() {
               </div>
               <div className="flex-1">
                 <div className="flex flex-wrap items-center gap-2">
-                  <h1 className="font-display text-2xl font-bold">{profile.full_name ?? 'Anonymous'}</h1>
+                  <h1 className="font-display text-2xl font-semibold">{profile.full_name ?? 'Anonymous'}</h1>
                   {isTalent && <Badge variant="default" className="gap-1"><Star className="h-3 w-3" /> Talent</Badge>}
                   {profile.is_coach && profile.coach_approved === 'approved' && (
                     <Badge variant="secondary" className="gap-1"><GraduationCap className="h-3 w-3" /> Coach</Badge>

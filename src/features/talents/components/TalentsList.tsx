@@ -46,7 +46,7 @@ export default function TalentsList() {
     <AppShell>
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-8">
-          <h1 className="font-display text-3xl font-bold">{t('Talent Listing', 'Daftar Talent')}</h1>
+          <h1 className="font-display text-3xl font-semibold">{t('Talent Listing', 'Daftar Talent')}</h1>
           <p className="mt-1 text-muted-foreground">{t('Book 1-on-1 consultations and mentoring sessions with vetted Indonesian IT experts.', 'Pesan konsultasi 1-on-1 dan mentoring dengan ahli IT Indonesia terverifikasi.')}</p>
         </div>
 

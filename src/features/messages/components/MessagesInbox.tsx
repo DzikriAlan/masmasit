@@ -148,7 +148,7 @@ function PesanContent() {
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <h1 className="font-display text-3xl font-bold">{t('Messages', 'Pesan')}</h1>
+            <h1 className="font-display text-3xl font-semibold">{t('Messages', 'Pesan')}</h1>
             <p className="mt-1 text-muted-foreground">{t('Chat with members, talents, and agency ops.', 'Chat dengan member, talent, dan agency ops.')}</p>
           </div>
           <Button variant="outline" className="gap-2" onClick={() => setShowSearch(!showSearch)}>

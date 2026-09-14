@@ -50,7 +50,7 @@ export default function JobsList() {
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h1 className="font-display text-3xl font-bold">{t('Job Portal', 'Lowongan Pekerjaan')}</h1>
+            <h1 className="font-display text-3xl font-semibold">{t('Job Portal', 'Lowongan Pekerjaan')}</h1>
             <p className="mt-1 text-muted-foreground">{t('Discover opportunities from verified Indonesian tech companies — from startups to enterprises.', 'Temukan peluang dari perusahaan tech terverifikasi di Indonesia — dari startup hingga enterprise.')}</p>
           </div>
           <Link href="/jobs/post">

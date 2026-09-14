@@ -196,7 +196,7 @@ export default function AdminDashboard() {
         <div className="mb-8 flex items-center gap-3">
           <ShieldCheck className="h-8 w-8 text-primary" />
           <div>
-            <h1 className="font-display text-3xl font-bold">{t('Admin Panel', 'Panel Admin')}</h1>
+            <h1 className="font-display text-3xl font-semibold">{t('Admin Panel', 'Panel Admin')}</h1>
             <p className="text-muted-foreground">{t('Manage approvals, fees, and platform settings.', 'Kelola approval, biaya, dan pengaturan platform.')}</p>
           </div>
         </div>

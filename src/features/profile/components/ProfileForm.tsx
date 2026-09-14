@@ -89,7 +89,7 @@ export default function ProfileForm() {
           <span className="h-1.5 w-1.5 animate-pulse-soft rounded-full bg-primary" />
           {t('Settings', 'Pengaturan')}
         </div>
-        <h1 className="mb-8 font-display text-3xl font-bold animate-fade-up">{t('Edit Profile', 'Edit Profil')}</h1>
+        <h1 className="mb-8 font-display text-3xl font-semibold animate-fade-up">{t('Edit Profile', 'Edit Profil')}</h1>
 
         <Card className="glass glass-hover mb-6 animate-fade-up">
           <CardHeader><CardTitle>{t('Profile Information', 'Informasi Profil')}</CardTitle><CardDescription>{t('This information is visible to other members.', 'Informasi ini terlihat oleh member lain.')}</CardDescription></CardHeader>

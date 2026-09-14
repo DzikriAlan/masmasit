@@ -146,7 +146,7 @@ export default function EventsList() {
             <Sparkles className="h-3 w-3" />
             {t('Community Events', 'Event Komunitas')}
           </div>
-          <h1 className="font-display text-3xl font-bold sm:text-4xl">{t('Regional Events', 'Event Daerah')}</h1>
+          <h1 className="font-display text-3xl font-semibold sm:text-4xl">{t('Regional Events', 'Event Daerah')}</h1>
           <p className="mt-1 max-w-2xl text-muted-foreground">{t('Join meetups, workshops, and hackathons near you. Connect with people who share your passion.', 'Ikuti meetup, workshop, dan hackathon di dekat Anda. Terhubung dengan orang yang memiliki passion yang sama.')}</p>
         </div>
 
@@ -227,7 +227,7 @@ export default function EventsList() {
                   <Badge variant="secondary" className="capitalize text-xs">{upcoming[0].event_type}</Badge>
                   {upcoming[0].regions && <Badge variant="outline" className="text-xs">{upcoming[0].regions.name}</Badge>}
                 </div>
-                <h2 className="font-display text-xl font-bold sm:text-2xl">{upcoming[0].title}</h2>
+                <h2 className="font-display text-xl font-semibold sm:text-2xl">{upcoming[0].title}</h2>
                 <div className="mt-2 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                   <span className="flex items-center gap-1.5"><Calendar className="h-4 w-4 text-primary" /> {new Date(upcoming[0].event_date).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}</span>
                   <span className="flex items-center gap-1.5"><MapPin className="h-4 w-4 text-primary" /> {upcoming[0].location}</span>
@@ -378,7 +378,7 @@ export default function EventsList() {
         {/* CTA */}
         {!user && !loading && (
           <div className="mt-10 rounded-2xl border border-primary/20 bg-primary/5 p-6 text-center sm:p-8">
-            <h3 className="font-display text-lg font-bold">{t('Want to host an event?', 'Ingin mengadakan event?')}</h3>
+            <h3 className="font-display text-lg font-semibold">{t('Want to host an event?', 'Ingin mengadakan event?')}</h3>
             <p className="mt-1 text-sm text-muted-foreground">{t('Join the community and start organizing meetups in your region.', 'Gabung komunitas dan mulai mengorganisir meetup di daerah Anda.')}</p>
             <Link href="/register"><Button className="mt-4 gap-2">{t('Join Now', 'Gabung Sekarang')} <ArrowRight className="h-4 w-4" /></Button></Link>
           </div>

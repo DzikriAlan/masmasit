@@ -94,7 +94,7 @@ export default function TalentBooking() {
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-2">
-                  <h1 className="font-display text-xl font-bold">{talent.full_name ?? 'Anonymous'}</h1>
+                  <h1 className="font-display text-xl font-semibold">{talent.full_name ?? 'Anonymous'}</h1>
                   <Badge variant="default" className="gap-1"><Star className="h-3 w-3 text-amber-400" /> {t('Talent', 'Talent')}</Badge>
                 </div>
                 {talent.location && <p className="flex items-center gap-1 text-sm text-muted-foreground"><MapPin className="h-3 w-3" /> {talent.location}</p>}
@@ -120,7 +120,7 @@ export default function TalentBooking() {
             <Card className="glass">
               <CardContent className="p-8 text-center">
                 <CheckCircle2 className="mx-auto mb-4 h-12 w-12 text-success" />
-                <h2 className="font-display text-xl font-bold">{t('Booking Created!', 'Booking Dibuat!')}</h2>
+                <h2 className="font-display text-xl font-semibold">{t('Booking Created!', 'Booking Dibuat!')}</h2>
                 <p className="mt-2 text-muted-foreground">{t('Your booking request has been sent. Complete payment to confirm.', 'Permintaan booking Anda telah dikirim. Selesaikan pembayaran untuk konfirmasi.')}</p>
                 <div className="mt-4 rounded-lg border border-border/60 p-4 text-left">
                   <div className="flex justify-between text-sm"><span className="text-muted-foreground">{t('Session Amount', 'Jumlah Sesi')}</span><span className="font-medium">Rp {parseInt(booking.amount).toLocaleString('id-ID')}</span></div>

@@ -107,7 +107,7 @@ export default function PostJob() {
           <Card className="glass">
             <CardContent className="p-8 text-center">
               <Building2 className="mx-auto mb-4 h-10 w-10 text-amber-400" />
-              <h2 className="font-display text-xl font-bold">{t('Awaiting Approval', 'Menunggu Persetujuan')}</h2>
+              <h2 className="font-display text-xl font-semibold">{t('Awaiting Approval', 'Menunggu Persetujuan')}</h2>
               <p className="mt-2 text-muted-foreground">{t('Your company', 'Perusahaan Anda')} &ldquo;{company.name}&rdquo; {t('is pending admin approval. You\'ll be able to post jobs once approved.', 'sedang menunggu persetujuan admin. Anda dapat memposting lowongan setelah disetujui.')}</p>
               <Badge variant="secondary" className="mt-4">{t('Status', 'Status')}: {t('Pending', 'Pending')}</Badge>
             </CardContent>

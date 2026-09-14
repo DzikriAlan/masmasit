@@ -104,7 +104,7 @@ export default function ProjectDetail() {
         <Card className="glass mb-6">
           <CardContent className="p-6 sm:p-8">
             <Badge variant={project.status === 'open' ? 'default' : 'secondary'} className="mb-3 capitalize">{project.status.replace('_', ' ')}</Badge>
-            <h1 className="font-display text-2xl font-bold">{project.title}</h1>
+            <h1 className="font-display text-2xl font-semibold">{project.title}</h1>
             <p className="mt-1 text-sm text-muted-foreground">{t('by', 'oleh')} {project.profiles?.full_name ?? 'Anonymous'}</p>
             <div className="mt-3 flex flex-wrap gap-2">
               <Badge variant="outline" className="gap-1"><Wallet className="h-3 w-3" /> {formatBudget(project.budget_min, project.budget_max)}</Badge>

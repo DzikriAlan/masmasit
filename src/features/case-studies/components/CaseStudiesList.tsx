@@ -19,7 +19,7 @@ export default function CaseStudiesList() {
     <AppShell>
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-8">
-          <h1 className="font-display text-3xl font-bold">{t('Case Studies', 'Studi Kasus')}</h1>
+          <h1 className="font-display text-3xl font-semibold">{t('Case Studies', 'Studi Kasus')}</h1>
           <p className="mt-1 text-muted-foreground">{t('Real projects, real results. See how we\'ve helped clients build digital solutions.', 'Proyek nyata, hasil nyata. Lihat bagaimana kami membantu klien membangun solusi digital.')}</p>
         </div>
 
@@ -43,7 +43,7 @@ export default function CaseStudiesList() {
                 )}
                 <CardContent className="p-6">
                   {!cs.image_url && cs.category && <Badge variant="secondary" className="mb-3">{cs.category}</Badge>}
-                  <h3 className="font-display text-lg font-bold">{cs.title}</h3>
+                  <h3 className="font-display text-lg font-semibold">{cs.title}</h3>
                   <p className="mt-1 text-sm text-muted-foreground">{t('Client', 'Klien')}: {cs.client_name}</p>
 
                   <div className="mt-4 space-y-3">

@@ -240,7 +240,7 @@ export default function CourseDetail() {
               {course.category && <Badge variant="outline">{course.category}</Badge>}
               {course.price === 0 ? <Badge variant="default" className="gap-1"><GraduationCap className="h-3 w-3" /> {t('Free', 'Gratis')}</Badge> : <Badge variant="outline">Rp {(course.price / 1000).toFixed(0)}K</Badge>}
             </div>
-            <h1 className="mt-3 font-display text-2xl font-bold">{course.title}</h1>
+            <h1 className="mt-3 font-display text-2xl font-semibold">{course.title}</h1>
             <p className="mt-1 text-sm text-muted-foreground">{t('by', 'oleh')} {course.profiles?.full_name ?? t('Coach', 'Pelatih')}</p>
             <p className="mt-4 text-sm leading-relaxed">{course.description}</p>
 
@@ -481,7 +481,7 @@ export default function CourseDetail() {
           <Card className="glass mt-6">
             <CardContent className="p-6 text-center">
               <Award className="mx-auto mb-3 h-10 w-10 text-amber-400" />
-              <h3 className="font-display text-lg font-bold">{t('Course Completed!', 'Kursus Selesai!')}</h3>
+              <h3 className="font-display text-lg font-semibold">{t('Course Completed!', 'Kursus Selesai!')}</h3>
               <p className="mt-1 text-sm text-muted-foreground">{t('Your certificate has been issued automatically.', 'Sertifikat Anda telah diterbitkan otomatis.')}</p>
             </CardContent>
           </Card>

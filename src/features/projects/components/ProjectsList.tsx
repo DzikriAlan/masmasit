@@ -91,7 +91,7 @@ export default function ProjectsList() {
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h1 className="font-display text-3xl font-bold">{t('Project Portal', 'Portal Proyek')}</h1>
+            <h1 className="font-display text-3xl font-semibold">{t('Project Portal', 'Portal Proyek')}</h1>
             <p className="mt-1 text-muted-foreground">{t('Outsource work or find freelance IT projects — all budgets in Rupiah, no middleman.', 'Outsource pekerjaan atau temukan proyek IT freelance — semua budget dalam Rupiah, tanpa perantara.')}</p>
           </div>
           <Button onClick={() => user ? setShowPost(!showPost) : router.push(loginHref())} className="gap-2">

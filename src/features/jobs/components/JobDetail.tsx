@@ -81,7 +81,7 @@ export default function JobDetail() {
                 )}
               </div>
               <div className="flex-1">
-                <h1 className="font-display text-2xl font-bold">{job.title}</h1>
+                <h1 className="font-display text-2xl font-semibold">{job.title}</h1>
                 <p className="text-muted-foreground">{job.companies?.name}</p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   <Badge variant="secondary" className="capitalize">{job.job_type.replace('-', ' ')}</Badge>

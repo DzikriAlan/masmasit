@@ -57,7 +57,7 @@ export default function DashboardOverview() {
             <span className="h-1.5 w-1.5 animate-pulse-soft rounded-full bg-primary" />
             {t('Dashboard', 'Dasbor')}
           </div>
-          <h1 className="font-display text-3xl font-bold sm:text-4xl">
+          <h1 className="font-display text-3xl font-semibold sm:text-4xl">
             {t('Welcome back', 'Selamat datang')}, {profile?.full_name?.split(' ')[0] ?? t('there', 'teman')}!
           </h1>
           <p className="mt-1 text-muted-foreground">{t('Here\'s what\'s happening in your ecosystem.', 'Inilah yang terjadi di ekosistem Anda.')}</p>

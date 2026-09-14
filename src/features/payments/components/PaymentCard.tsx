@@ -68,7 +68,7 @@ export function PaymentCard({
     <Card className="glass border-primary/20">
       <CardContent className="p-5 space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="font-display text-lg font-bold flex items-center gap-2">
+          <h3 className="font-display text-lg font-semibold flex items-center gap-2">
             <CreditCard className="h-5 w-5 text-primary" />
             {t('Complete Your Payment', 'Selesaikan Pembayaran')}
           </h3>

@@ -59,7 +59,7 @@ export default function ServicesList() {
     <AppShell>
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-8">
-          <h1 className="font-display text-3xl font-bold">{t('Agency Services', 'Layanan Agency')}</h1>
+          <h1 className="font-display text-3xl font-semibold">{t('Agency Services', 'Layanan Agency')}</h1>
           <p className="mt-1 text-muted-foreground">{t('End-to-end digital solutions delivered by our expert team — from MVP to enterprise scale.', 'Solusi digital end-to-end oleh tim ahli kami — dari MVP hingga skala enterprise.')}</p>
         </div>
 
@@ -73,7 +73,7 @@ export default function ServicesList() {
                 <div key={cat}>
                   <div className="mb-4 flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10"><Icon className="h-5 w-5 text-primary" /></div>
-                    <h2 className="font-display text-xl font-bold">{cat}</h2>
+                    <h2 className="font-display text-xl font-semibold">{cat}</h2>
                   </div>
                   <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     {services.filter((s) => s.category === cat).map((s) => (
@@ -123,7 +123,7 @@ export default function ServicesList() {
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={() => setSubmitted(false)}>
             <Card className="glass w-full max-w-md text-center">
               <CardContent className="p-8">
-                <h2 className="font-display text-xl font-bold">{t('Request Submitted!', 'Permintaan Terkirim!')}</h2>
+                <h2 className="font-display text-xl font-semibold">{t('Request Submitted!', 'Permintaan Terkirim!')}</h2>
                 <p className="mt-2 text-muted-foreground">{t('Our team will review your request and contact you within 2 business days with a DP payment link via Lynk.id.', 'Tim kami akan meninjau permintaan Anda dan menghubungi dalam 2 hari kerja dengan link pembayaran DP via Lynk.id.')}</p>
                 <Button onClick={() => setSubmitted(false)} className="mt-4">{t('Close', 'Tutup')}</Button>
               </CardContent>

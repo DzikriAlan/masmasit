@@ -70,7 +70,7 @@ export default function DirectoryList() {
     <AppShell>
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-8">
-          <h1 className="font-display text-3xl font-bold">{t('Member Directory', 'Direktori Member')}</h1>
+          <h1 className="font-display text-3xl font-semibold">{t('Member Directory', 'Direktori Member')}</h1>
           <p className="mt-1 text-muted-foreground">{t('Connect with IT practitioners across Indonesia.', 'Terhubung dengan praktisi IT di seluruh Indonesia.')}</p>
         </div>
 

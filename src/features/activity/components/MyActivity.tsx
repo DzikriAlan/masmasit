@@ -56,7 +56,7 @@ export default function MyActivity() {
     <AppShell>
       <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-8">
-          <h1 className="font-display text-3xl font-bold">{t('My Activity', 'Aktivitas Saya')}</h1>
+          <h1 className="font-display text-3xl font-semibold">{t('My Activity', 'Aktivitas Saya')}</h1>
           <p className="mt-1 text-muted-foreground">
             {t('Everything you have applied to, enrolled in, or booked.', 'Semua yang Anda lamar, ikuti, dan pesan.')}
           </p>
