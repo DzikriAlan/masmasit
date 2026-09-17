@@ -11,3 +11,14 @@ export function loginHref() {
   const back = window.location.pathname + window.location.search;
   return back === '/' ? '/login' : `/login?redirect=${encodeURIComponent(back)}`;
 }
+
+/** "PT Kirana Teknologi" → "pt-kirana-teknologi". Used for agency URLs. */
+export function slugify(input: string) {
+  return input
+    .toLowerCase()
+    .normalize('NFKD')
+    .replace(/[̀-ͯ]/g, '')
+    .split(/[^a-z0-9]+/)
+    .filter(Boolean)
+    .join('-');
+}
