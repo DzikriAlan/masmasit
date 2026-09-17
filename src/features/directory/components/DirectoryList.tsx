@@ -1,9 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Search, MapPin, Users, Loader2, Link as LinkIcon } from 'lucide-react';
+import { Search } from 'lucide-react';
 import Link from 'next/link';
 import { AppShell } from '@/components/app-shell';
+import { TONE_CHIP, TONE_TEXT, toneOf } from '@/shared/lib/tones';
+import { LoadData } from '@/components/load-data';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
@@ -70,7 +72,7 @@ export default function DirectoryList() {
     <AppShell>
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-8">
-          <h1 className="font-display text-3xl font-semibold">{t('Member Directory', 'Direktori Member')}</h1>
+          <h1 className={`font-display text-3xl font-semibold ${TONE_TEXT[toneOf('directory')]}`}>{t('Member Directory', 'Direktori Member')}</h1>
           <p className="mt-1 text-muted-foreground">{t('Connect with IT practitioners across Indonesia.', 'Terhubung dengan praktisi IT di seluruh Indonesia.')}</p>
         </div>
 
@@ -109,16 +111,14 @@ export default function DirectoryList() {
         </div>
 
         {/* Results */}
-        {loading ? (
-          <div className="flex justify-center py-20">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
-        ) : members.length === 0 ? (
-          <div className="py-20 text-center text-muted-foreground">
-            <Users className="mx-auto mb-3 h-10 w-10 opacity-50" />
-            <p>{t('No members found matching your filters.', 'Tidak ada member yang cocok dengan filter Anda.')}</p>
-          </div>
-        ) : (
+        <LoadData
+          hideIcon
+          response={{
+            isLoading: loading,
+            isEmpty: members.length === 0,
+            emptyTitle: t('No members found matching your filters.', 'Tidak ada member yang cocok dengan filter Anda.'),
+          }}
+        >
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {members.map((m) => (
                 <Link key={m.id} href={`/directory/${m.id}`}>
@@ -131,9 +131,7 @@ export default function DirectoryList() {
                         <div className="flex-1 min-w-0">
                           <h3 className="truncate font-semibold">{m.full_name ?? 'Anonymous'}</h3>
                           {m.location && (
-                            <p className="flex items-center gap-1 text-sm text-muted-foreground">
-                              <MapPin className="h-3 w-3" /> {m.location}
-                            </p>
+                            <p className="text-sm text-muted-foreground">{m.location}</p>
                           )}
                         </div>
                       </div>
@@ -151,7 +149,7 @@ export default function DirectoryList() {
                           <span className="text-xs text-muted-foreground">{m.current_job_status}</span>
                         )}
                         {m.is_talent && m.talent_approved === 'approved' && (
-                          <Badge variant="default" className="gap-1 text-xs"><LinkIcon className="h-3 w-3" /> Talent</Badge>
+                          <Badge variant="default" className={`text-xs ${TONE_CHIP[toneOf('directory')]}`}>Talent</Badge>
                         )}
                       </div>
                     </CardContent>
@@ -159,7 +157,7 @@ export default function DirectoryList() {
                 </Link>
               ))}
           </div>
-        )}
+        </LoadData>
 
         {!loading && (page > 1 || hasNextPage) && (
           <div className="mt-8 flex items-center justify-center gap-3">

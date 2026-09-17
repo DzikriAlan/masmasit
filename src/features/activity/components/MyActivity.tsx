@@ -1,9 +1,9 @@
 'use client';
 
-import { Loader2, Briefcase, GraduationCap, Star, CalendarClock, Award } from 'lucide-react';
 import Link from 'next/link';
 
 import { AppShell } from '@/components/app-shell';
+import { LoadData } from '@/components/load-data';
 import { useAuth } from '@/components/auth-provider';
 import { useLang } from '@/components/language-provider';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -49,7 +49,11 @@ export default function MyActivity() {
   };
 
   if (loading) {
-    return <AppShell><div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div></AppShell>;
+    return (
+      <AppShell>
+        <LoadData minHeight="60vh" response={{ isLoading: true }} />
+      </AppShell>
+    );
   }
 
   return (
@@ -76,15 +80,15 @@ export default function MyActivity() {
                 <CardDescription>{t('Track where each application stands.', 'Pantau status setiap lamaran.')}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
-                {fetchJobsMyApplications.isPending ? (
-                  <div className="flex justify-center py-10"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
-                ) : applications.length === 0 ? (
-                  <div className="py-10 text-center text-muted-foreground">
-                    <Briefcase className="mx-auto mb-3 h-10 w-10 opacity-50" />
-                    <p className="text-sm">{t('You have not applied to any jobs yet.', 'Anda belum melamar pekerjaan.')}</p>
-                  </div>
-                ) : (
-                  applications.map((app) => (
+                <LoadData
+                  hideIcon
+                  response={{
+                    isLoading: fetchJobsMyApplications.isPending,
+                    isEmpty: applications.length === 0,
+                    emptyTitle: t('You have not applied to any jobs yet.', 'Anda belum melamar pekerjaan.'),
+                  }}
+                >
+                  {applications.map((app) => (
                     <div key={app.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border/60 p-4">
                       <div className="min-w-0">
                         <Link href={app.jobs ? `/jobs/${app.jobs.id}` : '/jobs'} className="font-medium hover:underline">
@@ -98,8 +102,8 @@ export default function MyActivity() {
                       </div>
                       <Badge variant={STATUS_VARIANT[app.status] ?? 'outline'} className="capitalize">{app.status}</Badge>
                     </div>
-                  ))
-                )}
+                  ))}
+                </LoadData>
               </CardContent>
             </Card>
           </TabsContent>
@@ -111,15 +115,15 @@ export default function MyActivity() {
                 <CardDescription>{t('Your progress and certificates.', 'Progres dan sertifikat Anda.')}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
-                {fetchCoursesMine.isPending ? (
-                  <div className="flex justify-center py-10"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
-                ) : enrollments.length === 0 ? (
-                  <div className="py-10 text-center text-muted-foreground">
-                    <GraduationCap className="mx-auto mb-3 h-10 w-10 opacity-50" />
-                    <p className="text-sm">{t('You are not enrolled in any course yet.', 'Anda belum terdaftar di kursus manapun.')}</p>
-                  </div>
-                ) : (
-                  enrollments.map((en) => (
+                <LoadData
+                  hideIcon
+                  response={{
+                    isLoading: fetchCoursesMine.isPending,
+                    isEmpty: enrollments.length === 0,
+                    emptyTitle: t('You are not enrolled in any course yet.', 'Anda belum terdaftar di kursus manapun.'),
+                  }}
+                >
+                  {enrollments.map((en) => (
                     <div key={en.id} className="rounded-lg border border-border/60 p-4">
                       <div className="flex flex-wrap items-center justify-between gap-3">
                         <Link href={en.courses ? `/courses/${en.courses.id}` : '/courses'} className="font-medium hover:underline">
@@ -130,7 +134,7 @@ export default function MyActivity() {
                             <Badge variant="outline" className="text-xs">{t('Unpaid', 'Belum bayar')}</Badge>
                           )}
                           {en.progress >= 100 && (
-                            <Badge variant="default" className="gap-1 text-xs"><Award className="h-3 w-3" /> {t('Complete', 'Selesai')}</Badge>
+                            <Badge variant="default" className="text-xs">{t('Complete', 'Selesai')}</Badge>
                           )}
                         </div>
                       </div>
@@ -142,8 +146,8 @@ export default function MyActivity() {
                         <Progress value={en.progress} className="h-2" />
                       </div>
                     </div>
-                  ))
-                )}
+                  ))}
+                </LoadData>
               </CardContent>
             </Card>
           </TabsContent>
@@ -157,13 +161,15 @@ export default function MyActivity() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
-                {incomingBookings.length === 0 ? (
-                  <div className="py-10 text-center text-muted-foreground">
-                    <Star className="mx-auto mb-3 h-10 w-10 opacity-50" />
-                    <p className="text-sm">{t('No incoming bookings.', 'Belum ada booking masuk.')}</p>
-                  </div>
-                ) : (
-                  incomingBookings.map((b) => (
+                <LoadData
+                  hideIcon
+                  response={{
+                    isLoading: false,
+                    isEmpty: incomingBookings.length === 0,
+                    emptyTitle: t('No incoming bookings.', 'Belum ada booking masuk.'),
+                  }}
+                >
+                  {incomingBookings.map((b) => (
                     <div key={b.id} className="rounded-lg border border-border/60 p-4">
                       <div className="flex flex-wrap items-start justify-between gap-3">
                         <div>
@@ -188,8 +194,8 @@ export default function MyActivity() {
                         </Button>
                       )}
                     </div>
-                  ))
-                )}
+                  ))}
+                </LoadData>
               </CardContent>
             </Card>
 
@@ -198,13 +204,15 @@ export default function MyActivity() {
                 <CardTitle>{t('Sessions You Booked', 'Sesi yang Anda Pesan')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {myBookings.length === 0 ? (
-                  <div className="py-10 text-center text-muted-foreground">
-                    <CalendarClock className="mx-auto mb-3 h-10 w-10 opacity-50" />
-                    <p className="text-sm">{t('You have not booked any session.', 'Anda belum memesan sesi.')}</p>
-                  </div>
-                ) : (
-                  myBookings.map((b) => (
+                <LoadData
+                  hideIcon
+                  response={{
+                    isLoading: false,
+                    isEmpty: myBookings.length === 0,
+                    emptyTitle: t('You have not booked any session.', 'Anda belum memesan sesi.'),
+                  }}
+                >
+                  {myBookings.map((b) => (
                     <div key={b.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border/60 p-4">
                       <div>
                         <p className="font-medium">{b.profiles?.full_name ?? t('Talent', 'Talent')}</p>
@@ -214,8 +222,8 @@ export default function MyActivity() {
                       </div>
                       <Badge variant={STATUS_VARIANT[b.status] ?? 'outline'} className="capitalize">{b.status}</Badge>
                     </div>
-                  ))
-                )}
+                  ))}
+                </LoadData>
               </CardContent>
             </Card>
           </TabsContent>

@@ -1,8 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { Code2, Brain, Palette, UsersRound, Loader2, ArrowRight, Send } from 'lucide-react';
+import { Loader2, ArrowRight } from 'lucide-react';
 import { AppShell } from '@/components/app-shell';
+import { TONE_TEXT, toneOf } from '@/shared/lib/tones';
+import { LoadData } from '@/components/load-data';
 import { useAuth } from '@/components/auth-provider';
 import { useLang } from '@/components/language-provider';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -16,8 +18,6 @@ import { toast } from 'sonner';
 
 import type { DataServices } from '@/features/services/types/servicesTypes';
 import { useServicesControllers } from '@/features/services/controllers/servicesControllers';
-
-const categoryIcons: Record<string, any> = { 'SaaS': Code2, 'AI Solutions': Brain, 'Creative Services': Palette, 'HR Solutions': UsersRound };
 
 type Service = DataServices;
 
@@ -33,7 +33,6 @@ export default function ServicesList() {
   const services: Service[] = fetchServices.data ?? [];
   const loading = fetchServices.isPending;
   const saving = storeServicesRequest.isPending;
-  const categories = Array.from(new Set(services.map((s) => s.category)));
 
   const saveServicesRequest = async () => {
     try {
@@ -59,41 +58,34 @@ export default function ServicesList() {
     <AppShell>
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-8">
-          <h1 className="font-display text-3xl font-semibold">{t('Agency Services', 'Layanan Agency')}</h1>
+          <h1 className={`font-display text-3xl font-semibold ${TONE_TEXT[toneOf('services')]}`}>{t('Agency Services', 'Layanan Agency')}</h1>
           <p className="mt-1 text-muted-foreground">{t('End-to-end digital solutions delivered by our expert team — from MVP to enterprise scale.', 'Solusi digital end-to-end oleh tim ahli kami — dari MVP hingga skala enterprise.')}</p>
         </div>
 
-        {loading ? (
-          <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
-        ) : (
-          <div className="space-y-10">
-            {categories.map((cat) => {
-              const Icon = categoryIcons[cat] ?? Code2;
-              return (
-                <div key={cat}>
-                  <div className="mb-4 flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10"><Icon className="h-5 w-5 text-primary" /></div>
-                    <h2 className="font-display text-xl font-semibold">{cat}</h2>
-                  </div>
-                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    {services.filter((s) => s.category === cat).map((s) => (
-                      <Card key={s.id} className="glass group transition-all hover:border-primary/40 hover:-translate-y-0.5">
-                        <CardContent className="p-5">
-                          <h3 className="font-semibold">{s.title}</h3>
-                          <p className="mt-1 text-sm text-muted-foreground">{s.description}</p>
-                          {s.base_price && <p className="mt-3 text-sm font-medium text-primary">{t('From', 'Mulai')} Rp {(s.base_price / 1000000).toFixed(0)}M</p>}
-                          <Button size="sm" variant="outline" className="mt-3 w-full gap-2" onClick={() => setSelectedService(s.id)}>
-                            {t('Request Project', 'Minta Proyek')} <ArrowRight className="h-3.5 w-3.5" />
-                          </Button>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
+        <LoadData
+          hideIcon
+          response={{
+            isLoading: loading,
+            isEmpty: services.length === 0,
+            emptyTitle: t('No services listed yet.', 'Belum ada layanan yang terdaftar.'),
+          }}
+        >
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {services.map((s) => (
+              <Card key={s.id} className="glass group transition-all hover:border-primary/40 hover:-translate-y-0.5">
+                <CardContent className="p-5">
+                  <p className={`text-xs font-semibold ${TONE_TEXT[toneOf('services')]}`}>{s.category}</p>
+                  <h3 className="mt-1 font-semibold">{s.title}</h3>
+                  <p className="mt-1 text-sm text-muted-foreground">{s.description}</p>
+                  {s.base_price && <p className="mt-3 text-sm font-medium text-primary">{t('From', 'Mulai')} Rp {(s.base_price / 1000000).toFixed(0)}M</p>}
+                  <Button size="sm" variant="outline" className="mt-3 w-full gap-2" onClick={() => setSelectedService(s.id)}>
+                    {t('Request Project', 'Minta Proyek')} <ArrowRight className="h-3.5 w-3.5" />
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
           </div>
-        )}
+        </LoadData>
 
         {/* Request modal */}
         {selectedService && !submitted && (
@@ -111,7 +103,7 @@ export default function ServicesList() {
                 <div className="flex gap-2">
                   <Button variant="outline" onClick={() => setSelectedService(null)}>{t('Cancel', 'Batal')}</Button>
                   <Button onClick={saveServicesRequest} disabled={saving || !form.client_name || !form.client_email || !form.scope} className="gap-2 flex-1">
-                    {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />} {t('Submit Request', 'Kirim Permintaan')}
+                    {saving && <Loader2 className="h-4 w-4 animate-spin" />} {t('Submit Request', 'Kirim Permintaan')}
                   </Button>
                 </div>
               </CardContent>
@@ -124,7 +116,7 @@ export default function ServicesList() {
             <Card className="glass w-full max-w-md text-center">
               <CardContent className="p-8">
                 <h2 className="font-display text-xl font-semibold">{t('Request Submitted!', 'Permintaan Terkirim!')}</h2>
-                <p className="mt-2 text-muted-foreground">{t('Our team will review your request and contact you within 2 business days with a DP payment link via Lynk.id.', 'Tim kami akan meninjau permintaan Anda dan menghubungi dalam 2 hari kerja dengan link pembayaran DP via Lynk.id.')}</p>
+                <p className="mt-2 text-muted-foreground">{t('Our team will review your request and contact you within 2 business days with a DP payment link via GoAkal.', 'Tim kami akan meninjau permintaan Anda dan menghubungi dalam 2 hari kerja dengan link pembayaran DP via GoAkal.')}</p>
                 <Button onClick={() => setSubmitted(false)} className="mt-4">{t('Close', 'Tutup')}</Button>
               </CardContent>
             </Card>

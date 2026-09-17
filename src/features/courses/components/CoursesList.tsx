@@ -1,8 +1,9 @@
 'use client';
 
-import { GraduationCap, Loader2, Star, Users, Wallet, Plus } from 'lucide-react';
 import Link from 'next/link';
 import { AppShell } from '@/components/app-shell';
+import { TONE_TEXT, toneOf } from '@/shared/lib/tones';
+import { LoadData } from '@/components/load-data';
 import type { DataCourses } from '@/features/courses/types/coursesTypes';
 import { useCoursesControllers } from '@/features/courses/controllers/coursesControllers';
 import { useLang } from '@/components/language-provider';
@@ -34,23 +35,23 @@ export default function CoursesList() {
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h1 className="font-display text-3xl font-semibold">{t('Learning Management System', 'Sistem Pembelajaran')}</h1>
+            <h1 className={`font-display text-3xl font-semibold ${TONE_TEXT[toneOf('courses')]}`}>{t('Learning Management System', 'Sistem Pembelajaran')}</h1>
             <p className="mt-1 text-muted-foreground">{t('Level up your skills with courses from verified Indonesian IT coaches — get certificates upon completion.', 'Tingkatkan skill dengan kursus dari coach IT Indonesia terverifikasi — dapatkan sertifikat setelah selesai.')}</p>
           </div>
           <Link href="/coach">
-            <Button variant="outline" className="gap-2"><Plus className="h-4 w-4" /> {t('Become a Coach', 'Jadilah Coach')}</Button>
+            <Button variant="outline">{t('Become a Coach', 'Jadilah Coach')}</Button>
           </Link>
         </div>
 
-        {loading ? (
-          <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
-        ) : courses.length === 0 ? (
-          <div className="py-20 text-center text-muted-foreground">
-            <GraduationCap className="mx-auto mb-3 h-10 w-10 opacity-50" />
-            <p>{t('No courses available yet.', 'Belum ada kursus tersedia.')}</p>
-            <Link href="/coach" className="mt-4 inline-block"><Button variant="outline" size="sm">{t('Create the first course', 'Buat kursus pertama')}</Button></Link>
-          </div>
-        ) : (
+        <LoadData
+          hideIcon
+          response={{
+            isLoading: loading,
+            isEmpty: courses.length === 0,
+            emptyTitle: t('No courses available yet.', 'Belum ada kursus tersedia.'),
+            emptySubtitle: t('Be the first to create one — see "Become a Coach" above.', 'Jadilah yang pertama membuat kursus — lihat "Jadilah Coach" di atas.'),
+          }}
+        >
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {courses.map((c) => (
               <Link key={c.id} href={`/courses/${c.id}`}>
@@ -68,13 +69,13 @@ export default function CoursesList() {
                     <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{c.description}</p>
                     <div className="mt-3 flex items-center justify-between">
                       <p className="text-xs text-muted-foreground">{t('by', 'oleh')} {c.profiles?.full_name ?? t('Coach', 'Coach')}</p>
-                      <p className="flex items-center gap-1 text-xs text-muted-foreground"><Users className="h-3 w-3" /> {c.enrollments?.length ?? 0}</p>
+                      <p className="text-xs text-muted-foreground">{c.enrollments?.length ?? 0} {t('enrolled', 'terdaftar')}</p>
                     </div>
                     <div className="mt-2">
                       {c.price === 0 ? (
-                        <Badge variant="default" className="gap-1 text-xs"><Star className="h-3 w-3" /> {t('Free', 'Gratis')}</Badge>
+                        <Badge variant="default" className="text-xs">{t('Free', 'Gratis')}</Badge>
                       ) : (
-                        <Badge variant="outline" className="gap-1 text-xs"><Wallet className="h-3 w-3" /> Rp {(c.price / 1000).toFixed(0)}K</Badge>
+                        <Badge variant="outline" className={`text-xs ${TONE_TEXT[toneOf('courses')]}`}>Rp {(c.price / 1000).toFixed(0)}K</Badge>
                       )}
                     </div>
                   </CardContent>
@@ -82,7 +83,7 @@ export default function CoursesList() {
               </Link>
             ))}
           </div>
-        )}
+        </LoadData>
       </div>
     </AppShell>
   );

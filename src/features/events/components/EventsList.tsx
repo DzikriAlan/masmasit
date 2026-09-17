@@ -1,9 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { Calendar, MapPin, Users, Loader2, CheckCircle2, Clock, Search, Sparkles, ArrowRight, CreditCard, Plus } from 'lucide-react';
+import { Loader2, CheckCircle2, Search, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { AppShell } from '@/components/app-shell';
+import { TONE_TEXT, toneOf } from '@/shared/lib/tones';
+import { LoadData } from '@/components/load-data';
 import { useAuth } from '@/components/auth-provider';
 import { useLang } from '@/components/language-provider';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -32,13 +34,6 @@ const eventImages: Record<string, string> = {
 };
 
 const getEventImage = (type: string) => eventImages[type] || eventImages.default;
-
-const eventTypeConfig: Record<string, { color: string; icon: typeof Calendar }> = {
-  meetup: { color: 'text-emerald-400', icon: Users },
-  workshop: { color: 'text-amber-400', icon: Sparkles },
-  hackathon: { color: 'text-blue-400', icon: Calendar },
-  conference: { color: 'text-rose-400', icon: Calendar },
-};
 
 export default function EventsList() {
   const { user } = useAuth();
@@ -142,17 +137,16 @@ export default function EventsList() {
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Hero header */}
         <div className="mb-8">
-          <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs font-medium text-primary">
-            <Sparkles className="h-3 w-3" />
+          <div className={`mb-2 inline-flex items-center rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs font-medium ${TONE_TEXT[toneOf('events')]}`}>
             {t('Community Events', 'Event Komunitas')}
           </div>
-          <h1 className="font-display text-3xl font-semibold sm:text-4xl">{t('Regional Events', 'Event Daerah')}</h1>
+          <h1 className={`font-display text-3xl font-semibold sm:text-4xl ${TONE_TEXT[toneOf('events')]}`}>{t('Regional Events', 'Event Daerah')}</h1>
           <p className="mt-1 max-w-2xl text-muted-foreground">{t('Join meetups, workshops, and hackathons near you. Connect with people who share your passion.', 'Ikuti meetup, workshop, dan hackathon di dekat Anda. Terhubung dengan orang yang memiliki passion yang sama.')}</p>
         </div>
 
         <div className="mb-6 flex justify-end">
-          <Button onClick={() => user ? setShowCreate(!showCreate) : toast.error(t('Please sign in to create an event', 'Silakan masuk untuk membuat event'))} className="gap-2">
-            <Plus className="h-4 w-4" /> {t('Create Event', 'Buat Event')}
+          <Button onClick={() => user ? setShowCreate(!showCreate) : toast.error(t('Please sign in to create an event', 'Silakan masuk untuk membuat event'))}>
+            {t('Create Event', 'Buat Event')}
           </Button>
         </div>
 
@@ -221,24 +215,22 @@ export default function EventsList() {
               <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
               <div className="absolute bottom-0 left-0 right-0 p-5 sm:p-7">
                 <div className="mb-2 flex items-center gap-2">
-                  <Badge variant="default" className="gap-1">
-                    <Sparkles className="h-3 w-3" /> {t('Featured', 'Unggulan')}
-                  </Badge>
+                  <Badge variant="default" className={TONE_TEXT[toneOf('events')]}>{t('Featured', 'Unggulan')}</Badge>
                   <Badge variant="secondary" className="capitalize text-xs">{upcoming[0].event_type}</Badge>
                   {upcoming[0].regions && <Badge variant="outline" className="text-xs">{upcoming[0].regions.name}</Badge>}
                 </div>
                 <h2 className="font-display text-xl font-semibold sm:text-2xl">{upcoming[0].title}</h2>
                 <div className="mt-2 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                  <span className="flex items-center gap-1.5"><Calendar className="h-4 w-4 text-primary" /> {new Date(upcoming[0].event_date).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}</span>
-                  <span className="flex items-center gap-1.5"><MapPin className="h-4 w-4 text-primary" /> {upcoming[0].location}</span>
-                  <span className="flex items-center gap-1.5"><Users className="h-4 w-4 text-primary" /> {upcoming[0].event_rsvps?.length ?? 0}/{upcoming[0].max_capacity}</span>
+                  <span>{new Date(upcoming[0].event_date).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}</span>
+                  <span>{upcoming[0].location}</span>
+                  <span>{upcoming[0].event_rsvps?.length ?? 0}/{upcoming[0].max_capacity}</span>
                 </div>
                 <div className="mt-3">
                   {rsvpIds.has(upcoming[0].id) ? (
                     <Badge variant="default" className="gap-1"><CheckCircle2 className="h-3 w-3" /> {t('Registered', 'Terdaftar')}</Badge>
                   ) : (
-                    <Button size="sm" className="gap-2 glow-primary" onClick={() => saveRsvp(upcoming[0].id)} disabled={rsvpLoading === upcoming[0].id}>
-                      {rsvpLoading === upcoming[0].id ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Users className="h-4 w-4" /> {t('RSVP Now', 'RSVP Sekarang')}</>}
+                    <Button size="sm" className="glow-primary" onClick={() => saveRsvp(upcoming[0].id)} disabled={rsvpLoading === upcoming[0].id}>
+                      {rsvpLoading === upcoming[0].id ? <Loader2 className="h-4 w-4 animate-spin" /> : t('RSVP Now', 'RSVP Sekarang')}
                     </Button>
                   )}
                 </div>
@@ -278,15 +270,14 @@ export default function EventsList() {
         </div>
 
         {/* Events grid */}
-        {loading ? (
-          <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
-        ) : upcoming.length === 0 && past.length === 0 ? (
-          <div className="py-20 text-center">
-            <Calendar className="mx-auto mb-3 h-12 w-12 text-muted-foreground/40" />
-            <p className="text-muted-foreground">{t('No events found. Try adjusting your filters.', 'Tidak ada event ditemukan. Coba ubah filter.')}</p>
-          </div>
-        ) : (
-          <>
+        <LoadData
+          hideIcon
+          response={{
+            isLoading: loading,
+            isEmpty: upcoming.length === 0 && past.length === 0,
+            emptyTitle: t('No events found. Try adjusting your filters.', 'Tidak ada event ditemukan. Coba ubah filter.'),
+          }}
+        >
             {upcoming.length > 0 && (
               <>
                 <h2 className="mb-4 flex items-center gap-2 font-display text-lg font-semibold">
@@ -297,7 +288,6 @@ export default function EventsList() {
                   {upcoming.slice(1).map((e, i) => {
                     const spotsLeft = e.max_capacity - (e.event_rsvps?.length ?? 0);
                     const isRSVPed = rsvpIds.has(e.id);
-                    const typeCfg = eventTypeConfig[e.event_type] ?? eventTypeConfig.conference;
                     const fillPct = Math.round(((e.event_rsvps?.length ?? 0) / e.max_capacity) * 100);
                     return (
                       <Card key={e.id} className="group glass glass-hover overflow-hidden stagger-1" style={{ animationDelay: `${i * 0.06}s` }}>
@@ -314,8 +304,8 @@ export default function EventsList() {
                           <h3 className="font-semibold leading-tight">{e.title}</h3>
                           <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{e.description}</p>
                           <div className="mt-3 space-y-1.5 text-sm text-muted-foreground">
-                            <p className="flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5 text-primary/70" /> {new Date(e.event_date).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}</p>
-                            <p className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5 text-primary/70" /> {e.location}</p>
+                            <p>{new Date(e.event_date).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}</p>
+                            <p>{e.location}</p>
                           </div>
                           {/* Capacity bar */}
                           <div className="mt-3">
@@ -336,8 +326,8 @@ export default function EventsList() {
                                 <CheckCircle2 className="h-4 w-4" /> {t('Registered', 'Terdaftar')}
                               </div>
                             ) : spotsLeft > 0 ? (
-                              <Button size="sm" className="w-full gap-2" onClick={() => saveRsvp(e.id)} disabled={rsvpLoading === e.id}>
-                                {rsvpLoading === e.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Users className="h-3.5 w-3.5" /> {t('RSVP Now', 'RSVP Sekarang')}</>}
+                              <Button size="sm" className="w-full" onClick={() => saveRsvp(e.id)} disabled={rsvpLoading === e.id}>
+                                {rsvpLoading === e.id ? <Loader2 className="h-4 w-4 animate-spin" /> : t('RSVP Now', 'RSVP Sekarang')}
                               </Button>
                             ) : (
                               <Button size="sm" variant="outline" disabled className="w-full">{t('Sold Out', 'Penuh')}</Button>
@@ -364,16 +354,15 @@ export default function EventsList() {
                       </div>
                       <CardContent className="p-4">
                         <h3 className="text-sm font-semibold">{e.title}</h3>
-                        <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground"><MapPin className="h-3 w-3" /> {e.location}</p>
-                        <p className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground"><Users className="h-3 w-3" /> {e.event_rsvps?.length ?? 0} {t('attended', 'hadir')}</p>
+                        <p className="mt-1 text-xs text-muted-foreground">{e.location}</p>
+                        <p className="mt-0.5 text-xs text-muted-foreground">{e.event_rsvps?.length ?? 0} {t('attended', 'hadir')}</p>
                       </CardContent>
                     </Card>
                   ))}
                 </div>
               </>
             )}
-          </>
-        )}
+        </LoadData>
 
         {/* CTA */}
         {!user && !loading && (

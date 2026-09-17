@@ -1,10 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Search, Code2, Wallet, Clock, Loader2, Plus, ArrowLeft, Send, Star } from 'lucide-react';
+import { Search, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { AppShell } from '@/components/app-shell';
+import { TONE_TEXT, toneOf } from '@/shared/lib/tones';
+import { LoadData } from '@/components/load-data';
 import type { DataProjects } from '@/features/projects/types/projectsTypes';
 import { useProjectsControllers } from '@/features/projects/controllers/projectsControllers';
 import { useAuth } from '@/components/auth-provider';
@@ -91,11 +93,11 @@ export default function ProjectsList() {
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h1 className="font-display text-3xl font-semibold">{t('Project Portal', 'Portal Proyek')}</h1>
+            <h1 className={`font-display text-3xl font-semibold ${TONE_TEXT[toneOf('projects')]}`}>{t('Project Portal', 'Portal Proyek')}</h1>
             <p className="mt-1 text-muted-foreground">{t('Outsource work or find freelance IT projects — all budgets in Rupiah, no middleman.', 'Outsource pekerjaan atau temukan proyek IT freelance — semua budget dalam Rupiah, tanpa perantara.')}</p>
           </div>
-          <Button onClick={() => user ? setShowPost(!showPost) : router.push(loginHref())} className="gap-2">
-            <Plus className="h-4 w-4" /> {t('Post Project', 'Pasang Proyek')}
+          <Button onClick={() => user ? setShowPost(!showPost) : router.push(loginHref())}>
+            {t('Post Project', 'Pasang Proyek')}
           </Button>
         </div>
 
@@ -138,14 +140,14 @@ export default function ProjectsList() {
           </div>
         </div>
 
-        {loading ? (
-          <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
-        ) : projects.length === 0 ? (
-          <div className="py-20 text-center text-muted-foreground">
-            <Code2 className="mx-auto mb-3 h-10 w-10 opacity-50" />
-            <p>{t('No projects found.', 'Tidak ada proyek ditemukan.')}</p>
-          </div>
-        ) : (
+        <LoadData
+          hideIcon
+          response={{
+            isLoading: loading,
+            isEmpty: projects.length === 0,
+            emptyTitle: t('No projects found.', 'Tidak ada proyek ditemukan.'),
+          }}
+        >
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {projects.map((p) => (
               <Link key={p.id} href={`/projects/${p.id}`}>
@@ -160,8 +162,8 @@ export default function ProjectsList() {
                     <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{p.description}</p>
                     <div className="mt-3 flex flex-wrap gap-2">
                       <Badge variant={p.status === 'open' ? 'default' : 'secondary'} className="capitalize text-xs">{p.status.replace('_', ' ')}</Badge>
-                      <Badge variant="outline" className="gap-1 text-xs"><Wallet className="h-3 w-3" /> {formatBudget(p.budget_min, p.budget_max)}</Badge>
-                      {p.deadline && <Badge variant="outline" className="gap-1 text-xs"><Clock className="h-3 w-3" /> {new Date(p.deadline).toLocaleDateString('id-ID')}</Badge>}
+                      <Badge variant="outline" className={`text-xs ${TONE_TEXT[toneOf('projects')]}`}>{formatBudget(p.budget_min, p.budget_max)}</Badge>
+                      {p.deadline && <Badge variant="outline" className="text-xs">{new Date(p.deadline).toLocaleDateString('id-ID')}</Badge>}
                     </div>
                     <p className="mt-2 text-xs text-muted-foreground">{t('by', 'oleh')} {p.profiles?.full_name ?? t('Anonymous', 'Anonim')}</p>
                   </CardContent>
@@ -169,7 +171,7 @@ export default function ProjectsList() {
               </Link>
             ))}
           </div>
-        )}
+        </LoadData>
       </div>
     </AppShell>
   );

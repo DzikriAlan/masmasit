@@ -1,7 +1,8 @@
 'use client';
 
-import { TrendingUp, Loader2, Target, Lightbulb, BarChart3 } from 'lucide-react';
 import { AppShell } from '@/components/app-shell';
+import { TONE_TEXT, toneOf } from '@/shared/lib/tones';
+import { LoadData } from '@/components/load-data';
 import { useLang } from '@/components/language-provider';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -19,18 +20,18 @@ export default function CaseStudiesList() {
     <AppShell>
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-8">
-          <h1 className="font-display text-3xl font-semibold">{t('Case Studies', 'Studi Kasus')}</h1>
+          <h1 className={`font-display text-3xl font-semibold ${TONE_TEXT[toneOf('case-studies')]}`}>{t('Case Studies', 'Studi Kasus')}</h1>
           <p className="mt-1 text-muted-foreground">{t('Real projects, real results. See how we\'ve helped clients build digital solutions.', 'Proyek nyata, hasil nyata. Lihat bagaimana kami membantu klien membangun solusi digital.')}</p>
         </div>
 
-        {loading ? (
-          <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
-        ) : studies.length === 0 ? (
-          <div className="py-20 text-center text-muted-foreground">
-            <TrendingUp className="mx-auto mb-3 h-10 w-10 opacity-50" />
-            <p>{t('No case studies published yet.', 'Belum ada studi kasus yang dipublikasikan.')}</p>
-          </div>
-        ) : (
+        <LoadData
+          hideIcon
+          response={{
+            isLoading: loading,
+            isEmpty: studies.length === 0,
+            emptyTitle: t('No case studies published yet.', 'Belum ada studi kasus yang dipublikasikan.'),
+          }}
+        >
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {studies.map((cs) => (
               <Card key={cs.id} className="glass group h-full overflow-hidden transition-all hover:border-primary/40 hover:-translate-y-0.5">
@@ -48,15 +49,15 @@ export default function CaseStudiesList() {
 
                   <div className="mt-4 space-y-3">
                     <div>
-                      <div className="flex items-center gap-1.5 text-xs font-semibold text-destructive"><Target className="h-3.5 w-3.5" /> {t('Challenge', 'Tantangan')}</div>
+                      <div className="text-xs font-semibold text-destructive">{t('Challenge', 'Tantangan')}</div>
                       <p className="mt-1 text-sm text-muted-foreground">{cs.challenge}</p>
                     </div>
                     <div>
-                      <div className="flex items-center gap-1.5 text-xs font-semibold text-primary"><Lightbulb className="h-3.5 w-3.5" /> {t('Solution', 'Solusi')}</div>
+                      <div className={`text-xs font-semibold ${TONE_TEXT[toneOf('case-studies')]}`}>{t('Solution', 'Solusi')}</div>
                       <p className="mt-1 text-sm text-muted-foreground">{cs.solution}</p>
                     </div>
                     <div className="rounded-lg bg-success/10 p-3">
-                      <div className="flex items-center gap-1.5 text-xs font-semibold text-success"><BarChart3 className="h-3.5 w-3.5" /> {t('Result', 'Hasil')}</div>
+                      <div className="text-xs font-semibold text-success">{t('Result', 'Hasil')}</div>
                       <p className="mt-1 text-sm font-medium text-success">{cs.result}</p>
                     </div>
                   </div>
@@ -64,7 +65,7 @@ export default function CaseStudiesList() {
               </Card>
             ))}
           </div>
-        )}
+        </LoadData>
       </div>
     </AppShell>
   );

@@ -1,12 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { Star, MapPin, Loader2, CalendarClock, Link as LinkIcon, Search } from 'lucide-react';
+import { Search } from 'lucide-react';
 import Link from 'next/link';
 
 import type { Talent } from '@/features/talents/types/talentsTypes';
 import { useTalentsControllers } from '@/features/talents/controllers/talentsControllers';
 import { AppShell } from '@/components/app-shell';
+import { TONE_CHIP, TONE_TEXT, toneOf } from '@/shared/lib/tones';
+import { LoadData } from '@/components/load-data';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -46,7 +48,7 @@ export default function TalentsList() {
     <AppShell>
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-8">
-          <h1 className="font-display text-3xl font-semibold">{t('Talent Listing', 'Daftar Talent')}</h1>
+          <h1 className={`font-display text-3xl font-semibold ${TONE_TEXT[toneOf('talents')]}`}>{t('Talent Listing', 'Daftar Talent')}</h1>
           <p className="mt-1 text-muted-foreground">{t('Book 1-on-1 consultations and mentoring sessions with vetted Indonesian IT experts.', 'Pesan konsultasi 1-on-1 dan mentoring dengan ahli IT Indonesia terverifikasi.')}</p>
         </div>
 
@@ -55,15 +57,14 @@ export default function TalentsList() {
           <Input placeholder={t('Search talent...', 'Cari talent...')} value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
         </div>
 
-        {loading ? (
-          <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
-        ) : filtered.length === 0 ? (
-          <div className="py-20 text-center text-muted-foreground">
-            <Star className="mx-auto mb-3 h-10 w-10 opacity-50" />
-            <p>{t('No talent profiles available yet.', 'Belum ada profil talent.')}</p>
-            <Link href="/coach" className="mt-4 inline-block"><Button variant="outline" size="sm">{t('Become a Talent', 'Jadilah Talent')}</Button></Link>
-          </div>
-        ) : (
+        <LoadData
+          hideIcon
+          response={{
+            isLoading: loading,
+            isEmpty: filtered.length === 0,
+            emptyTitle: t('No talent profiles available yet.', 'Belum ada profil talent.'),
+          }}
+        >
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {filtered.map((tal) => (
               <Card key={tal.id} className="glass group transition-all hover:border-primary/40 hover:-translate-y-0.5">
@@ -74,26 +75,26 @@ export default function TalentsList() {
                     </div>
                     <div className="flex-1">
                       <h3 className="font-semibold">{tal.full_name ?? 'Anonymous'}</h3>
-                      {tal.location && <p className="flex items-center gap-1 text-sm text-muted-foreground"><MapPin className="h-3 w-3" /> {tal.location}</p>}
+                      {tal.location && <p className="text-sm text-muted-foreground">{tal.location}</p>}
                     </div>
-                    <Badge variant="default" className="gap-1"><Star className="h-3 w-3 text-amber-400" /> {t('Talent', 'Talent')}</Badge>
+                    <Badge variant="default" className={TONE_CHIP[toneOf('talents')]}>{t('Talent', 'Talent')}</Badge>
                   </div>
                   <p className="mt-3 line-clamp-2 text-sm text-muted-foreground">{tal.bio ?? t('IT professional ready to help.', 'Profesional IT siap membantu.')}</p>
                   <div className="mt-4 flex gap-2">
                     {tal.linkedin_url && (
                       <a href={tal.linkedin_url} target="_blank" rel="noreferrer" className="flex-1">
-                        <Button variant="outline" size="sm" className="w-full gap-2"><LinkIcon className="h-3.5 w-3.5" /> LinkedIn</Button>
+                        <Button variant="outline" size="sm" className="w-full">LinkedIn</Button>
                       </a>
                     )}
                     <Link href={`/talents/${tal.id}`} className="flex-1">
-                      <Button size="sm" className="w-full gap-2"><CalendarClock className="h-3.5 w-3.5" /> {t('Book', 'Pesan')}</Button>
+                      <Button size="sm" className="w-full">{t('Book', 'Pesan')}</Button>
                     </Link>
                   </div>
                 </CardContent>
               </Card>
             ))}
           </div>
-        )}
+        </LoadData>
       </div>
     </AppShell>
   );
