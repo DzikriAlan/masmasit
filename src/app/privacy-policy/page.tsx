@@ -16,7 +16,7 @@ export default function PrivacyPolicyPage() {
         <div className="prose prose-sm dark:prose-invert max-w-none space-y-6 text-muted-foreground">
           <section>
             <h2 className="font-display text-lg font-semibold text-foreground">{t('Data We Collect', 'Data Yang Kami Kumpulkan')}</h2>
-            <p>{t('We collect your name, email, location, professional information (job status, LinkedIn, WhatsApp, Calendly), and any content you post (job listings, projects, courses, messages). We also store payment notes you submit — but not payment card details. All payments are processed externally via Lynk.id.', 'Kami mengumpulkan nama, email, lokasi, informasi profesional (status pekerjaan, LinkedIn, WhatsApp, Calendly), dan konten yang Anda posting (lowongan, proyek, kursus, pesan). Kami juga menyimpan catatan pembayaran yang Anda kirim — tetapi bukan detail kartu pembayaran. Semua pembayaran diproses eksternal melalui Lynk.id.')}</p>
+            <p>{t('We collect your name, email, location, professional information (job status, LinkedIn, WhatsApp, Calendly), and any content you post (job listings, projects, courses, messages). We also store payment notes you submit — but not payment card details. All payments are processed externally via GoAkal.', 'Kami mengumpulkan nama, email, lokasi, informasi profesional (status pekerjaan, LinkedIn, WhatsApp, Calendly), dan konten yang Anda posting (lowongan, proyek, kursus, pesan). Kami juga menyimpan catatan pembayaran yang Anda kirim — tetapi bukan detail kartu pembayaran. Semua pembayaran diproses eksternal melalui GoAkal.')}</p>
           </section>
           <section>
             <h2 className="font-display text-lg font-semibold text-foreground">{t('How We Use Your Data', 'Cara Kami Menggunakan Data Anda')}</h2>
@@ -24,12 +24,12 @@ export default function PrivacyPolicyPage() {
               <li>{t('To display your profile to other community members', 'Menampilkan profil Anda kepada member komunitas lain')}</li>
               <li>{t('To connect you with jobs, projects, and bookings', 'Menghubungkan Anda dengan lowongan, proyek, dan booking')}</li>
               <li>{t('To send notifications about messages and status updates', 'Mengirim notifikasi tentang pesan dan pembaruan status')}</li>
-              <li>{t('To verify payments submitted through Lynk.id', 'Memverifikasi pembayaran yang dikirim melalui Lynk.id')}</li>
+              <li>{t('To verify payments submitted through GoAkal', 'Memverifikasi pembayaran yang dikirim melalui GoAkal')}</li>
             </ul>
           </section>
           <section>
             <h2 className="font-display text-lg font-semibold text-foreground">{t('Payments', 'Pembayaran')}</h2>
-            <p>{t('All payments on this platform are processed externally through Lynk.id. We do not store, process, or transmit any payment card information. When you click "Pay via Lynk.id", you are redirected to Lynk.id\'s secure payment page. We only receive a confirmation note (which you optionally submit) to verify your payment.', 'Semua pembayaran di platform ini diproses eksternal melalui Lynk.id. Kami tidak menyimpan, memproses, atau mengirimkan informasi kartu pembayaran. Saat Anda mengklik "Bayar via Lynk.id", Anda diarahkan ke halaman pembayaran aman Lynk.id. Kami hanya menerima catatan konfirmasi (yang Anda kirim secara opsional) untuk memverifikasi pembayaran Anda.')}</p>
+            <p>{t('All payments on this platform are processed externally through GoAkal. We do not store, process, or transmit any payment card information. When you click "Pay via GoAkal", you are redirected to GoAkal\'s secure payment page. We only receive a confirmation note (which you optionally submit) to verify your payment.', 'Semua pembayaran di platform ini diproses eksternal melalui GoAkal. Kami tidak menyimpan, memproses, atau mengirimkan informasi kartu pembayaran. Saat Anda mengklik "Bayar via GoAkal", Anda diarahkan ke halaman pembayaran aman GoAkal. Kami hanya menerima catatan konfirmasi (yang Anda kirim secara opsional) untuk memverifikasi pembayaran Anda.')}</p>
           </section>
           <section>
             <h2 className="font-display text-lg font-semibold text-foreground">{t('Data Retention', 'Penyimpanan Data')}</h2>

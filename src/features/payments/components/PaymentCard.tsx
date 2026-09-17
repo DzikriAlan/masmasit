@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useLang } from '@/components/language-provider';
+import { PAYMENT_PROVIDER } from '@/shared/lib/external';
 import { toast } from 'sonner';
 
 import { usePaymentsControllers } from '@/features/payments/controllers/paymentsControllers';
@@ -88,12 +89,23 @@ export function PaymentCard({
         {paymentStatus !== 'paid' && (
           <>
             {payUrl && (
-              <a href={payUrl} target="_blank" rel="noreferrer">
-                <Button className="w-full gap-2 glow-primary">
-                  <ExternalLink className="h-4 w-4" />
-                  {t('Pay via Lynk.id', 'Bayar via Lynk.id')}
-                </Button>
-              </a>
+              <div className="space-y-2">
+                {/* Checkout happens on another platform. Buyers are told by
+                    name before they click, so leaving the site is never a
+                    surprise mid-purchase. */}
+                <p className="rounded-lg border border-border/60 bg-muted/40 p-3 text-xs leading-relaxed text-muted-foreground">
+                  {t(
+                    `You will be taken to ${PAYMENT_PROVIDER} to complete this payment. ${PAYMENT_PROVIDER} is an external platform — MasmasIT never sees your card details.`,
+                    `Kamu akan diarahkan ke ${PAYMENT_PROVIDER} untuk menyelesaikan pembayaran ini. ${PAYMENT_PROVIDER} adalah platform eksternal — MasmasIT tidak pernah melihat detail kartumu.`
+                  )}
+                </p>
+                <a href={payUrl} target="_blank" rel="noreferrer">
+                  <Button className="w-full gap-2 glow-primary">
+                    <ExternalLink className="h-4 w-4" />
+                    {t(`Continue to ${PAYMENT_PROVIDER}`, `Lanjut ke ${PAYMENT_PROVIDER}`)}
+                  </Button>
+                </a>
+              </div>
             )}
 
             <div className="space-y-2">

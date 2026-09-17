@@ -25,16 +25,16 @@ export default function TermsOfServicePage() {
               <li>{t('Do not post misleading, offensive, or illegal content', 'Jangan posting konten yang menyesatkan, menyinggung, atau ilegal')}</li>
               <li>{t('Respect other members — no harassment, spam, or abuse', 'Hormati member lain — tanpa pelecehan, spam, atau penyalahgunaan')}</li>
               <li>{t('Complete bookings and projects you commit to', 'Selesaikan booking dan proyek yang Anda komitmeni')}</li>
-              <li>{t('Do not attempt to circumvent payment through Lynk.id', 'Jangan mencoba menghindari pembayaran melalui Lynk.id')}</li>
+              <li>{t('Do not attempt to circumvent payment through GoAkal', 'Jangan mencoba menghindari pembayaran melalui GoAkal')}</li>
             </ul>
           </section>
           <section>
-            <h2 className="font-display text-lg font-semibold text-foreground">{t('Payments via Lynk.id', 'Pembayaran via Lynk.id')}</h2>
-            <p>{t('All payments for bookings, courses, events, and agency projects are processed externally through Lynk.id. MasmasIT does not handle payment card data. After completing payment on Lynk.id, you must submit a confirmation note so the admin can verify your payment and mark it as paid.', 'Semua pembayaran untuk booking, kursus, event, dan proyek agency diproses eksternal melalui Lynk.id. MasmasIT tidak menangani data kartu pembayaran. Setelah menyelesaikan pembayaran di Lynk.id, Anda harus mengirim catatan konfirmasi agar admin dapat memverifikasi pembayaran Anda dan menandainya sebagai lunas.')}</p>
+            <h2 className="font-display text-lg font-semibold text-foreground">{t('Payments via GoAkal', 'Pembayaran via GoAkal')}</h2>
+            <p>{t('All payments for bookings, courses, events, and agency projects are processed externally through GoAkal. MasmasIT does not handle payment card data. After completing payment on GoAkal, you must submit a confirmation note so the admin can verify your payment and mark it as paid.', 'Semua pembayaran untuk booking, kursus, event, dan proyek agency diproses eksternal melalui GoAkal. MasmasIT tidak menangani data kartu pembayaran. Setelah menyelesaikan pembayaran di GoAkal, Anda harus mengirim catatan konfirmasi agar admin dapat memverifikasi pembayaran Anda dan menandainya sebagai lunas.')}</p>
           </section>
           <section>
             <h2 className="font-display text-lg font-semibold text-foreground">{t('Disputes & Refunds', 'Sengketa & Pengembalian Dana')}</h2>
-            <p>{t('If you have a dispute about a payment, booking, or project, contact us at hello@masmasit.online. Refunds are handled case-by-case. Since payments are processed via Lynk.id, refund requests may need to be initiated through Lynk.id as well.', 'Jika Anda memiliki sengketa tentang pembayaran, booking, atau proyek, hubungi kami di hello@masmasit.online. Pengembalian dana ditangani sesuai kasus. Karena pembayaran diproses melalui Lynk.id, permintaan pengembalian dana mungkin perlu diinisiasi melalui Lynk.id juga.')}</p>
+            <p>{t('If you have a dispute about a payment, booking, or project, contact us at hello@masmasit.online. Refunds are handled case-by-case. Since payments are processed via GoAkal, refund requests may need to be initiated through GoAkal as well.', 'Jika Anda memiliki sengketa tentang pembayaran, booking, atau proyek, hubungi kami di hello@masmasit.online. Pengembalian dana ditangani sesuai kasus. Karena pembayaran diproses melalui GoAkal, permintaan pengembalian dana mungkin perlu diinisiasi melalui GoAkal juga.')}</p>
           </section>
           <section>
             <h2 className="font-display text-lg font-semibold text-foreground">{t('Account Termination', 'Penghentian Akun')}</h2>
