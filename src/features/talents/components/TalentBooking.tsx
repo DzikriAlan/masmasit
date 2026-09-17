@@ -10,6 +10,7 @@ import type { PayloadPostTalentsBooking } from '@/features/talents/types/talents
 import { useTalentsBookingControllers } from '@/features/talents/controllers/talentsControllers';
 import { PaymentCard } from '@/features/payments/components/PaymentCard';
 import { AppShell } from '@/components/app-shell';
+import { LoadData } from '@/components/load-data';
 import { useAuth } from '@/components/auth-provider';
 import { useLang } from '@/components/language-provider';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -75,8 +76,20 @@ export default function TalentBooking() {
     setBooked(true);
   };
 
-  if (loading) return <AppShell><div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div></AppShell>;
-  if (!talent) return <AppShell><div className="py-20 text-center text-muted-foreground">{t('Talent not found.', 'Talent tidak ditemukan.')}</div></AppShell>;
+  if (loading || !talent) {
+    return (
+      <AppShell>
+        <LoadData
+          minHeight="60vh"
+          response={{
+            isLoading: loading,
+            isEmpty: !talent,
+            emptyTitle: t('Talent not found.', 'Talent tidak ditemukan.'),
+          }}
+        />
+      </AppShell>
+    );
+  }
 
   const netAmount = parseInt(bookingAmount || '0') * (1 - adminFee / 100);
 

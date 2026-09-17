@@ -2,8 +2,10 @@
 
 import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Wallet, Clock, Loader2, Send, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Wallet, Clock, Loader2, Send, XCircle, AlertTriangle } from 'lucide-react';
 import { AppShell } from '@/components/app-shell';
+import { LoadData } from '@/components/load-data';
+import { MatchedBadge, MatchedHandoff } from '@/components/matched-handoff';
 import { API_ERROR_CODE } from '@/shared/lib/apiResponse';
 import { useProjectsDetailControllers } from '@/features/projects/controllers/projectsControllers';
 import { useAuth } from '@/components/auth-provider';
@@ -85,8 +87,24 @@ export default function ProjectDetail() {
     toast.success(t('Bid accepted! Project is now in progress.', 'Bid diterima! Proyek sekarang berjalan.'));
   };
 
-  if (loading) return <AppShell><div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div></AppShell>;
-  if (!project) return <AppShell><div className="py-20 text-center text-muted-foreground">{t('Project not found.', 'Proyek tidak ditemukan.')}</div></AppShell>;
+  // Once past this guard, `project` is narrowed to non-null both for
+  // TypeScript and at runtime (a real early return, not an assertion) — so
+  // everything below can use `project.field` directly with no risk of
+  // dereferencing null on the still-loading first render.
+  if (loading || !project) {
+    return (
+      <AppShell>
+        <LoadData
+          minHeight="60vh"
+          response={{
+            isLoading: loading,
+            isEmpty: !project,
+            emptyTitle: t('Project not found.', 'Proyek tidak ditemukan.'),
+          }}
+        />
+      </AppShell>
+    );
+  }
 
   const isOwner = user?.id === project.user_id;
   const formatBudget = (min: number | null, max: number | null) => {
@@ -142,9 +160,9 @@ export default function ProjectDetail() {
               </div>
             )}
 
-            {bids.length === 0 ? (
-              <p className="text-sm text-muted-foreground">{t('No bids yet.', 'Belum ada bid.')}</p>
-            ) : (
+            <LoadData
+              response={{ isLoading: false, isEmpty: bids.length === 0, emptyTitle: t('No bids yet.', 'Belum ada bid.') }}
+            >
               <div className="space-y-3">
                 {bids.map((bid) => (
                   <div key={bid.id} className={`rounded-lg border p-4 ${bid.status === 'accepted' ? 'border-success/40 bg-success/5' : 'border-border/60'}`}>
@@ -159,16 +177,23 @@ export default function ProjectDetail() {
                       </div>
                     </div>
                     <div className="mt-2 flex items-center gap-2">
-                      {bid.status === 'accepted' && <Badge variant="default" className="gap-1 text-xs"><CheckCircle2 className="h-3 w-3" /> {t('Accepted', 'Diterima')}</Badge>}
+                      {/* An accepted bid IS the match — it shows the Matched
+                          status, never the instant-booking treatment. */}
+                      {bid.status === 'accepted' && <MatchedBadge />}
                       {bid.status === 'rejected' && <Badge variant="secondary" className="gap-1 text-xs"><XCircle className="h-3 w-3" /> {t('Rejected', 'Ditolak')}</Badge>}
                       {bid.status === 'pending' && isOwner && project.status === 'open' && (
                         <Button size="sm" onClick={() => setConfirmBidId(bid.id)} disabled={saving}>{t('Accept', 'Terima')}</Button>
                       )}
                     </div>
+
+                    {/* Only the two parties need the hand-off panel. */}
+                    {bid.status === 'accepted' && (isOwner || bid.user_id === user?.id) && (
+                      <MatchedHandoff subject={project.title} className="mt-3" />
+                    )}
                   </div>
                 ))}
               </div>
-            )}
+            </LoadData>
           </CardContent>
         </Card>
       </div>
@@ -181,7 +206,7 @@ export default function ProjectDetail() {
               <AlertTriangle className="h-5 w-5" />
               <h3 className="font-semibold">{t('Accept this bid?', 'Terima bid ini?')}</h3>
             </div>
-            <p className="text-sm text-muted-foreground">{t('This will reject all other bids and start the project. This action cannot be undone.', 'Ini akan menolak semua bid lain dan memulai proyek. Tindakan ini tidak bisa dibatalkan.')}</p>
+            <p className="text-sm text-muted-foreground">{t('This will reject all other bids and mark the project Matched. Both sides then continue on WhatsApp — a person creates the group within 1×24 hours. This action cannot be undone.', 'Ini akan menolak semua bid lain dan menandai proyek sebagai Matched. Kedua pihak lalu lanjut di WhatsApp — grup dibuat orang dalam 1×24 jam. Tindakan ini tidak bisa dibatalkan.')}</p>
             <div className="mt-4 flex gap-2">
               <Button variant="outline" className="flex-1" onClick={() => setConfirmBidId(null)}>{t('Cancel', 'Batal')}</Button>
               <Button className="flex-1" onClick={() => saveAcceptedBid(confirmBidId)} disabled={saving}>

@@ -8,6 +8,7 @@ import {
   ExternalLink, Check, X, Circle
 } from 'lucide-react';
 import { AppShell } from '@/components/app-shell';
+import { LoadData } from '@/components/load-data';
 import { API_ERROR_CODE } from '@/shared/lib/apiResponse';
 import type {
   DataCoursesMaterial as Material,
@@ -216,8 +217,20 @@ export default function CourseDetail() {
     }
   };
 
-  if (loading) return <AppShell><div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div></AppShell>;
-  if (!course) return <AppShell><div className="py-20 text-center text-muted-foreground">{t('Course not found.', 'Kursus tidak ditemukan.')}</div></AppShell>;
+  if (loading || !course) {
+    return (
+      <AppShell>
+        <LoadData
+          minHeight="60vh"
+          response={{
+            isLoading: loading,
+            isEmpty: !course,
+            emptyTitle: t('Course not found.', 'Kursus tidak ditemukan.'),
+          }}
+        />
+      </AppShell>
+    );
+  }
 
   const isCoach = user?.id === course.coach_id;
   const canAccess = (enrolled && (course.price === 0 || paymentStatus === 'paid')) || isCoach;

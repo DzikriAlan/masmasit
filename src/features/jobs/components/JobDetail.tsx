@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Building2, MapPin, Clock, Wallet, Loader2, ArrowLeft, Send, CheckCircle2 } from 'lucide-react';
 import { AppShell } from '@/components/app-shell';
+import { LoadData } from '@/components/load-data';
 import { API_ERROR_CODE } from '@/shared/lib/apiResponse';
 import { useJobsDetailControllers } from '@/features/jobs/controllers/jobsControllers';
 import { useAuth } from '@/components/auth-provider';
@@ -55,8 +56,20 @@ export default function JobDetail() {
     setShowApply(false);
   };
 
-  if (loading) return <AppShell><div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div></AppShell>;
-  if (!job) return <AppShell><div className="py-20 text-center text-muted-foreground">{t('Job not found.', 'Lowongan tidak ditemukan.')}</div></AppShell>;
+  if (loading || !job) {
+    return (
+      <AppShell>
+        <LoadData
+          minHeight="60vh"
+          response={{
+            isLoading: loading,
+            isEmpty: !job,
+            emptyTitle: t('Job not found.', 'Lowongan tidak ditemukan.'),
+          }}
+        />
+      </AppShell>
+    );
+  }
 
   const formatSalary = (min: number | null, max: number | null) => {
     if (!min && !max) return null;

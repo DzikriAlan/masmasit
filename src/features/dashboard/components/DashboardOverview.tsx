@@ -3,10 +3,11 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Loader2, Briefcase, Code2, GraduationCap, Calendar, Star, Users, Settings, ShieldCheck, TrendingUp, FileText, MessageCircle, Mail, Send } from 'lucide-react';
+import { Briefcase, Code2, GraduationCap, Calendar, Star, Users, Settings, ShieldCheck, TrendingUp, FileText, MessageCircle, Mail, Send } from 'lucide-react';
 import { useAuth } from '@/components/auth-provider';
 import { useLang } from '@/components/language-provider';
 import { AppShell } from '@/components/app-shell';
+import { LoadData } from '@/components/load-data';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -31,11 +32,7 @@ export default function DashboardOverview() {
   }, [user, loading, router]);
 
   if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
+    return <LoadData minHeight="100vh" response={{ isLoading: true }} />;
   }
 
   const quickLinks = [

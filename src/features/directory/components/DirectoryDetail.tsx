@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { MapPin, Briefcase, Calendar, Star, Link as LinkIcon, Loader2, MessageCircle, CalendarClock, GraduationCap } from 'lucide-react';
+import { MapPin, Briefcase, Calendar, Star, Link as LinkIcon, MessageCircle, CalendarClock, GraduationCap } from 'lucide-react';
 import Link from 'next/link';
 import { AppShell } from '@/components/app-shell';
+import { LoadData } from '@/components/load-data';
 import { useAuth } from '@/components/auth-provider';
 import { useLang } from '@/components/language-provider';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -24,12 +25,19 @@ export default function DirectoryDetail() {
   const profile = fetchDirectoryDetail.data ?? null;
   const loading = fetchDirectoryDetail.isPending;
 
-  if (loading) {
-    return <AppShell><div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div></AppShell>;
-  }
-
-  if (!profile) {
-    return <AppShell><div className="py-20 text-center text-muted-foreground">{t('Profile not found.', 'Profil tidak ditemukan.')}</div></AppShell>;
+  if (loading || !profile) {
+    return (
+      <AppShell>
+        <LoadData
+          minHeight="60vh"
+          response={{
+            isLoading: loading,
+            isEmpty: !profile,
+            emptyTitle: t('Profile not found.', 'Profil tidak ditemukan.'),
+          }}
+        />
+      </AppShell>
+    );
   }
 
   const isTalent = profile.is_talent && profile.talent_approved === 'approved';

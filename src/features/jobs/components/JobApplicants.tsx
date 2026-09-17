@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
 import { AppShell } from '@/components/app-shell';
+import { LoadData } from '@/components/load-data';
 import { useAuth } from '@/components/auth-provider';
 import { useLang } from '@/components/language-provider';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -60,7 +61,11 @@ export default function JobApplicants() {
   };
 
   if (loading) {
-    return <AppShell><div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div></AppShell>;
+    return (
+      <AppShell>
+        <LoadData minHeight="60vh" response={{ isLoading: true }} />
+      </AppShell>
+    );
   }
 
   if (!company) {
@@ -144,14 +149,14 @@ export default function JobApplicants() {
                     </Button>
                   </CardHeader>
                   <CardContent className="space-y-3">
-                    {fetchJobsApplicants.isPending ? (
-                      <div className="flex justify-center py-10"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
-                    ) : applicants.length === 0 ? (
-                      <p className="py-10 text-center text-sm text-muted-foreground">
-                        {t('No applicants yet.', 'Belum ada pelamar.')}
-                      </p>
-                    ) : (
-                      applicants.map((app) => (
+                    <LoadData
+                      response={{
+                        isLoading: fetchJobsApplicants.isPending,
+                        isEmpty: applicants.length === 0,
+                        emptyTitle: t('No applicants yet.', 'Belum ada pelamar.'),
+                      }}
+                    >
+                      {applicants.map((app) => (
                         <div key={app.id} className="rounded-lg border border-border/60 p-4">
                           <div className="flex flex-wrap items-start justify-between gap-3">
                             <div>
@@ -197,8 +202,8 @@ export default function JobApplicants() {
                             </Button>
                           </div>
                         </div>
-                      ))
-                    )}
+                      ))}
+                    </LoadData>
                   </CardContent>
                 </>
               )}
