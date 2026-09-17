@@ -4,22 +4,29 @@ import { unwrapApiResponse } from '@/shared/lib/apiResponse';
 
 import {
   deleteAdminAgencyService,
+  deleteAdminArticle,
   deleteAdminCaseStudy,
   deleteAdminContent,
   deleteAdminUserRole,
   getAdminAgencyServices,
   getAdminApprovals,
+  getAdminArticles,
   getAdminAuditLogs,
   getAdminCaseStudies,
+  getAdminTeamCollabs,
   getAdminRoleDistribution,
   getAdminRegions,
   getAdminUsers,
   postAdminAgencyService,
+  postAdminArticle,
   postAdminCaseStudy,
   postAdminUserRole,
+  updateAdminAgencyApproval,
   updateAdminAgencyService,
+  updateAdminArticle,
   updateAdminCaseStudy,
   updateAdminEventApproval,
+  updateAdminTeamCollabsMatch,
   getAdminAgencyProjects,
   getAdminAnalytics,
   getAdminCoaches,
@@ -168,10 +175,41 @@ export const useAdminControllers = (userId: string | undefined, enabled: boolean
     },
   });
 
+  // Agency approval (REST.md Bagian 7) — same shape as company/event approval.
+  const changeAdminAgencyApproval = useMutation({
+    mutationFn: async (payload: { id: string; status: string }) =>
+      unwrapApiResponse(await updateAdminAgencyApproval(payload.id, payload.status)),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['adminApprovals'] });
+      queryClient.invalidateQueries({ queryKey: ['agency'] });
+    },
+  });
+
+  const fetchAdminTeamCollabs = useQuery({
+    queryKey: ['adminTeamCollabs'],
+    queryFn: async () => unwrapApiResponse(await getAdminTeamCollabs()) ?? [],
+    enabled,
+  });
+
+  // Marks a Team Collabs listing Matched (REST.md Bagian 6.2) — the one
+  // field a client-side self-update can never move, see migration 015's
+  // guard_team_collabs_match trigger.
+  const changeAdminTeamCollabsMatch = useMutation({
+    mutationFn: async (payload: { id: string; matchedWith: string }) =>
+      unwrapApiResponse(await updateAdminTeamCollabsMatch(payload.id, payload.matchedWith)),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['adminTeamCollabs'] });
+      queryClient.invalidateQueries({ queryKey: ['teamCollabs'] });
+    },
+  });
+
   return {
     fetchAdminApprovals,
     fetchAdminRoleDistribution,
     changeAdminEventApproval,
+    changeAdminAgencyApproval,
+    fetchAdminTeamCollabs,
+    changeAdminTeamCollabsMatch,
     fetchAdminCompanies,
     fetchAdminCoaches,
     fetchAdminSettings,
@@ -298,6 +336,34 @@ export const useAdminCatalogControllers = (enabled: boolean) => {
     onSuccess: invalidateCaseStudies,
   });
 
+  // Articles — Discover's "Article" strand (Bagian 3/9).
+  const invalidateArticles = () => {
+    queryClient.invalidateQueries({ queryKey: ['adminArticles'] });
+    queryClient.invalidateQueries({ queryKey: ['articles'] });
+  };
+
+  const fetchAdminArticles = useQuery({
+    queryKey: ['adminArticles'],
+    queryFn: async () => unwrapApiResponse(await getAdminArticles()) ?? [],
+    enabled,
+  });
+
+  const storeAdminArticle = useMutation({
+    mutationFn: async (payload: Record<string, unknown>) => unwrapApiResponse(await postAdminArticle(payload)),
+    onSuccess: invalidateArticles,
+  });
+
+  const changeAdminArticle = useMutation({
+    mutationFn: async (payload: { id: string; data: Record<string, unknown> }) =>
+      unwrapApiResponse(await updateAdminArticle(payload.id, payload.data)),
+    onSuccess: invalidateArticles,
+  });
+
+  const removeAdminArticle = useMutation({
+    mutationFn: async (id: string) => unwrapApiResponse(await deleteAdminArticle(id)),
+    onSuccess: invalidateArticles,
+  });
+
   return {
     fetchAdminAgencyServices,
     storeAdminAgencyService,
@@ -307,5 +373,9 @@ export const useAdminCatalogControllers = (enabled: boolean) => {
     storeAdminCaseStudy,
     changeAdminCaseStudy,
     removeAdminCaseStudy,
+    fetchAdminArticles,
+    storeAdminArticle,
+    changeAdminArticle,
+    removeAdminArticle,
   };
 };

@@ -63,14 +63,67 @@ export const getAdminPendingApprovals = async (ctx: AuthContext) => {
 
   if (regionId) eventsQuery = eventsQuery.eq('region_id', regionId);
 
-  const [companies, people, events] = await Promise.all([companiesQuery, peopleQuery, eventsQuery]);
+  // Agencies have no region column (REST.md Bagian 7 doesn't scope them
+  // regionally), so a regional_admin sees the same pending queue as super_admin.
+  const agenciesQuery = supabase
+    .from('agencies')
+    .select('*, profiles:owner_id(full_name)')
+    .eq('approval_status', 'pending')
+    .order('created_at', { ascending: false });
 
-  return { companies, people, events };
+  const [companies, people, events, agencies] = await Promise.all([companiesQuery, peopleQuery, eventsQuery, agenciesQuery]);
+
+  return { companies, people, events, agencies };
 };
 
 export const updateAdminEventApproval = async (eventId: string, status: string) => {
   const supabase = getServerSupabase();
   return supabase.from('events').update({ approval_status: status }).eq('id', eventId);
+};
+
+// Agency approval (REST.md Bagian 7: "pola sama seperti approval company").
+// Client-side self-updates cannot move this field at all — see the
+// guard_agencies_approval trigger in migration 015 — so this server path,
+// running with is_admin() satisfied by withAdmin(), is the only way in.
+export const updateAdminAgencyApproval = async (agencyId: string, status: string) => {
+  const supabase = getServerSupabase();
+  return supabase.from('agencies').update({ approval_status: status }).eq('id', agencyId);
+};
+
+// Team Collabs open for a match (REST.md Bagian 6.2/7) — the human-in-the-loop
+// step: an admin pairs a team with a client and hands both sides to WhatsApp.
+export const getAdminTeamCollabs = async () => {
+  const supabase = getServerSupabase();
+  return supabase
+    .from('team_collabs')
+    .select('*, teams(name), profiles:created_by(full_name)')
+    .order('created_at', { ascending: false });
+};
+
+export const updateAdminTeamCollabsMatch = async (id: string, matchedWith: string) => {
+  const supabase = getServerSupabase();
+  return supabase.from('team_collabs').update({ status: 'matched', matched_with: matchedWith }).eq('id', id);
+};
+
+// Articles — the "Article" strand of Discover (Bagian 3/9), platform-authored.
+export const getAdminArticles = async () => {
+  const supabase = getServerSupabase();
+  return supabase.from('articles').select('*').order('created_at', { ascending: false });
+};
+
+export const postAdminArticle = async (payload: Record<string, unknown>) => {
+  const supabase = getServerSupabase();
+  return supabase.from('articles').insert(payload);
+};
+
+export const updateAdminArticle = async (id: string, payload: Record<string, unknown>) => {
+  const supabase = getServerSupabase();
+  return supabase.from('articles').update(payload).eq('id', id);
+};
+
+export const deleteAdminArticle = async (id: string) => {
+  const supabase = getServerSupabase();
+  return supabase.from('articles').delete().eq('id', id);
 };
 
 export const getAdminAgencyServices = async () => {

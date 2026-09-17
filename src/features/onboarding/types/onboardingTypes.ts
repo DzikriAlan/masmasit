@@ -25,6 +25,23 @@ export interface PayloadPostOnboardingExperiences {
   description: string;
 }
 
+// REST.md Bagian 8: "pilih peran (multi-select, bisa lebih dari satu)".
+// 'member' is assigned automatically at signup and is not offered here.
+export type OnboardingRole = 'talent' | 'coach' | 'company' | 'agency_owner';
+
+export interface PayloadPostOnboardingRoles {
+  user_id: string;
+  roles: OnboardingRole[];
+}
+
+// Sub-step shown only when "Agency Owner" is picked.
+export interface PayloadPostOnboardingAgency {
+  owner_id: string;
+  name: string;
+  logo_url: string;
+  description: string;
+}
+
 export interface Onboarding {
   status: string;
   statusTitle: string;

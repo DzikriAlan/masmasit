@@ -6,6 +6,7 @@ import type {
   DataAdminAgencyService,
   DataAdminAnalytics,
   DataAdminApprovals,
+  DataAdminArticle,
   DataAdminAuditLog,
   DataAdminCaseStudy,
   DataAdminCoaches,
@@ -14,6 +15,7 @@ import type {
   DataAdminPayments,
   DataAdminSettings,
   DataAdminStats,
+  DataAdminTeamCollabs,
   DataAdminUser,
   PayloadPatchAdminSettings,
   PayloadPostAdminRole,
@@ -346,4 +348,35 @@ export const getAdminRegions = async () => {
     supabase.from('regions').select('id, name').order('name'),
     'Regions retrieved successfully'
   );
+};
+
+// Agency approval — client-side updates to `approval_status` are reverted
+// by the guard_agencies_approval trigger (migration 015), so approving one
+// only ever goes through this server route.
+export const updateAdminAgencyApproval = async (id: string, status: string) => {
+  return apiPatch<null>(`/admin/agencies/${id}`, { status });
+};
+
+export const getAdminTeamCollabs = async () => {
+  return apiGet<DataAdminTeamCollabs[]>('/admin/team-collabs');
+};
+
+export const updateAdminTeamCollabsMatch = async (id: string, matchedWith: string) => {
+  return apiPatch<null>(`/admin/team-collabs/${id}`, { matched_with: matchedWith });
+};
+
+export const getAdminArticles = async () => {
+  return apiGet<DataAdminArticle[]>('/admin/articles');
+};
+
+export const postAdminArticle = async (payload: Record<string, unknown>) => {
+  return apiPost<null>('/admin/articles', payload);
+};
+
+export const updateAdminArticle = async (id: string, payload: Record<string, unknown>) => {
+  return apiPatch<null>(`/admin/articles/${id}`, payload);
+};
+
+export const deleteAdminArticle = async (id: string) => {
+  return apiDelete<null>(`/admin/articles/${id}`);
 };

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Loader2, Plus, Trash2, Package, TrendingUp, Power } from 'lucide-react';
+import { Loader2, Plus, Trash2, Package, TrendingUp, Power, Newspaper } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { useLang } from '@/components/language-provider';
@@ -19,6 +19,7 @@ const CATEGORIES = ['SaaS', 'AI Solutions', 'Creative Services', 'HR Solutions']
 
 const EMPTY_SERVICE = { title: '', description: '', category: 'SaaS', base_price: '' };
 const EMPTY_CASE = { title: '', client_name: '', challenge: '', solution: '', result: '', category: '', image_url: '' };
+const EMPTY_ARTICLE = { title: '', excerpt: '', body: '', cover_image_url: '' };
 
 interface Props {
   enabled: boolean;
@@ -30,6 +31,8 @@ export default function AdminCatalog({ enabled }: Props) {
   const [serviceForm, setServiceForm] = useState(EMPTY_SERVICE);
   const [showCaseForm, setShowCaseForm] = useState(false);
   const [caseForm, setCaseForm] = useState(EMPTY_CASE);
+  const [showArticleForm, setShowArticleForm] = useState(false);
+  const [articleForm, setArticleForm] = useState(EMPTY_ARTICLE);
 
   const {
     fetchAdminAgencyServices,
@@ -39,12 +42,18 @@ export default function AdminCatalog({ enabled }: Props) {
     fetchAdminCaseStudies,
     storeAdminCaseStudy,
     removeAdminCaseStudy,
+    fetchAdminArticles,
+    storeAdminArticle,
+    changeAdminArticle,
+    removeAdminArticle,
   } = useAdminCatalogControllers(enabled);
 
   const services = fetchAdminAgencyServices.data ?? [];
   const caseStudies = fetchAdminCaseStudies.data ?? [];
+  const articles = fetchAdminArticles.data ?? [];
   const savingService = storeAdminAgencyService.isPending || changeAdminAgencyService.isPending;
   const savingCase = storeAdminCaseStudy.isPending;
+  const savingArticle = storeAdminArticle.isPending;
 
   const saveService = async () => {
     if (!serviceForm.title || !serviceForm.description) {
@@ -114,6 +123,42 @@ export default function AdminCatalog({ enabled }: Props) {
       return;
     }
     toast.success(t('Case study deleted', 'Studi kasus dihapus'));
+  };
+
+  const saveArticle = async () => {
+    if (!articleForm.title || !articleForm.excerpt || !articleForm.body) {
+      toast.error(t('Title, excerpt and body are required', 'Judul, ringkasan dan isi wajib diisi'));
+      return;
+    }
+    try {
+      await storeAdminArticle.mutateAsync({ ...articleForm, cover_image_url: articleForm.cover_image_url || null });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : t('Failed to save article', 'Gagal menyimpan artikel'));
+      return;
+    }
+    toast.success(t('Article created', 'Artikel dibuat'));
+    setShowArticleForm(false);
+    setArticleForm(EMPTY_ARTICLE);
+  };
+
+  const modifyArticlePublished = async (id: string, isPublished: boolean) => {
+    try {
+      await changeAdminArticle.mutateAsync({ id, data: { is_published: !isPublished } });
+    } catch {
+      toast.error(t('Failed to update article', 'Gagal memperbarui artikel'));
+      return;
+    }
+    toast.success(t('Article updated', 'Artikel diperbarui'));
+  };
+
+  const destroyArticle = async (id: string) => {
+    try {
+      await removeAdminArticle.mutateAsync(id);
+    } catch {
+      toast.error(t('Failed to delete article', 'Gagal menghapus artikel'));
+      return;
+    }
+    toast.success(t('Article deleted', 'Artikel dihapus'));
   };
 
   return (
@@ -250,6 +295,74 @@ export default function AdminCatalog({ enabled }: Props) {
                   <p className="text-xs text-muted-foreground">{cs.client_name}</p>
                 </div>
                 <Button size="sm" variant="outline" onClick={() => destroyCaseStudy(cs.id)} className="gap-1">
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            ))
+          )}
+        </CardContent>
+      </Card>
+
+      <Card className="glass">
+        <CardHeader className="flex flex-row items-start justify-between gap-4">
+          <div>
+            <CardTitle>{t('Articles', 'Artikel')}</CardTitle>
+            <CardDescription>
+              {t('The "Article" strand of the public /discover page.', 'Strand "Artikel" di halaman publik /discover.')}
+            </CardDescription>
+          </div>
+          <Button size="sm" onClick={() => setShowArticleForm(!showArticleForm)} className="gap-1">
+            <Plus className="h-3.5 w-3.5" /> {t('Add', 'Tambah')}
+          </Button>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {showArticleForm && (
+            <div className="grid gap-3 rounded-lg border border-border/60 p-4 sm:grid-cols-2">
+              <div className="space-y-2 sm:col-span-2">
+                <Label>{t('Title', 'Judul')}</Label>
+                <Input value={articleForm.title} onChange={(e) => setArticleForm({ ...articleForm, title: e.target.value })} />
+              </div>
+              <div className="space-y-2 sm:col-span-2">
+                <Label>{t('Excerpt', 'Ringkasan')}</Label>
+                <Textarea value={articleForm.excerpt} onChange={(e) => setArticleForm({ ...articleForm, excerpt: e.target.value })} />
+              </div>
+              <div className="space-y-2 sm:col-span-2">
+                <Label>{t('Body', 'Isi')}</Label>
+                <Textarea className="min-h-[140px]" value={articleForm.body} onChange={(e) => setArticleForm({ ...articleForm, body: e.target.value })} />
+              </div>
+              <div className="space-y-2 sm:col-span-2">
+                <Label>{t('Cover Image URL (optional)', 'URL Gambar Sampul (opsional)')}</Label>
+                <Input value={articleForm.cover_image_url} onChange={(e) => setArticleForm({ ...articleForm, cover_image_url: e.target.value })} />
+              </div>
+              <div className="flex items-end sm:col-span-2">
+                <Button onClick={saveArticle} disabled={savingArticle} className="w-full gap-2">
+                  {savingArticle && <Loader2 className="h-4 w-4 animate-spin" />} {t('Save as draft', 'Simpan sebagai draf')}
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {articles.length === 0 ? (
+            <p className="py-8 text-center text-sm text-muted-foreground">
+              <Newspaper className="mx-auto mb-2 h-8 w-8 opacity-50" />
+              {t('No articles yet.', 'Belum ada artikel.')}
+            </p>
+          ) : (
+            articles.map((a) => (
+              <div key={a.id} className="flex flex-wrap items-center gap-3 rounded-lg border border-border/60 p-3">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <p className="truncate font-medium">{a.title}</p>
+                    <Badge variant={a.is_published ? 'default' : 'outline'} className="text-xs">
+                      {a.is_published ? t('Published', 'Terbit') : t('Draft', 'Draf')}
+                    </Badge>
+                  </div>
+                  <p className="truncate text-xs text-muted-foreground">{a.excerpt}</p>
+                </div>
+                <Button size="sm" variant="outline" onClick={() => modifyArticlePublished(a.id, a.is_published)} className="gap-1">
+                  <Power className="h-3.5 w-3.5" /> {a.is_published ? t('Unpublish', 'Batalkan terbit') : t('Publish', 'Terbitkan')}
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => destroyArticle(a.id)} className="gap-1">
                   <Trash2 className="h-3.5 w-3.5" />
                 </Button>
               </div>

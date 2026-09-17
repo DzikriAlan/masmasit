@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Loader2, MapPin, Briefcase, GraduationCap, Plus, X, Check } from 'lucide-react';
+import { Loader2, MapPin, Briefcase, GraduationCap, Plus, X, Check, Users2, Building2 } from 'lucide-react';
 import { useAuth } from '@/components/auth-provider';
 import { useLang } from '@/components/language-provider';
 import { Button } from '@/components/ui/button';
@@ -11,19 +11,34 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import type { Skill } from '@/shared/lib/types';
+import type { OnboardingRole } from '@/features/onboarding/types/onboardingTypes';
 
 import { useOnboardingControllers } from '@/features/onboarding/controllers/onboardingControllers';
 import { loginHref } from '@/shared/lib/utils';
 
 const jobStatuses = ['Employed', 'Freelancing', 'Looking for work', 'Open to opportunities', 'Student'];
 
+// REST.md Bagian 8: multi-select roles, with "Agency Owner" opening a
+// sub-step. 'member' is not offered — it is assigned automatically at signup.
+const roleOptions: { value: OnboardingRole; labelEn: string; labelId: string; descEn: string; descId: string }[] = [
+  { value: 'talent', labelEn: 'Talent', labelId: 'Talent', descEn: 'Get booked for 1-on-1 consultations or mentoring.', descId: 'Bisa dibooking untuk konsultasi atau mentoring 1-on-1.' },
+  { value: 'coach', labelEn: 'Coach', labelId: 'Coach', descEn: 'Teach a course or run cohorts on the platform.', descId: 'Mengajar kursus atau menjalankan cohort di platform.' },
+  { value: 'company', labelEn: 'Company', labelId: 'Company', descEn: 'Post jobs and projects on behalf of a company.', descId: 'Memposting lowongan dan proyek atas nama perusahaan.' },
+  { value: 'agency_owner', labelEn: 'Agency Owner', labelId: 'Agency Owner', descEn: 'List an agency and its service catalogue.', descId: 'Mendaftarkan agency dan katalog jasanya.' },
+];
+
+type Phase = 'roles' | 'agency' | 'profile' | 'skills' | 'experience';
+
 export default function OnboardingForm() {
   const { user, profile, loading, refreshProfile } = useAuth();
   const { t } = useLang();
   const router = useRouter();
-  const [step, setStep] = useState(1);
+  const [phase, setPhase] = useState<Phase>('roles');
+  const [selectedRoles, setSelectedRoles] = useState<OnboardingRole[]>([]);
+  const [agencyForm, setAgencyForm] = useState({ name: '', logo_url: '', description: '' });
   const [selectedSkills, setSelectedSkills] = useState<{ skillId: string; level: string }[]>([]);
   const [experiences, setExperiences] = useState<{ company: string; position: string; start_date: string; end_date: string; description: string }[]>([]);
 
@@ -36,6 +51,11 @@ export default function OnboardingForm() {
     whatsapp: '',
     calendly_url: '',
   });
+
+  // The progress dots only show the steps this particular user will
+  // actually see — the Agency step is skipped entirely unless picked.
+  const phaseOrder: Phase[] = ['roles', ...(selectedRoles.includes('agency_owner') ? (['agency'] as Phase[]) : []), 'profile', 'skills', 'experience'];
+  const phaseIndex = phaseOrder.indexOf(phase);
 
   useEffect(() => {
     if (!loading && !user) router.push(loginHref());
@@ -57,15 +77,50 @@ export default function OnboardingForm() {
     storeOnboardingProfile,
     storeOnboardingSkills,
     storeOnboardingExperiences,
+    storeOnboardingRoles,
+    storeOnboardingAgency,
   } = useOnboardingControllers(user?.id);
 
   const skills: Skill[] = fetchOnboardingSkills.data ?? [];
   const saving =
     storeOnboardingProfile.isPending ||
     storeOnboardingSkills.isPending ||
-    storeOnboardingExperiences.isPending;
+    storeOnboardingExperiences.isPending ||
+    storeOnboardingRoles.isPending ||
+    storeOnboardingAgency.isPending;
 
   const updateForm = (key: string, value: string) => setForm((f) => ({ ...f, [key]: value }));
+
+  const toggleRole = (role: OnboardingRole) => {
+    setSelectedRoles((r) => (r.includes(role) ? r.filter((x) => x !== role) : [...r, role]));
+  };
+
+  const saveRoles = async () => {
+    if (!user) return;
+    try {
+      await storeOnboardingRoles.mutateAsync({ user_id: user.id, roles: selectedRoles });
+    } catch {
+      toast.error(t('Failed to save roles', 'Gagal menyimpan peran'));
+      return;
+    }
+    setPhase(selectedRoles.includes('agency_owner') ? 'agency' : 'profile');
+  };
+
+  const saveAgency = async () => {
+    if (!user) return;
+    if (!agencyForm.name.trim() || !agencyForm.description.trim()) {
+      toast.error(t('Please fill in the agency name and description', 'Isi nama dan deskripsi agency'));
+      return;
+    }
+    try {
+      await storeOnboardingAgency.mutateAsync({ owner_id: user.id, ...agencyForm });
+    } catch {
+      toast.error(t('Failed to register agency', 'Gagal mendaftarkan agency'));
+      return;
+    }
+    toast.success(t('Agency submitted — pending admin approval', 'Agency dikirim — menunggu approval admin'));
+    setPhase('profile');
+  };
 
   const addSkill = (skillId: string) => {
     if (selectedSkills.find((s) => s.skillId === skillId)) return;
@@ -105,7 +160,7 @@ export default function OnboardingForm() {
       return;
     }
     toast.success(t('Profile saved', 'Profil disimpan'));
-    setStep(2);
+    setPhase('skills');
   };
 
   const saveSkills = async () => {
@@ -119,7 +174,7 @@ export default function OnboardingForm() {
       return;
     }
     toast.success(t('Skills saved', 'Skill disimpan'));
-    setStep(3);
+    setPhase('experience');
   };
 
   const saveExperiences = async () => {
@@ -150,23 +205,114 @@ export default function OnboardingForm() {
     <div className="relative min-h-screen overflow-hidden bg-background py-12">
       <div className="absolute left-1/2 top-0 h-[400px] w-[600px] -translate-x-1/2 rounded-full bg-primary/10 blur-[120px]" />
       <div className="relative mx-auto max-w-2xl px-4">
-        {/* Progress */}
+        {/* Progress — only the steps this user will actually see. */}
         <div className="mb-8 flex items-center justify-center gap-2">
-          {[1, 2, 3].map((s) => (
-            <div key={s} className="flex items-center gap-2">
+          {phaseOrder.map((p, i) => (
+            <div key={p} className="flex items-center gap-2">
               <div
                 className={`flex h-10 w-10 items-center justify-center rounded-full border-2 transition-colors ${
-                  step >= s ? 'border-primary bg-primary text-primary-foreground' : 'border-border text-muted-foreground'
+                  phaseIndex >= i ? 'border-primary bg-primary text-primary-foreground' : 'border-border text-muted-foreground'
                 }`}
               >
-                {step > s ? <Check className="h-4 w-4" /> : s}
+                {phaseIndex > i ? <Check className="h-4 w-4" /> : i + 1}
               </div>
-              {s < 3 && <div className={`h-0.5 w-12 ${step > s ? 'bg-primary' : 'bg-border'}`} />}
+              {i < phaseOrder.length - 1 && <div className={`h-0.5 w-12 ${phaseIndex > i ? 'bg-primary' : 'bg-border'}`} />}
             </div>
           ))}
         </div>
 
-        {step === 1 && (
+        {phase === 'roles' && (
+          <Card className="glass">
+            <CardHeader>
+              <div className="mb-2 flex items-center gap-2 text-primary">
+                <Users2 className="h-5 w-5" />
+              </div>
+              <CardTitle className="font-display">{t('What brings you here?', 'Apa peran Anda di sini?')}</CardTitle>
+              <CardDescription>
+                {t('Pick as many as apply — you can always add more later.', 'Pilih sebanyak yang sesuai — bisa ditambah lagi nanti.')}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                {roleOptions.map((opt) => (
+                  <label
+                    key={opt.value}
+                    className="flex cursor-pointer items-start gap-3 rounded-lg border border-border/60 p-3 transition-colors hover:bg-muted/40"
+                  >
+                    <Checkbox
+                      checked={selectedRoles.includes(opt.value)}
+                      onCheckedChange={() => toggleRole(opt.value)}
+                      className="mt-0.5"
+                    />
+                    <div>
+                      <p className="text-sm font-medium">{t(opt.labelEn, opt.labelId)}</p>
+                      <p className="text-xs text-muted-foreground">{t(opt.descEn, opt.descId)}</p>
+                    </div>
+                  </label>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {t('Rather stay a plain member for now? Leave everything unchecked.', 'Ingin tetap jadi member biasa dulu? Kosongkan semuanya.')}
+              </p>
+              <Button onClick={saveRoles} className="w-full" disabled={saving}>
+                {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {t('Continue', 'Lanjut')}
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {phase === 'agency' && (
+          <Card className="glass">
+            <CardHeader>
+              <div className="mb-2 flex items-center gap-2 text-primary">
+                <Building2 className="h-5 w-5" />
+              </div>
+              <CardTitle className="font-display">{t('Agency Details', 'Detail Agency')}</CardTitle>
+              <CardDescription>
+                {t('Submitted for admin approval — the same queue used for company accounts.', 'Dikirim untuk approval admin — antrean yang sama dengan akun company.')}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="agency_name">{t('Agency Name', 'Nama Agency')}</Label>
+                <Input
+                  id="agency_name"
+                  value={agencyForm.name}
+                  onChange={(e) => setAgencyForm((f) => ({ ...f, name: e.target.value }))}
+                  placeholder="Studio Kirana"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="agency_logo">{t('Logo URL (optional)', 'URL Logo (opsional)')}</Label>
+                <Input
+                  id="agency_logo"
+                  value={agencyForm.logo_url}
+                  onChange={(e) => setAgencyForm((f) => ({ ...f, logo_url: e.target.value }))}
+                  placeholder="https://..."
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="agency_desc">{t('Description', 'Deskripsi')}</Label>
+                <Textarea
+                  id="agency_desc"
+                  value={agencyForm.description}
+                  onChange={(e) => setAgencyForm((f) => ({ ...f, description: e.target.value }))}
+                  placeholder={t('What does the agency build, and for whom?', 'Agency ini membangun apa, untuk siapa?')}
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => setPhase('roles')} className="flex-1">{t('Back', 'Kembali')}</Button>
+                <Button onClick={saveAgency} className="flex-1" disabled={saving}>
+                  {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {t('Continue', 'Lanjut')}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {phase === 'profile' && (
           <Card className="glass">
             <CardHeader>
               <div className="mb-2 flex items-center gap-2 text-primary">
@@ -221,7 +367,7 @@ export default function OnboardingForm() {
           </Card>
         )}
 
-        {step === 2 && (
+        {phase === 'skills' && (
           <Card className="glass">
             <CardHeader>
               <div className="mb-2 flex items-center gap-2 text-primary">
@@ -271,7 +417,7 @@ export default function OnboardingForm() {
               )}
 
               <div className="flex gap-2">
-                <Button variant="outline" onClick={() => setStep(1)} className="flex-1">{t('Back', 'Kembali')}</Button>
+                <Button variant="outline" onClick={() => setPhase('profile')} className="flex-1">{t('Back', 'Kembali')}</Button>
                 <Button onClick={saveSkills} className="flex-1" disabled={saving || selectedSkills.length === 0}>
                   {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   {t('Continue', 'Lanjut')}
@@ -281,7 +427,7 @@ export default function OnboardingForm() {
           </Card>
         )}
 
-        {step === 3 && (
+        {phase === 'experience' && (
           <Card className="glass">
             <CardHeader>
               <div className="mb-2 flex items-center gap-2 text-primary">
@@ -332,7 +478,7 @@ export default function OnboardingForm() {
                 <Plus className="h-4 w-4" /> {t('Add Experience', 'Tambah Pengalaman')}
               </Button>
               <div className="flex gap-2">
-                <Button variant="outline" onClick={() => setStep(2)} className="flex-1">{t('Back', 'Kembali')}</Button>
+                <Button variant="outline" onClick={() => setPhase('skills')} className="flex-1">{t('Back', 'Kembali')}</Button>
                 <Button onClick={saveExperiences} className="flex-1" disabled={saving}>
                   {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   {t('Finish', 'Selesai')}

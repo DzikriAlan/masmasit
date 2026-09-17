@@ -124,10 +124,44 @@ export interface DataAdminPendingEvent {
   regions: { name: string } | null;
 }
 
+export interface DataAdminAgencies {
+  id: string;
+  name: string;
+  slug: string;
+  logo_url: string | null;
+  description: string;
+  is_in_house: boolean;
+  approval_status: string;
+  created_at: string;
+  profiles: { full_name: string | null } | null;
+}
+
 export interface DataAdminApprovals {
   companies: DataAdminCompanies[];
   people: DataAdminCoaches[];
   events: DataAdminPendingEvent[];
+  agencies: DataAdminAgencies[];
+}
+
+export interface DataAdminTeamCollabs {
+  id: string;
+  focus: string;
+  description: string;
+  status: string;
+  matched_with: string | null;
+  created_at: string;
+  teams: { name: string } | null;
+  profiles: { full_name: string | null } | null;
+}
+
+export interface DataAdminArticle {
+  id: string;
+  title: string;
+  excerpt: string;
+  body: string;
+  cover_image_url: string | null;
+  is_published: boolean;
+  created_at: string;
 }
 
 export interface DataAdminAgencyService {

@@ -4,8 +4,11 @@ export default async function sitemap() {
   const baseUrl = 'https://masmasit.online';
 
   const staticPages = [
-    '', '/directory', '/jobs', '/projects', '/courses', '/events', '/talents',
-    '/services', '/case-studies', '/login', '/register', '/privacy-policy', '/terms-of-service',
+    '', '/about', '/team-builder', '/spotlight',
+    '/jobs', '/projects', '/team-collabs', '/talents', '/courses', '/agency', '/services',
+    '/discussions', '/directory', '/builds', '/events',
+    '/discover', '/case-studies',
+    '/login', '/register', '/privacy-policy', '/terms-of-service',
   ].map((path) => ({
     url: `${baseUrl}${path}`,
     lastModified: new Date(),

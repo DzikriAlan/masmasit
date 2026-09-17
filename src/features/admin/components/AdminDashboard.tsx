@@ -58,11 +58,18 @@ export default function AdminDashboard() {
     removeAdminContent,
     fetchAdminApprovals,
     changeAdminEventApproval,
+    changeAdminAgencyApproval,
+    fetchAdminTeamCollabs,
+    changeAdminTeamCollabsMatch,
   } = useAdminControllers(user?.id, authChecked);
 
   const isSuperAdmin = roles.includes('super_admin');
   const approvals = fetchAdminApprovals.data ?? null;
   const pendingEvents = approvals?.events ?? [];
+  const pendingAgencies = approvals?.agencies ?? [];
+  const teamCollabs = fetchAdminTeamCollabs.data ?? [];
+  const openTeamCollabs = teamCollabs.filter((c) => c.status === 'open');
+  const [matchDrafts, setMatchDrafts] = useState<Record<string, string>>({});
 
 
   const companies = fetchAdminCompanies.data ?? [];
@@ -176,6 +183,35 @@ export default function AdminDashboard() {
       return;
     }
     toast.success(`Event ${status}`);
+  };
+
+  const modifyAgencyApproval = async (id: string, status: string) => {
+    try {
+      await changeAdminAgencyApproval.mutateAsync({ id, status });
+    } catch {
+      toast.error('Failed to update agency');
+      return;
+    }
+    toast.success(`Agency ${status}`);
+  };
+
+  // REST.md Bagian 6.2: the human-in-the-loop step — this is the only place
+  // a Team Collabs listing can become "Matched" (see guard_team_collabs_match
+  // in migration 015, and the /admin/team-collabs/[id] route it protects).
+  const modifyTeamCollabsMatch = async (id: string) => {
+    const matchedWith = matchDrafts[id]?.trim();
+    if (!matchedWith) {
+      toast.error(t('Enter who this team was matched with', 'Isi siapa yang dipasangkan dengan tim ini'));
+      return;
+    }
+    try {
+      await changeAdminTeamCollabsMatch.mutateAsync({ id, matchedWith });
+    } catch {
+      toast.error('Failed to mark as matched');
+      return;
+    }
+    setMatchDrafts((d) => ({ ...d, [id]: '' }));
+    toast.success(t('Marked as matched — both sides now see the WhatsApp hand-off', 'Ditandai matched — kedua pihak kini melihat hand-off WhatsApp'));
   };
 
   const destroyContent = async (table: string, id: string) => {
@@ -292,6 +328,62 @@ export default function AdminDashboard() {
                               <Button size="sm" variant="outline" onClick={() => modifyCompanyApproval(c.id, 'rejected')} className="gap-1"><X className="h-3.5 w-3.5" /> {t('Reject', 'Tolak')}</Button>
                             </>
                           )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Agencies — REST.md Bagian 7: "pola sama seperti approval company" */}
+            <Card className="glass">
+              <CardHeader><CardTitle>{t('Agency Approvals', 'Approval Agency')}</CardTitle></CardHeader>
+              <CardContent>
+                {pendingAgencies.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">{t('Nothing waiting for a decision.', 'Tidak ada yang menunggu keputusan.')}</p>
+                ) : (
+                  <div className="space-y-3">
+                    {pendingAgencies.map((a) => (
+                      <div key={a.id} className="flex items-center justify-between rounded-lg border border-border/60 p-4">
+                        <div>
+                          <p className="font-medium">{a.name}</p>
+                          <p className="text-sm text-muted-foreground">{t('by', 'oleh')} {a.profiles?.full_name ?? 'Unknown'}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button size="sm" onClick={() => modifyAgencyApproval(a.id, 'approved')} className="gap-1"><Check className="h-3.5 w-3.5" /> {t('Approve', 'Setujui')}</Button>
+                          <Button size="sm" variant="outline" onClick={() => modifyAgencyApproval(a.id, 'rejected')} className="gap-1"><X className="h-3.5 w-3.5" /> {t('Reject', 'Tolak')}</Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Team Collabs matching — REST.md Bagian 6.2: human-in-the-loop,
+                naming who a team was matched with hands both sides to WhatsApp. */}
+            <Card className="glass">
+              <CardHeader><CardTitle>{t('Team Collabs Matching', 'Pencocokan Team Collabs')}</CardTitle></CardHeader>
+              <CardContent>
+                {openTeamCollabs.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">{t('No open listings.', 'Tidak ada listing terbuka.')}</p>
+                ) : (
+                  <div className="space-y-3">
+                    {openTeamCollabs.map((c) => (
+                      <div key={c.id} className="rounded-lg border border-border/60 p-4">
+                        <p className="font-medium">{c.focus}</p>
+                        <p className="text-sm text-muted-foreground">{c.teams?.name ?? t('A team', 'Sebuah tim')} · {c.profiles?.full_name ?? 'Unknown'}</p>
+                        <div className="mt-3 flex flex-wrap items-center gap-2">
+                          <Input
+                            value={matchDrafts[c.id] ?? ''}
+                            onChange={(e) => setMatchDrafts((d) => ({ ...d, [c.id]: e.target.value }))}
+                            placeholder={t('Matched with (client / team name)', 'Dipasangkan dengan (nama klien / tim)')}
+                            className="max-w-xs"
+                          />
+                          <Button size="sm" onClick={() => modifyTeamCollabsMatch(c.id)} disabled={changeAdminTeamCollabsMatch.isPending} className="gap-1">
+                            <Check className="h-3.5 w-3.5" /> {t('Mark Matched', 'Tandai Matched')}
+                          </Button>
                         </div>
                       </div>
                     ))}
@@ -461,24 +553,24 @@ export default function AdminDashboard() {
                     </div>
 
                     <div className="space-y-3">
-                      <h4 className="text-sm font-semibold">{t('Lynk.id Payment Links', 'Link Pembayaran Lynk.id')}</h4>
+                      <h4 className="text-sm font-semibold">{t('GoAkal Payment Links', 'Link Pembayaran GoAkal')}</h4>
                       <p className="text-xs text-muted-foreground">{t('Default fallback payment links for each category. Admin can override per record.', 'Link pembayaran default per kategori. Admin dapat override per record.')}</p>
                       <div className="grid gap-4 sm:grid-cols-2">
                         <div className="space-y-2">
-                          <Label htmlFor="lb">{t('Bookings Lynk.id URL', 'URL Lynk.id Booking')}</Label>
-                          <Input id="lb" value={settings.lynkid_bookings_url ?? ''} onChange={(e) => setSettings({ ...settings, lynkid_bookings_url: e.target.value })} placeholder="https://lynk.id/your-booking-product" />
+                          <Label htmlFor="lb">{t('Bookings GoAkal URL', 'URL GoAkal Booking')}</Label>
+                          <Input id="lb" value={settings.lynkid_bookings_url ?? ''} onChange={(e) => setSettings({ ...settings, lynkid_bookings_url: e.target.value })} placeholder="https://checkout.example/your-booking-product" />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="la">{t('Agency Lynk.id URL', 'URL Lynk.id Agency')}</Label>
-                          <Input id="la" value={settings.lynkid_agency_url ?? ''} onChange={(e) => setSettings({ ...settings, lynkid_agency_url: e.target.value })} placeholder="https://lynk.id/your-agency-product" />
+                          <Label htmlFor="la">{t('Agency GoAkal URL', 'URL GoAkal Agency')}</Label>
+                          <Input id="la" value={settings.lynkid_agency_url ?? ''} onChange={(e) => setSettings({ ...settings, lynkid_agency_url: e.target.value })} placeholder="https://checkout.example/your-agency-product" />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="lc">{t('Courses Lynk.id URL', 'URL Lynk.id Kursus')}</Label>
-                          <Input id="lc" value={settings.lynkid_courses_url ?? ''} onChange={(e) => setSettings({ ...settings, lynkid_courses_url: e.target.value })} placeholder="https://lynk.id/your-course-product" />
+                          <Label htmlFor="lc">{t('Courses GoAkal URL', 'URL GoAkal Kursus')}</Label>
+                          <Input id="lc" value={settings.lynkid_courses_url ?? ''} onChange={(e) => setSettings({ ...settings, lynkid_courses_url: e.target.value })} placeholder="https://checkout.example/your-course-product" />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="le">{t('Events Lynk.id URL', 'URL Lynk.id Event')}</Label>
-                          <Input id="le" value={settings.lynkid_events_url ?? ''} onChange={(e) => setSettings({ ...settings, lynkid_events_url: e.target.value })} placeholder="https://lynk.id/your-event-product" />
+                          <Label htmlFor="le">{t('Events GoAkal URL', 'URL GoAkal Event')}</Label>
+                          <Input id="le" value={settings.lynkid_events_url ?? ''} onChange={(e) => setSettings({ ...settings, lynkid_events_url: e.target.value })} placeholder="https://checkout.example/your-event-product" />
                         </div>
                       </div>
                     </div>

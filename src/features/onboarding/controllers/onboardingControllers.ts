@@ -6,13 +6,17 @@ import {
   deleteOnboardingExperiences,
   deleteOnboardingSkills,
   getOnboardingSkills,
+  postOnboardingAgency,
   postOnboardingExperiences,
   postOnboardingProfile,
+  postOnboardingRoles,
   postOnboardingSkills,
 } from '../services/onboardingServices';
 import type {
+  PayloadPostOnboardingAgency,
   PayloadPostOnboardingExperiences,
   PayloadPostOnboardingProfile,
+  PayloadPostOnboardingRoles,
   PayloadPostOnboardingSkills,
 } from '../types/onboardingTypes';
 
@@ -43,10 +47,20 @@ export const useOnboardingControllers = (userId: string | undefined) => {
     },
   });
 
+  const storeOnboardingRoles = useMutation({
+    mutationFn: async (payload: PayloadPostOnboardingRoles) => unwrapApiResponse(await postOnboardingRoles(payload)),
+  });
+
+  const storeOnboardingAgency = useMutation({
+    mutationFn: async (payload: PayloadPostOnboardingAgency) => unwrapApiResponse(await postOnboardingAgency(payload)),
+  });
+
   return {
     fetchOnboardingSkills,
     storeOnboardingProfile,
     storeOnboardingSkills,
     storeOnboardingExperiences,
+    storeOnboardingRoles,
+    storeOnboardingAgency,
   };
 };

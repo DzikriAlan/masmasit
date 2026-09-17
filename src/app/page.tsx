@@ -8,13 +8,13 @@ import { AppShell } from '@/components/app-shell';
 import { PageDecor } from '@/components/page-decor';
 import { useLang } from '@/components/language-provider';
 import { supabase } from '@/shared/lib/supabase';
+import { CONTACT_EMAIL, waLink } from '@/shared/lib/external';
 import { Button } from '@/components/ui/button';
 import heroBackground from '@/shared/images/backgroundhero2.png';
 
 const px = (id: string, w: number, h: number) =>
   `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&h=${h}&w=${w}`;
 
-const CONTACT_EMAIL = 'hello@masmasit.online';
 
 /* Identity colour per ecosystem area (tokens in globals.css). Full class
    strings live here so Tailwind can see them. */
@@ -152,7 +152,7 @@ const testimonials = [
    so the conversation starts with the service already named. */
 const agencyCards = [
   {
-    key: 'saas', tone: 'blue' as Tone, wide: true,
+    key: 'saas', tone: 'teal' as Tone, wide: true,
     tagEn: 'SaaS', tagId: 'SaaS',
     leadEn: 'Product & cloud platforms,', leadId: 'Produk & platform cloud,',
     boldEn: 'from MVP to millions of requests.', boldId: 'dari MVP sampai jutaan request.',
@@ -185,8 +185,6 @@ const agencyCards = [
   },
 ];
 
-const WA_NUMBER = '6281234567890';
-const waLink = (text: string) => `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(text)}`;
 
 /* -------------------------------------------------------------- components */
 
@@ -784,7 +782,9 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* 1b ── ABOUT / WHAT IS MASMASIT ------------------------------------ */}
+        {/* 1b ── ABOUT COMMUNITY — the teaser. Two or three sentences on who
+             MasmasIT is, who it is for, and the one thing that makes it one
+             product; the long version lives on /about. ------------------- */}
         <section className="relative overflow-hidden bg-background">
           <div className="mx-auto grid max-w-6xl gap-8 px-4 py-16 sm:px-6 sm:py-20 lg:grid-cols-[0.7fr_1.3fr] lg:gap-16 lg:px-8">
             <div>
@@ -796,16 +796,21 @@ export default function HomePage() {
             <div>
               <p className="font-display text-xl font-semibold leading-snug tracking-tight text-balance sm:text-2xl">
                 {t(
-                  'MasmasIT is the home for Indonesian IT professionals to build their career and business.',
-                  'MasmasIT adalah rumah bagi praktisi IT Indonesia untuk membangun karier dan bisnis mereka.'
+                  'MasmasIT is a community and an ecosystem for Indonesian IT practitioners, in one account.',
+                  'MasmasIT adalah komunitas sekaligus ekosistem untuk praktisi IT Indonesia, dalam satu akun.'
                 )}
               </p>
               <p className="mt-4 text-sm leading-relaxed text-muted-foreground text-pretty sm:text-base">
                 {t(
-                  'From job listings and freelance projects, to courses, events, talent bookings, and professional services — MasmasIT brings everything Indonesian IT practitioners need into one connected platform.',
-                  'Dari lowongan kerja dan proyek freelance, hingga kursus, event, booking talent, dan layanan profesional — MasmasIT menyatukan semua kebutuhan praktisi IT Indonesia dalam satu platform yang terhubung.'
+                  'The community is where people talk, post what they are building and turn up to events. The ecosystem is where that becomes paid work — jobs, client projects, team collabs, bookings, courses and services. Both live in the same place, so a conversation and the work it leads to are never two separate products.',
+                  'Komunitasnya tempat orang berbincang, memposting apa yang sedang dibangun, dan datang ke event. Ekosistemnya tempat semua itu jadi pekerjaan berbayar — lowongan, proyek klien, team collabs, booking, kursus dan layanan. Keduanya ada di tempat yang sama, jadi percakapan dan pekerjaan yang lahir darinya tidak pernah jadi dua produk terpisah.'
                 )}
               </p>
+              <Link href="/about" className="mt-6 inline-block">
+                <Button size="lg" variant="outline" className="h-11 rounded-full px-6 text-base font-semibold">
+                  {t('Learn more', 'Pelajari Lebih Lanjut')}
+                </Button>
+              </Link>
             </div>
           </div>
         </section>
@@ -818,7 +823,7 @@ export default function HomePage() {
             <SectionHead
               eyebrow={t('Ecosystem', 'Ekosistem')}
               title={t('Everything an Indonesian IT professional needs', 'Semua yang dibutuhkan praktisi IT Indonesia')}
-              desc={t('Seven connected areas, one account. Start anywhere.', 'Tujuh area yang saling terhubung, satu akun. Mulai dari mana saja.')}
+              desc={t('Connected areas, one account. Start anywhere.', 'Area yang saling terhubung, satu akun. Mulai dari mana saja.')}
             />
 
             <div className="no-scrollbar flex snap-x gap-4 overflow-x-auto pb-1 sm:grid sm:snap-none sm:overflow-visible sm:pb-0 sm:grid-cols-2 lg:grid-cols-6">
