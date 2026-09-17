@@ -10,7 +10,11 @@ import { cn } from '@/shared/lib/utils';
  * button around it or pushes its neighbours.
  */
 export function StableText({ show, all, className }: { show: string; all: string[]; className?: string }) {
-  const variants = all.includes(show) ? all : [...all, show];
+  // Deduped: when a caller's EN and ID strings happen to be identical (e.g.
+  // "Discover"), `all` collapses to one entry instead of two equal ones —
+  // otherwise both would render with the same `key`, which is exactly the
+  // "two children with the same key" warning React raises for it.
+  const variants = Array.from(new Set(all.includes(show) ? all : [...all, show]));
   return (
     <span className={cn('inline-grid justify-items-center', className)}>
       {variants.map((v) => (

@@ -4,10 +4,11 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 import { useLang } from '@/components/language-provider';
+import { CONTACT_EMAIL, waLink } from '@/shared/lib/external';
 import { cn } from '@/shared/lib/utils';
+import mmitLogo from '@/shared/images/mmit-transparent.png';
 
-const WA_HREF = 'https://wa.me/6281234567890';
-const EMAIL = 'hello@masmasit.online';
+const WA_HREF = waLink('Halo MasmasIT, saya ingin bertanya.');
 
 export function Footer() {
   const { t } = useLang();
@@ -17,30 +18,44 @@ export function Footer() {
   const isHome = usePathname() === '/';
 
   // Legal links live in the bottom bar, not mixed into product navigation.
+  // Mirrors the header: Product, then the ecosystem split into work/business
+  // and community, then Discover and contact.
   const groups = [
     {
-      title: t('Community', 'Komunitas'),
+      title: 'Product',
       links: [
-        { href: '/directory', label: t('Members', 'Anggota') },
-        { href: '/jobs', label: t('Jobs', 'Lowongan') },
-        { href: '/projects', label: t('Projects', 'Proyek') },
-        { href: '/courses', label: 'LMS' },
-        { href: '/events', label: 'Events' },
+        { href: '/about', label: t('About', 'Tentang') },
+        { href: '/team-builder', label: 'Team Builder' },
+        { href: '/spotlight', label: 'Spotlight' },
       ],
     },
     {
-      title: 'Talent & Agency',
+      title: t('Work & Business', 'Kerja & Bisnis'),
       links: [
-        { href: '/talents', label: 'Talents' },
+        { href: '/jobs', label: t('Jobs', 'Lowongan') },
+        { href: '/projects', label: t('Projects', 'Proyek') },
+        { href: '/team-collabs', label: 'Team Collabs' },
+        { href: '/talents', label: 'Talent' },
+        { href: '/courses', label: t('Courses', 'Kursus') },
+        { href: '/agency', label: 'Agency' },
         { href: '/services', label: t('Services', 'Layanan') },
-        { href: '/case-studies', label: t('Case Studies', 'Studi Kasus') },
+      ],
+    },
+    {
+      title: t('Community', 'Komunitas'),
+      links: [
+        { href: '/discussions', label: t('Discussions', 'Diskusi') },
+        { href: '/directory', label: t('Members', 'Member') },
+        { href: '/builds', label: 'Builds' },
+        { href: '/events', label: 'Events' },
+        { href: '/discover', label: 'Discover' },
       ],
     },
     {
       title: t('Contact', 'Kontak'),
       links: [
         { href: WA_HREF, label: 'WhatsApp', external: true },
-        { href: `mailto:${EMAIL}`, label: EMAIL, external: true },
+        { href: `mailto:${CONTACT_EMAIL}`, label: CONTACT_EMAIL, external: true },
       ],
     },
   ];
@@ -55,9 +70,14 @@ export function Footer() {
       <div className="mx-auto max-w-7xl px-4 pt-14 sm:px-6 sm:pt-16 lg:px-8">
         <div className="grid gap-10 lg:grid-cols-12">
           <div className="lg:col-span-4">
-            {/* Same text-only wordmark as the navbar. */}
-            <Link href="/" aria-label="MasmasIT home" className="block w-fit font-brand text-[26px] font-extrabold leading-none tracking-[-0.035em]">
-              MasmasIT
+            {/* Same logomark + wordmark as the navbar. Footer is always on
+                the white canvas, so the ink-on-white mark always applies —
+                no dark-hero swap needed here. */}
+            <Link href="/" aria-label="MasmasIT home" className="flex w-fit items-center gap-2.5">
+              <img src={mmitLogo.src} alt="" aria-hidden className="h-7 w-auto shrink-0" />
+              <span className="font-brand text-[26px] font-extrabold leading-none tracking-[-0.035em]">
+                MasmasIT
+              </span>
             </Link>
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-muted-foreground text-pretty">
               {t(
@@ -67,7 +87,7 @@ export function Footer() {
             </p>
           </div>
 
-          <nav className="grid grid-cols-2 gap-8 sm:grid-cols-3 lg:col-span-8" aria-label={t('Footer', 'Footer')}>
+          <nav className="grid grid-cols-2 gap-8 sm:grid-cols-4 lg:col-span-8" aria-label={t('Footer', 'Footer')}>
             {groups.map((g) => (
               <div key={g.title} className={g.title === t('Contact', 'Kontak') ? 'col-span-2 sm:col-span-1' : ''}>
                 <h4 className="eyebrow text-muted-foreground">{g.title}</h4>
@@ -109,22 +129,6 @@ export function Footer() {
             </Link>
           </div>
         </div>
-      </div>
-
-      {/* Oversized ink wordmark as the sign-off; decorative only. */}
-      <div aria-hidden className="pointer-events-none select-none overflow-hidden">
-        <p
-          className="-mb-[0.22em] text-center font-display font-semibold leading-none tracking-tight text-transparent"
-          style={{
-            fontSize: 'min(21vw, 17rem)',
-            // Smooth ink: near-black easing to a softer charcoal at the clipped base.
-            backgroundImage: 'linear-gradient(to bottom, hsl(240 10% 8%) 0%, hsl(240 6% 22%) 100%)',
-            WebkitBackgroundClip: 'text',
-            backgroundClip: 'text',
-          }}
-        >
-          MasmasIT
-        </p>
       </div>
     </footer>
   );
