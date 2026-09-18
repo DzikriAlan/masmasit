@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useState, useEffect, useRef } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
+import { Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -17,7 +18,7 @@ import { useAuth } from '@/components/auth-provider';
 import { useLang } from '@/components/language-provider';
 import { NotificationBell } from '@/features/notifications/components/NotificationBell';
 import { GlobalSearch } from '@/features/search/components/GlobalSearch';
-import { StableLabel, StableText } from '@/components/stable-label';
+import { StableLabel } from '@/components/stable-label';
 import { waLink } from '@/shared/lib/external';
 import { cn } from '@/shared/lib/utils';
 import mmitLogo from '@/shared/images/mmit-transparent.png';
@@ -364,11 +365,12 @@ export function Navbar() {
           </div>
 
           <button
-            className="rounded-md px-2 py-1.5 text-base font-medium lg:hidden"
+            className="rounded-md p-2 lg:hidden"
             onClick={() => setOpen(!open)}
             aria-expanded={open}
+            aria-label={open ? t('Close menu', 'Tutup menu') : t('Open menu', 'Buka menu')}
           >
-            <StableText show={open ? t('Close', 'Tutup') : 'Menu'} all={['Menu', 'Close', 'Tutup']} />
+            {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </button>
         </div>
 
