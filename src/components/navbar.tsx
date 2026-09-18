@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useState, useEffect, useRef } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { ArrowRight, Globe, Menu } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -14,7 +14,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { useAuth } from '@/components/auth-provider';
 import { useLang } from '@/components/language-provider';
 import { NotificationBell } from '@/features/notifications/components/NotificationBell';
@@ -365,156 +364,150 @@ export function Navbar() {
             )}
           </div>
 
-          <Sheet open={open} onOpenChange={setOpen}>
-            <SheetTrigger asChild>
-              <button className="rounded-md p-2 lg:hidden" aria-label={t('Open menu', 'Buka menu')}>
-                <Menu className="h-6 w-6" />
-              </button>
-            </SheetTrigger>
+          <button
+            className="rounded-md p-2 lg:hidden"
+            onClick={() => setOpen(!open)}
+            aria-expanded={open}
+            aria-label={open ? t('Close menu', 'Tutup menu') : t('Open menu', 'Buka menu')}
+          >
+            {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </button>
+        </div>
 
-            {/* `.dark` re-declares every token for this subtree (see
-                globals.css) — a solid, near-black brand-colour panel with
-                correctly contrasted text, using the same trick the homepage
-                hero/footer already rely on, no per-element colour picking. */}
-            <SheetContent
-              side="right"
-              className="dark flex w-[85%] flex-col gap-0 border-none bg-background p-0 text-foreground sm:max-w-sm"
-            >
-              <SheetTitle className="sr-only">{t('Menu', 'Menu')}</SheetTitle>
+        {open && (
+          <div className="max-h-[calc(100vh-4rem)] overflow-y-auto border-t border-border bg-white lg:hidden animate-fade-up">
+            <nav className="flex flex-col gap-0.5 px-4 py-4">
+              <Link
+                href="/about"
+                onClick={() => setOpen(false)}
+                className={cn(
+                  'rounded-md px-3 py-2.5 text-base font-medium transition-colors hover:bg-muted',
+                  pathname === '/about' ? 'bg-primary/5 text-primary' : 'text-foreground'
+                )}
+              >
+                {t('About', 'Tentang')}
+              </Link>
 
-              <div className="flex-1 overflow-y-auto">
-                <div className="flex flex-col gap-2 px-6 pb-6 pt-10">
-                  {user && (
-                    <div className="mb-2 flex items-center gap-3">
-                      <Avatar className="h-10 w-10">
-                        {profile?.avatar_url && <AvatarImage src={profile.avatar_url} alt={displayName} />}
-                        <AvatarFallback className="bg-muted text-sm text-foreground">{initial}</AvatarFallback>
-                      </Avatar>
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold">{displayName}</p>
-                        <p className="truncate text-xs text-muted-foreground">{user.email}</p>
-                      </div>
-                    </div>
-                  )}
-
-                  {user ? (
-                    <>
-                      <Link href="/dashboard" onClick={() => setOpen(false)} className="py-1 text-2xl font-extrabold uppercase tracking-tight">
-                        {t('Dashboard', 'Dashboard')}
+              {mobileGroups.map((group) => (
+                <div key={group.titleEn} className="mt-3">
+                  <p className="eyebrow px-3 text-muted-foreground">{t(group.titleEn, group.titleId)}</p>
+                  <div className="mt-1 flex flex-col gap-0.5">
+                    {group.items.map((item) => (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        onClick={() => setOpen(false)}
+                        className={cn(
+                          'rounded-md px-3 py-2.5 text-base font-medium transition-colors hover:bg-muted',
+                          pathname === item.href ? 'bg-primary/5 text-primary' : 'text-muted-foreground'
+                        )}
+                      >
+                        {t(item.en, item.id)}
                       </Link>
-                      <Link href="/profile" onClick={() => setOpen(false)} className="py-1 text-2xl font-extrabold uppercase tracking-tight">
-                        {t('Profile', 'Profil')}
-                      </Link>
-                      <Link href="/pesan" onClick={() => setOpen(false)} className="py-1 text-2xl font-extrabold uppercase tracking-tight">
-                        {t('Messages', 'Pesan')}
-                      </Link>
-                    </>
-                  ) : (
-                    <>
-                      <Link href="/login" onClick={() => setOpen(false)} className="py-1 text-2xl font-extrabold uppercase tracking-tight">
-                        {t('Sign in', 'Masuk')}
-                      </Link>
-                      <Link href="/register" onClick={() => setOpen(false)} className="py-1 text-2xl font-extrabold uppercase tracking-tight">
-                        {t('Get Started', 'Daftar')}
-                      </Link>
-                    </>
-                  )}
-                </div>
-
-                <div className="border-t border-border" />
-
-                <div className="px-6 py-6">
-                  <Link
-                    href="/about"
-                    onClick={() => setOpen(false)}
-                    className={cn(
-                      'block text-lg font-bold uppercase tracking-wide',
-                      pathname === '/about' ? 'text-foreground' : 'text-foreground/60'
-                    )}
-                  >
-                    {t('About', 'Tentang')}
-                  </Link>
-                </div>
-
-                {mobileGroups.map((group) => (
-                  <div key={group.titleEn}>
-                    <div className="border-t border-border" />
-                    <div className="px-6 py-6">
-                      <p className="eyebrow mb-3 text-muted-foreground">{t(group.titleEn, group.titleId)}</p>
-                      <div className="flex flex-col gap-3">
-                        {group.items.map((item) => (
-                          <Link
-                            key={item.href}
-                            href={item.href}
-                            onClick={() => setOpen(false)}
-                            className={cn(
-                              'text-lg font-bold uppercase tracking-wide',
-                              pathname === item.href ? 'text-foreground' : 'text-foreground/60'
-                            )}
-                          >
-                            {t(item.en, item.id)}
-                          </Link>
-                        ))}
-                      </div>
-                    </div>
+                    ))}
                   </div>
-                ))}
+                </div>
+              ))}
 
-                <div className="border-t border-border" />
-
-                <div className="flex flex-col gap-3 px-6 py-6">
+              <div className="mt-3 flex flex-col gap-0.5 border-t border-border/40 pt-3">
+                <Link
+                  href="/discover"
+                  onClick={() => setOpen(false)}
+                  className={cn(
+                    'rounded-md px-3 py-2.5 text-base font-medium transition-colors hover:bg-muted',
+                    pathname === '/discover' ? 'bg-primary/5 text-primary' : 'text-foreground'
+                  )}
+                >
+                  {t('Discover', 'Discover')}
+                </Link>
+                <a
+                  href={CONTACT_WA}
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={() => setOpen(false)}
+                  className="rounded-md px-3 py-2.5 text-base font-medium text-foreground transition-colors hover:bg-muted"
+                >
+                  {t('Contact Us', 'Hubungi Kami')}
+                </a>
+                {user && (
                   <Link
-                    href="/discover"
+                    href="/pesan"
                     onClick={() => setOpen(false)}
                     className={cn(
-                      'text-lg font-bold uppercase tracking-wide',
-                      pathname === '/discover' ? 'text-foreground' : 'text-foreground/60'
+                      'rounded-md px-3 py-2.5 text-base font-medium transition-colors hover:bg-muted',
+                      pathname === '/pesan' ? 'bg-primary/5 text-primary' : 'text-muted-foreground'
                     )}
                   >
-                    {t('Discover', 'Discover')}
+                    {t('Messages', 'Pesan')}
                   </Link>
-                  <a
-                    href={CONTACT_WA}
-                    target="_blank"
-                    rel="noreferrer"
+                )}
+                {user && (
+                  <Link
+                    href="/profile"
                     onClick={() => setOpen(false)}
-                    className="flex items-center gap-1.5 text-lg font-bold uppercase tracking-wide text-foreground/60"
+                    className={cn(
+                      'rounded-md px-3 py-2.5 text-base font-medium transition-colors hover:bg-muted',
+                      pathname === '/profile' ? 'bg-primary/5 text-primary' : 'text-muted-foreground'
+                    )}
                   >
-                    {t('Contact Us', 'Hubungi Kami')}
-                    <ArrowRight className="h-4 w-4" />
-                  </a>
-                  {user && (
-                    <button
-                      onClick={handleSignOut}
-                      className="text-left text-lg font-bold uppercase tracking-wide text-destructive"
-                    >
-                      {t('Sign out', 'Keluar')}
-                    </button>
-                  )}
-                </div>
+                    {t('Profile', 'Profil')}
+                  </Link>
+                )}
               </div>
 
-              {/* Utility bar pinned to the bottom, mirroring the reference's
-                  language picker. */}
-              <div className="flex items-center justify-between gap-2 border-t border-border px-4 py-3">
+              {user && (
+                <div className="mt-2 flex items-center gap-3 rounded-md border border-border/40 px-3 py-2">
+                  <Avatar className="h-8 w-8">
+                    {profile?.avatar_url && <AvatarImage src={profile.avatar_url} alt={displayName} />}
+                    <AvatarFallback className="bg-primary/15 text-xs text-primary">{initial}</AvatarFallback>
+                  </Avatar>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium">{displayName}</p>
+                    <p className="truncate text-xs text-muted-foreground">{user.email}</p>
+                  </div>
+                  <Button variant="ghost" size="sm" onClick={handleSignOut} className="text-destructive">
+                    {t('Sign out', 'Keluar')}
+                  </Button>
+                </div>
+              )}
+              {/* Two rows, not one — Search/EN-ID/Sign in/Get Started never
+                  fit on one line at phone width without wrapping mid-word. */}
+              <div className="mt-3 flex items-center justify-between gap-2 border-t border-border/40 pt-3">
                 <div className="flex min-w-0 items-center gap-1">
                   <GlobalSearch />
                   {user && <NotificationBell />}
                 </div>
                 <button
                   onClick={toggleLang}
-                  className="flex shrink-0 items-center gap-1.5 rounded-md px-2.5 py-2 text-xs font-semibold"
+                  className="shrink-0 rounded-md px-2.5 py-2 text-xs font-semibold"
                   aria-label={t('Switch to Bahasa Indonesia', 'Ganti ke English')}
                 >
-                  <Globe className="h-3.5 w-3.5 text-muted-foreground" />
                   <span className={lang === 'en' ? 'text-foreground' : 'text-muted-foreground'}>EN</span>
-                  <span className="text-muted-foreground/60">/</span>
+                  <span className="text-muted-foreground/60"> / </span>
                   <span className={lang === 'id' ? 'text-foreground' : 'text-muted-foreground'}>ID</span>
                 </button>
               </div>
-            </SheetContent>
-          </Sheet>
-        </div>
+              <div className="mt-2 flex items-center gap-2">
+                {user ? (
+                  <Link href="/dashboard" onClick={() => setOpen(false)} className="flex-1">
+                    <Button size="sm" className="w-full">
+                      {t('Dashboard', 'Dashboard')}
+                    </Button>
+                  </Link>
+                ) : (
+                  <>
+                    <Link href="/login" onClick={() => setOpen(false)} className="flex-1">
+                      <Button variant="ghost" size="sm" className="h-10 w-full text-base font-medium hover:bg-transparent">{t('Sign in', 'Masuk')}</Button>
+                    </Link>
+                    <Link href="/register" onClick={() => setOpen(false)} className="flex-1">
+                      <Button size="sm" className="h-10 w-full rounded-full text-base font-semibold shadow-sm">{t('Get Started', 'Daftar')}</Button>
+                    </Link>
+                  </>
+                )}
+              </div>
+            </nav>
+          </div>
+        )}
       </div>
     </header>
   );
