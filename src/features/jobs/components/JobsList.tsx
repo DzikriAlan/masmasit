@@ -15,9 +15,34 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { MobileFilterDrawer, MobileFilterField } from '@/components/mobile-filter-drawer';
 import { useAuth } from '@/components/auth-provider';
 import { useLang } from '@/components/language-provider';
 import { calcMatchScore, matchScoreColor } from '@/shared/lib/match-score';
+
+// Mirrors the real job card's shape (logo + title/subtitle, badge row,
+// salary line) so the grid doesn't visibly reflow once data arrives.
+function JobCardSkeleton() {
+  return (
+    <Card className="glass h-full">
+      <CardContent className="p-5">
+        <div className="flex items-start gap-3">
+          <Skeleton className="h-10 w-10 shrink-0 rounded-lg" />
+          <div className="min-w-0 flex-1 space-y-2">
+            <Skeleton className="h-4 w-3/4" />
+            <Skeleton className="h-3 w-1/2" />
+          </div>
+        </div>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <Skeleton className="h-5 w-20 rounded-full" />
+          <Skeleton className="h-5 w-16 rounded-full" />
+        </div>
+        <Skeleton className="mt-3 h-4 w-24" />
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function JobsList() {
   const { t } = useLang();
@@ -75,37 +100,73 @@ export default function JobsList() {
           </div>
 
           <TabsContent value="masmasit">
-        {/* Filters */}
-        <div className="mb-6 grid gap-3 sm:grid-cols-3">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input placeholder={t('Search jobs...', 'Cari lowongan...')} value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+        {/* Filters: search always shows; Job Type/Location ride inline from sm
+            up, and collapse into a bottom-sheet triggered by a Filter button
+            below sm. */}
+        <div className="mb-6 space-y-3">
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input placeholder={t('Search jobs...', 'Cari lowongan...')} value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+            </div>
+            <Select value={typeFilter} onValueChange={setTypeFilter}>
+              <SelectTrigger className="hidden sm:flex"><SelectValue placeholder={t('Job Type', 'Tipe Pekerjaan')} /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('All Types', 'Semua Tipe')}</SelectItem>
+                {jobTypes.map((jt) => <SelectItem key={jt} value={jt} className="capitalize">{jt}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={locationFilter} onValueChange={setLocationFilter}>
+              <SelectTrigger className="hidden sm:flex"><SelectValue placeholder={t('Location', 'Lokasi')} /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('All Locations', 'Semua Lokasi')}</SelectItem>
+                {locations.map((l) => <SelectItem key={l} value={l}>{l}</SelectItem>)}
+              </SelectContent>
+            </Select>
           </div>
-          <Select value={typeFilter} onValueChange={setTypeFilter}>
-            <SelectTrigger><SelectValue placeholder={t('Job Type', 'Tipe Pekerjaan')} /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t('All Types', 'Semua Tipe')}</SelectItem>
-              {jobTypes.map((jt) => <SelectItem key={jt} value={jt} className="capitalize">{jt}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <Select value={locationFilter} onValueChange={setLocationFilter}>
-            <SelectTrigger><SelectValue placeholder={t('Location', 'Lokasi')} /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t('All Locations', 'Semua Lokasi')}</SelectItem>
-              {locations.map((l) => <SelectItem key={l} value={l}>{l}</SelectItem>)}
-            </SelectContent>
-          </Select>
+
+          <MobileFilterDrawer
+            triggerLabel={t('Filter', 'Filter')}
+            title={t('Filter your search', 'Filter pencarianmu')}
+            applyLabel={t('Refine Jobs', 'Perbarui Lowongan')}
+            activeCount={(typeFilter !== 'all' ? 1 : 0) + (locationFilter !== 'all' ? 1 : 0)}
+          >
+            <MobileFilterField label={t('Job Type', 'Tipe Pekerjaan')}>
+              <Select value={typeFilter} onValueChange={setTypeFilter}>
+                <SelectTrigger><SelectValue placeholder={t('Job Type', 'Tipe Pekerjaan')} /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t('All Types', 'Semua Tipe')}</SelectItem>
+                  {jobTypes.map((jt) => <SelectItem key={jt} value={jt} className="capitalize">{jt}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </MobileFilterField>
+            <MobileFilterField label={t('Location', 'Lokasi')}>
+              <Select value={locationFilter} onValueChange={setLocationFilter}>
+                <SelectTrigger><SelectValue placeholder={t('Location', 'Lokasi')} /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t('All Locations', 'Semua Lokasi')}</SelectItem>
+                  {locations.map((l) => <SelectItem key={l} value={l}>{l}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </MobileFilterField>
+          </MobileFilterDrawer>
         </div>
 
         <LoadData
           hideIcon
+          customLoader
           response={{
             isLoading: loading,
             isEmpty: jobs.length === 0,
             emptyTitle: t('No jobs found. Check back soon!', 'Belum ada lowongan. Cek lagi nanti!'),
           }}
         >
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {loading ? (
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {Array.from({ length: 6 }).map((_, i) => <JobCardSkeleton key={i} />)}
+            </div>
+          ) : (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {jobs.map((job) => (
               <Link key={job.id} href={`/jobs/${job.id}`}>
                 <Card className="glass group h-full transition-all hover:border-primary/40 hover:-translate-y-0.5">
@@ -142,6 +203,7 @@ export default function JobsList() {
               </Link>
             ))}
           </div>
+          )}
         </LoadData>
           </TabsContent>
 

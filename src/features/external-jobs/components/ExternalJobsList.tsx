@@ -8,6 +8,8 @@ import { useLang } from '@/components/language-provider';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
+import { MobileFilterDrawer, MobileFilterField } from '@/components/mobile-filter-drawer';
 import { TONE_CHIP, toneOf } from '@/shared/lib/tones';
 
 import { useExternalJobsControllers } from '@/features/external-jobs/controllers/externalJobsControllers';
@@ -38,6 +40,33 @@ function CompanyLogo({ name, domain, toneClass }: Readonly<{ name: string; domai
   );
 }
 
+// Mirrors the real job card's shape (logo + title/subtitle, badge row, tag
+// row, footer line) so the grid doesn't visibly reflow once data arrives.
+function ExternalJobCardSkeleton() {
+  return (
+    <div className="flex h-full flex-col rounded-xl border border-border p-5">
+      <div className="flex items-start gap-2.5">
+        <Skeleton className="h-8 w-8 shrink-0 rounded-md" />
+        <div className="min-w-0 flex-1 space-y-2">
+          <Skeleton className="h-4 w-3/4" />
+          <Skeleton className="h-3 w-1/2" />
+        </div>
+      </div>
+      <div className="mt-3 flex flex-wrap gap-1.5">
+        <Skeleton className="h-5 w-16 rounded-full" />
+        <Skeleton className="h-5 w-20 rounded-full" />
+        <Skeleton className="h-5 w-14 rounded-full" />
+      </div>
+      <div className="mt-3 flex flex-wrap gap-1 border-t border-border/60 pt-3">
+        <Skeleton className="h-4 w-10" />
+        <Skeleton className="h-4 w-12" />
+        <Skeleton className="h-4 w-8" />
+      </div>
+      <Skeleton className="mt-auto h-3 w-24 pt-3" />
+    </div>
+  );
+}
+
 const roleLabels: Record<ExternalJobRole, { en: string; id: string }> = {
   backend: { en: 'Backend', id: 'Backend' },
   frontend: { en: 'Frontend', id: 'Frontend' },
@@ -55,6 +84,13 @@ const roleLabels: Record<ExternalJobRole, { en: string; id: string }> = {
  * own database. Search and the country/role filters narrow the one fetched
  * batch client-side; applying leaves the site for the original posting.
  */
+// Remotive's `location` is often several regions in one string, e.g.
+// "LATAM, Europe, USA, Canada, APAC" — split so the filter dropdown lists
+// individual countries/regions and a job matches on any one of them, instead
+// of the dropdown showing that whole run-on string as a single option.
+const splitLocations = (location: string): string[] =>
+  location.split(',').map((s) => s.trim()).filter(Boolean);
+
 export default function ExternalJobsList() {
   const { t } = useLang();
   const [search, setSearch] = useState('');
@@ -65,14 +101,14 @@ export default function ExternalJobsList() {
   const allJobs = fetchExternalJobs.data ?? [];
 
   const countries = useMemo(
-    () => Array.from(new Set(allJobs.map((j) => j.location))).sort(),
+    () => Array.from(new Set(allJobs.flatMap((j) => splitLocations(j.location)))).sort((a, b) => a.localeCompare(b)),
     [allJobs]
   );
 
   const jobs = useMemo(() => {
     const q = search.trim().toLowerCase();
     return allJobs.filter((job) => {
-      if (country !== 'all' && job.location !== country) return false;
+      if (country !== 'all' && !splitLocations(job.location).includes(country)) return false;
       if (role !== 'all' && job.role_category !== role) return false;
       if (q && !job.title.toLowerCase().includes(q) && !job.company_name.toLowerCase().includes(q)) return false;
       return true;
@@ -88,38 +124,70 @@ export default function ExternalJobsList() {
         )}
       </p>
 
-      {/* Search + filters: stacks on mobile, one row from sm up. */}
-      <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto_auto]">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder={t('Search title or company...', 'Cari judul atau perusahaan...')}
-            className="pl-9"
-          />
+      {/* Search always shows; the country/role selects ride inline from sm up,
+          and collapse into a bottom-sheet triggered by a Filter button below sm. */}
+      <div className="mt-4 space-y-3">
+        <div className="grid gap-3 sm:grid-cols-[1fr_auto_auto]">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder={t('Search title or company...', 'Cari judul atau perusahaan...')}
+              className="pl-9"
+            />
+          </div>
+          <Select value={country} onValueChange={setCountry}>
+            <SelectTrigger className="hidden sm:flex sm:w-52"><SelectValue placeholder={t('Country', 'Negara')} /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('All countries', 'Semua negara')}</SelectItem>
+              {countries.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Select value={role} onValueChange={setRole}>
+            <SelectTrigger className="hidden sm:flex sm:w-44"><SelectValue placeholder={t('Role', 'Peran')} /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('All roles', 'Semua peran')}</SelectItem>
+              {(Object.keys(roleLabels) as ExternalJobRole[]).map((r) => (
+                <SelectItem key={r} value={r}>{t(roleLabels[r].en, roleLabels[r].id)}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
-        <Select value={country} onValueChange={setCountry}>
-          <SelectTrigger className="w-full sm:w-52"><SelectValue placeholder={t('Country', 'Negara')} /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t('All countries', 'Semua negara')}</SelectItem>
-            {countries.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-          </SelectContent>
-        </Select>
-        <Select value={role} onValueChange={setRole}>
-          <SelectTrigger className="w-full sm:w-44"><SelectValue placeholder={t('Role', 'Peran')} /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t('All roles', 'Semua peran')}</SelectItem>
-            {(Object.keys(roleLabels) as ExternalJobRole[]).map((r) => (
-              <SelectItem key={r} value={r}>{t(roleLabels[r].en, roleLabels[r].id)}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+
+        <MobileFilterDrawer
+          triggerLabel={t('Filter', 'Filter')}
+          title={t('Filter your search', 'Filter pencarianmu')}
+          applyLabel={t('Show results', 'Tampilkan hasil')}
+          activeCount={(country !== 'all' ? 1 : 0) + (role !== 'all' ? 1 : 0)}
+        >
+          <MobileFilterField label={t('Country', 'Negara')}>
+            <Select value={country} onValueChange={setCountry}>
+              <SelectTrigger><SelectValue placeholder={t('Country', 'Negara')} /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('All countries', 'Semua negara')}</SelectItem>
+                {countries.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </MobileFilterField>
+          <MobileFilterField label={t('Role', 'Peran')}>
+            <Select value={role} onValueChange={setRole}>
+              <SelectTrigger><SelectValue placeholder={t('Role', 'Peran')} /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('All roles', 'Semua peran')}</SelectItem>
+                {(Object.keys(roleLabels) as ExternalJobRole[]).map((r) => (
+                  <SelectItem key={r} value={r}>{t(roleLabels[r].en, roleLabels[r].id)}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </MobileFilterField>
+        </MobileFilterDrawer>
       </div>
 
       <LoadData
         className="mt-6"
         hideIcon
+        customLoader
         response={{
           isLoading: fetchExternalJobs.isPending,
           isError: fetchExternalJobs.isError,
@@ -130,14 +198,19 @@ export default function ExternalJobsList() {
           emptySubtitle: t('Try a different search or filter.', 'Coba pencarian atau filter lain.'),
         }}
       >
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {fetchExternalJobs.isPending ? (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, i) => <ExternalJobCardSkeleton key={i} />)}
+          </div>
+        ) : (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {jobs.map((job) => (
             <a
               key={job.id}
               href={job.url}
               target="_blank"
               rel="noreferrer"
-              className="group flex h-full flex-col rounded-xl border border-border p-5 transition-colors hover:border-foreground/30 hover:bg-muted/30"
+              className="group flex h-full min-w-0 flex-col rounded-xl border border-border p-5 transition-colors hover:border-foreground/30 hover:bg-muted/30"
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="flex min-w-0 items-center gap-2.5">
@@ -154,9 +227,11 @@ export default function ExternalJobsList() {
                 <Badge variant="outline" className={`text-xs capitalize ${TONE_CHIP[toneOf('external-jobs')]}`}>
                   {t(roleLabels[job.role_category].en, roleLabels[job.role_category].id)}
                 </Badge>
-                <Badge variant="outline" className="text-xs">
-                  {job.location}
-                </Badge>
+                {splitLocations(job.location).map((loc) => (
+                  <Badge key={loc} variant="outline" className="text-xs">
+                    {loc}
+                  </Badge>
+                ))}
                 {job.salary && <Badge variant="outline" className="text-xs">{job.salary}</Badge>}
               </div>
 
@@ -174,6 +249,7 @@ export default function ExternalJobsList() {
             </a>
           ))}
         </div>
+        )}
       </LoadData>
     </div>
   );
