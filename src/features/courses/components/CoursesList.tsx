@@ -52,7 +52,7 @@ export default function CoursesList() {
             emptySubtitle: t('Be the first to create one — see "Become a Coach" above.', 'Jadilah yang pertama membuat kursus — lihat "Jadilah Coach" di atas.'),
           }}
         >
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {courses.map((c) => (
               <Link key={c.id} href={`/courses/${c.id}`}>
                 <Card className="glass group h-full overflow-hidden transition-all hover:border-primary/40 hover:-translate-y-0.5">

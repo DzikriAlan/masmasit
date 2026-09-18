@@ -46,7 +46,7 @@ export default function TeamCollabsList() {
             emptyTitle: t('No teams registered yet.', 'Belum ada tim yang mendaftar.'),
           }}
         >
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {listings.map((l) => {
               const isOwner = l.created_by === user?.id;
               return (

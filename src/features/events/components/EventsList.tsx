@@ -284,7 +284,7 @@ export default function EventsList() {
                   <span className="h-2 w-2 animate-pulse-soft rounded-full bg-primary" />
                   {t('Upcoming', 'Mendatang')} ({upcoming.length})
                 </h2>
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {upcoming.slice(1).map((e, i) => {
                     const spotsLeft = e.max_capacity - (e.event_rsvps?.length ?? 0);
                     const isRSVPed = rsvpIds.has(e.id);
@@ -344,7 +344,7 @@ export default function EventsList() {
             {past.length > 0 && (
               <>
                 <h2 className="mb-4 mt-10 font-display text-lg font-semibold text-muted-foreground">{t('Past Events', 'Event Sebelumnya')} ({past.length})</h2>
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {past.slice(0, 6).map((e) => (
                     <Card key={e.id} className="glass opacity-70">
                       <div className="relative h-24 overflow-hidden rounded-t-lg">

@@ -148,7 +148,7 @@ export default function ProjectsList() {
             emptyTitle: t('No projects found.', 'Tidak ada proyek ditemukan.'),
           }}
         >
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {projects.map((p) => (
               <Link key={p.id} href={`/projects/${p.id}`}>
                 <Card className="glass group h-full overflow-hidden transition-all hover:border-primary/40 hover:-translate-y-0.5">

@@ -121,7 +121,7 @@ export default function SpotlightList() {
             emptyTitle: t('Nothing on the shelf yet.', 'Belum ada yang tayang di etalase.'),
           }}
         >
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {items.map((item, i) => (
               <div key={item.id} className="relative rounded-xl border border-border p-5">
                 {i === 0 && (

@@ -65,7 +65,7 @@ export default function TalentsList() {
             emptyTitle: t('No talent profiles available yet.', 'Belum ada profil talent.'),
           }}
         >
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {filtered.map((tal) => (
               <Card key={tal.id} className="glass group transition-all hover:border-primary/40 hover:-translate-y-0.5">
                 <CardContent className="p-6">

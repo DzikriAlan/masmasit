@@ -119,7 +119,7 @@ export default function DirectoryList() {
             emptyTitle: t('No members found matching your filters.', 'Tidak ada member yang cocok dengan filter Anda.'),
           }}
         >
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {members.map((m) => (
                 <Link key={m.id} href={`/directory/${m.id}`}>
                   <Card className="glass group h-full transition-all hover:border-primary/40 hover:-translate-y-0.5">

@@ -120,7 +120,7 @@ export default function DashboardOverview() {
 
         {/* Quick Links */}
         <h2 className="mb-4 font-display text-xl font-semibold">{t('Quick Access', 'Akses Cepat')}</h2>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {quickLinks.map((link, i) => (
             <Link key={link.href} href={link.href}>
               <Card className={`group glass glass-hover h-full stagger-${(i % 6) + 1}`}>
