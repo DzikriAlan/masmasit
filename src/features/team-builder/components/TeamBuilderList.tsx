@@ -53,10 +53,6 @@ export default function TeamBuilderList() {
     }
   };
 
-  if (loading || !user) {
-    return <AppShell><LoadData minHeight="60vh" response={{ isLoading: true }} /></AppShell>;
-  }
-
   return (
     <AppShell>
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -65,7 +61,7 @@ export default function TeamBuilderList() {
           title={t('Team Builder', 'Team Builder')}
           subtitle={t('Assemble a team, roles graded automatically.', 'Susun tim, grade tiap role otomatis.')}
           action={
-            <Button onClick={() => setOpen((v) => !v)}>{t('New team', 'Tim baru')}</Button>
+            <Button onClick={() => setOpen((v) => !v)} disabled={loading || !user}>{t('New team', 'Tim baru')}</Button>
           }
         />
 
@@ -86,7 +82,7 @@ export default function TeamBuilderList() {
         <LoadData
           hideIcon
           response={{
-            isLoading: listLoading,
+            isLoading: loading || !user || listLoading,
             isEmpty: teams.length === 0,
             emptyTitle: t("You're not on a team yet.", 'Kamu belum punya tim.'),
           }}

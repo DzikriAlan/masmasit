@@ -48,14 +48,6 @@ export default function MyActivity() {
     await changeTalentsBookingStatus.mutateAsync({ bookingId, status });
   };
 
-  if (loading) {
-    return (
-      <AppShell>
-        <LoadData minHeight="60vh" response={{ isLoading: true }} />
-      </AppShell>
-    );
-  }
-
   return (
     <AppShell>
       <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
@@ -83,7 +75,7 @@ export default function MyActivity() {
                 <LoadData
                   hideIcon
                   response={{
-                    isLoading: fetchJobsMyApplications.isPending,
+                    isLoading: loading || fetchJobsMyApplications.isPending,
                     isEmpty: applications.length === 0,
                     emptyTitle: t('You have not applied to any jobs yet.', 'Anda belum melamar pekerjaan.'),
                   }}
@@ -118,7 +110,7 @@ export default function MyActivity() {
                 <LoadData
                   hideIcon
                   response={{
-                    isLoading: fetchCoursesMine.isPending,
+                    isLoading: loading || fetchCoursesMine.isPending,
                     isEmpty: enrollments.length === 0,
                     emptyTitle: t('You are not enrolled in any course yet.', 'Anda belum terdaftar di kursus manapun.'),
                   }}
