@@ -155,9 +155,13 @@
   }
   html {
     overflow-x: clip;
-    /* Reserves the scrollbar's width permanently so a dialog/sheet locking
-       body scroll (removing the scrollbar) doesn't widen the viewport and
-       shift fixed content like the navbar sideways. */
+    /* scrollbar-gutter only takes effect once overflow-y is something other
+       than its default `visible` — the root element's default computes as
+       visible even though the viewport itself always scrolls, so it was a
+       no-op without this. `scroll` (not `auto`) keeps the reserved gutter
+       — and thus the page width — identical whether a short page has
+       nothing to scroll or a dialog/sheet has just locked body scroll. */
+    overflow-y: scroll;
     scrollbar-gutter: stable;
   }
   body {
