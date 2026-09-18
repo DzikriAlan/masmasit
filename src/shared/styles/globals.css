@@ -155,6 +155,10 @@
   }
   html {
     overflow-x: clip;
+    /* Reserves the scrollbar's width permanently so a dialog/sheet locking
+       body scroll (removing the scrollbar) doesn't widen the viewport and
+       shift fixed content like the navbar sideways. */
+    scrollbar-gutter: stable;
   }
   body {
     @apply bg-background text-foreground;
