@@ -1,176 +1,217 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { Search, Loader2 } from 'lucide-react';
-import Link from 'next/link';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { AppShell } from '@/components/app-shell';
-import { TONE_TEXT, toneOf } from '@/shared/lib/tones';
-import { LoadData } from '@/components/load-data';
+import { toast } from 'sonner';
+
 import type { DataProjects } from '@/features/projects/types/projectsTypes';
 import { useProjectsControllers } from '@/features/projects/controllers/projectsControllers';
+import { ProjectsCard } from '@/features/projects/components/ProjectsCard';
+import { ProjectsPostForm, type ProjectsFormValues } from '@/features/projects/components/ProjectsPostForm';
+
+import { AppShell } from '@/components/app-shell';
+import { PageHeader } from '@/components/page-header';
+import { LoadData } from '@/components/load-data';
+import { BrowseToolbar } from '@/components/browse-toolbar';
+import { CardGridSkeleton } from '@/components/card-skeleton';
 import { useAuth } from '@/components/auth-provider';
 import { useLang } from '@/components/language-provider';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
+import { toneOf } from '@/shared/lib/tones';
 import { loginHref } from '@/shared/lib/utils';
+
+const EMPTY_FORM: ProjectsFormValues = { title: '', description: '', budget_min: '', budget_max: '', deadline: '' };
 
 export default function ProjectsList() {
   const { t } = useLang();
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('open');
-  const [showPost, setShowPost] = useState(false);
   const { user } = useAuth();
   const router = useRouter();
-
-  const [form, setForm] = useState({ title: '', description: '', budget_min: '', budget_max: '', deadline: '' });
-
   const { fetchProjects, storeProjects, setGetProjects } = useProjectsControllers();
 
-  const projects: DataProjects[] = fetchProjects.data ?? [];
-  const loading = fetchProjects.isPending;
-  const saving = storeProjects.isPending;
+  const [filters, setFilters] = useState({
+    search: '',
+    filter: { status: 'open' },
+    isComposerOpen: false,
+  });
+  const [form, setForm] = useState<ProjectsFormValues>(EMPTY_FORM);
 
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      setGetProjects({ search, statusFilter });
-    }, 300);
-    return () => clearTimeout(timeout);
-  }, [search, statusFilter, setGetProjects]);
+  const data = useMemo(() => {
+    const getBudget = (min: number | null, max: number | null) => {
+      if (!min && !max) return t('Budget negotiable', 'Budget negosiasi');
+      if (min && max) return `Rp ${(min / 1000000).toFixed(1)}–${(max / 1000000).toFixed(1)} jt`;
+      if (min) return `Rp ${(min / 1000000).toFixed(1)} jt+`;
+      return `${t('Up to', 'Hingga')} Rp ${((max as number) / 1000000).toFixed(1)} jt`;
+    };
 
-  const saveProject = async () => {
-    if (!user) { router.push(loginHref()); return; }
+    const getStatusLabel = (status: string) => {
+      const labels: Record<string, string> = {
+        open: t('Open', 'Terbuka'),
+        in_progress: t('In progress', 'Berjalan'),
+        completed: t('Completed', 'Selesai'),
+      };
+      return labels[status] ?? status.replace('_', ' ');
+    };
+
+    const getMappedProject = (project: DataProjects) => ({
+      id: project.id,
+      title: project.title,
+      description: project.description,
+      status: project.status,
+      statusLabel: getStatusLabel(project.status),
+      budget: getBudget(project.budget_min, project.budget_max),
+      deadline: project.deadline
+        ? new Date(project.deadline).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })
+        : null,
+      author: project.profiles?.full_name ?? t('Anonymous', 'Anonim'),
+    });
+
+    const list = (fetchProjects.data ?? []).map(getMappedProject);
+    const isFiltered = Boolean(filters.search) || filters.filter.status !== 'open';
+
+    return {
+      data: list,
+      isLoading: fetchProjects.isPending,
+      isError: fetchProjects.isError,
+      isEmpty: !fetchProjects.isPending && !fetchProjects.isError && list.length === 0,
+      errorTitle: t('Could not load projects.', 'Gagal memuat proyek.'),
+      errorSubtitle: t('Check your connection and try again.', 'Periksa koneksi lalu coba lagi.'),
+      emptyTitle: isFiltered
+        ? t('No projects match these filters.', 'Tidak ada proyek yang cocok.')
+        : t('No open projects right now.', 'Belum ada proyek terbuka saat ini.'),
+      emptySubtitle: isFiltered
+        ? t('Try another status, or a broader search.', 'Coba status lain, atau kata kunci yang lebih umum.')
+        : t('Post the first one and let members bid on it.', 'Pasang yang pertama dan biarkan member menawar.'),
+    };
+  }, [fetchProjects.data, fetchProjects.isPending, fetchProjects.isError, filters, t]);
+
+  const toolbarFilters = useMemo(
+    () => [
+      {
+        key: 'status',
+        label: t('Status', 'Status'),
+        value: filters.filter.status,
+        anyValue: 'open',
+        width: 'sm:w-48',
+        options: [
+          { value: 'open', label: t('Open for bids', 'Terbuka untuk tawaran') },
+          { value: 'in_progress', label: t('In progress', 'Sedang berjalan') },
+          { value: 'completed', label: t('Completed', 'Selesai') },
+          { value: 'all', label: t('Any status', 'Semua status') },
+        ],
+      },
+    ],
+    [filters.filter.status, t]
+  );
+
+  const editProjectsSearch = (value: string) => {
+    setFilters((prev) => ({ ...prev, search: value }));
+  };
+
+  const editProjectsFilter = (key: string, value: string) => {
+    setFilters((prev) => ({ ...prev, filter: { ...prev.filter, [key]: value } }));
+  };
+
+  const clearProjectsFilters = () => {
+    setFilters((prev) => ({ ...prev, search: '', filter: { status: 'open' } }));
+  };
+
+  const editProjectsComposer = () => {
+    if (!user) {
+      router.push(loginHref());
+      return;
+    }
+    setFilters((prev) => ({ ...prev, isComposerOpen: !prev.isComposerOpen }));
+  };
+
+  const editProjectsForm = (patch: Partial<ProjectsFormValues>) => {
+    setForm((prev) => ({ ...prev, ...patch }));
+  };
+
+  const clearProjectsForm = () => {
+    setForm(EMPTY_FORM);
+    setFilters((prev) => ({ ...prev, isComposerOpen: false }));
+  };
+
+  const submitProjects = async () => {
+    if (!user) {
+      router.push(loginHref());
+      return;
+    }
+
+    const getNumeric = (value: string) => (value ? Number.parseInt(value, 10) : null);
+
     try {
       await storeProjects.mutateAsync({
         user_id: user.id,
         title: form.title,
         description: form.description,
-        budget_min: form.budget_min ? parseInt(form.budget_min) : null,
-        budget_max: form.budget_max ? parseInt(form.budget_max) : null,
+        budget_min: getNumeric(form.budget_min),
+        budget_max: getNumeric(form.budget_max),
         deadline: form.deadline || null,
       });
     } catch {
       toast.error(t('Failed to post project', 'Gagal memposting proyek'));
       return;
     }
-    toast.success(t('Project posted!', 'Proyek diposting!'));
-    setShowPost(false);
-    setForm({ title: '', description: '', budget_min: '', budget_max: '', deadline: '' });
+
+    toast.success(t('Project posted', 'Proyek diposting'));
+    clearProjectsForm();
   };
 
-  const formatBudget = (min: number | null, max: number | null) => {
-    if (!min && !max) return t('Negotiable', 'Negosiasi');
-    if (min && max) return `Rp ${(min / 1000000).toFixed(1)}-${(max / 1000000).toFixed(1)}M`;
-    if (min) return `Rp ${(min / 1000000).toFixed(1)}M+`;
-    return `Up to Rp ${(max! / 1000000).toFixed(1)}M`;
-  };
-
-  const projectImages: Record<string, string> = {
-    'web': 'https://images.pexels.com/photos/1966452/pexels-photo-1966452.jpeg?auto=compress&cs=tinysrgb&h=160&w=400',
-    'mobile': 'https://images.pexels.com/photos/6078123/pexels-photo-6078123.jpeg?auto=compress&cs=tinysrgb&h=160&w=400',
-    'ai': 'https://images.pexels.com/photos/8386440/pexels-photo-8386440.jpeg?auto=compress&cs=tinysrgb&h=160&w=400',
-    'data': 'https://images.pexels.com/photos/590016/pexels-photo-590016.jpeg?auto=compress&cs=tinysrgb&h=160&w=400',
-    'design': 'https://images.pexels.com/photos/1966444/pexels-photo-1966444.jpeg?auto=compress&cs=tinysrgb&h=160&w=400',
-    default: 'https://images.pexels.com/photos/270404/pexels-photo-270404.jpeg?auto=compress&cs=tinysrgb&h=160&w=400',
-  };
-  const getProjectImage = (title: string) => {
-    const lower = title.toLowerCase();
-    if (lower.includes('web') || lower.includes('website')) return projectImages.web;
-    if (lower.includes('mobile') || lower.includes('app')) return projectImages.mobile;
-    if (lower.includes('ai') || lower.includes('ml') || lower.includes('chatbot')) return projectImages.ai;
-    if (lower.includes('data') || lower.includes('pipeline')) return projectImages.data;
-    if (lower.includes('design') || lower.includes('ui')) return projectImages.design;
-    return projectImages.default;
-  };
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setGetProjects({ search: filters.search, statusFilter: filters.filter.status });
+    }, 300);
+    return () => clearTimeout(timeout);
+  }, [filters.search, filters.filter.status, setGetProjects]);
 
   return (
     <AppShell>
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <h1 className={`font-display text-3xl font-semibold ${TONE_TEXT[toneOf('projects')]}`}>{t('Project Portal', 'Portal Proyek')}</h1>
-            <p className="mt-1 text-muted-foreground">{t('Outsource work or find freelance IT projects — all budgets in Rupiah, no middleman.', 'Outsource pekerjaan atau temukan proyek IT freelance — semua budget dalam Rupiah, tanpa perantara.')}</p>
-          </div>
-          <Button onClick={() => user ? setShowPost(!showPost) : router.push(loginHref())}>
-            {t('Post Project', 'Pasang Proyek')}
-          </Button>
-        </div>
+      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+        <PageHeader
+          eyebrow={t('Product · Work', 'Product · Kerja')}
+          tone={toneOf('projects')}
+          title={t('Project Portal', 'Portal Proyek')}
+          subtitle={t(
+            'Outsource work or win freelance IT projects — budgets in Rupiah, no middleman.',
+            'Outsource pekerjaan atau menangkan proyek IT freelance — budget dalam Rupiah, tanpa perantara.'
+          )}
+          action={
+            <Button onClick={editProjectsComposer}>
+              {filters.isComposerOpen ? t('Close composer', 'Tutup form') : t('Post project', 'Pasang proyek')}
+            </Button>
+          }
+        />
 
-        {showPost && (
-          <Card className="glass mb-6">
-            <CardHeader>
-              <CardTitle className="font-display">{t('Post a New Project', 'Pasang Proyek Baru')}</CardTitle>
-              <CardDescription>{t('Describe what you need and let members bid.', 'Jelaskan kebutuhan Anda dan biarkan member menawar.')}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2"><Label htmlFor="ptitle">{t('Title', 'Judul')}</Label><Input id="ptitle" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder={t('E-commerce website development', 'Pengembangan website e-commerce')} /></div>
-              <div className="space-y-2"><Label htmlFor="pdesc">{t('Description', 'Deskripsi')}</Label><Textarea id="pdesc" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder={t('Detailed project scope...', 'Detail scope proyek...')} className="min-h-[120px]" /></div>
-              <div className="grid gap-4 sm:grid-cols-3">
-                <div className="space-y-2"><Label htmlFor="pbmin">{t('Budget Min (IDR)', 'Budget Min (IDR)')}</Label><Input id="pbmin" type="number" value={form.budget_min} onChange={(e) => setForm({ ...form, budget_min: e.target.value })} placeholder="5000000" /></div>
-                <div className="space-y-2"><Label htmlFor="pbmax">{t('Budget Max (IDR)', 'Budget Max (IDR)')}</Label><Input id="pbmax" type="number" value={form.budget_max} onChange={(e) => setForm({ ...form, budget_max: e.target.value })} placeholder="15000000" /></div>
-                <div className="space-y-2"><Label htmlFor="pdead">{t('Deadline', 'Tenggat')}</Label><Input id="pdead" type="date" value={form.deadline} onChange={(e) => setForm({ ...form, deadline: e.target.value })} /></div>
-              </div>
-              <div className="flex gap-2">
-                <Button variant="outline" onClick={() => setShowPost(false)}>{t('Cancel', 'Batal')}</Button>
-                <Button onClick={saveProject} disabled={saving || !form.title || !form.description} className="gap-2">
-                  {saving && <Loader2 className="h-4 w-4 animate-spin" />} {t('Post Project', 'Pasang Proyek')}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+        {filters.isComposerOpen && (
+          <ProjectsPostForm
+            values={form}
+            saving={storeProjects.isPending}
+            onEditProjects={editProjectsForm}
+            onSubmitProjects={submitProjects}
+            onClearProjects={clearProjectsForm}
+          />
         )}
 
-        {/* Filters */}
-        <div className="mb-6 grid gap-3 sm:grid-cols-2">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input placeholder={t('Search projects...', 'Cari proyek...')} value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
-          </div>
-          <div className="flex gap-2">
-            {['open', 'in_progress', 'completed', 'all'].map((s) => (
-              <Button key={s} variant={statusFilter === s ? 'default' : 'outline'} size="sm" onClick={() => setStatusFilter(s)} className="capitalize">
-                {s.replace('_', ' ')}
-              </Button>
-            ))}
-          </div>
-        </div>
+        <BrowseToolbar
+          searchValue={filters.search}
+          searchPlaceholder={t('Search projects…', 'Cari proyek…')}
+          onEditSearch={editProjectsSearch}
+          filters={toolbarFilters}
+          onEditFilter={editProjectsFilter}
+          onClearFilters={clearProjectsFilters}
+        />
 
-        <LoadData
-          hideIcon
-          response={{
-            isLoading: loading,
-            isEmpty: projects.length === 0,
-            emptyTitle: t('No projects found.', 'Tidak ada proyek ditemukan.'),
-          }}
-        >
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {projects.map((p) => (
-              <Link key={p.id} href={`/projects/${p.id}`}>
-                <Card className="glass group h-full overflow-hidden transition-all hover:border-primary/40 hover:-translate-y-0.5">
-                  <div className="relative h-28 overflow-hidden">
-                    <img src={getProjectImage(p.title)} alt={p.title} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-card via-card/30 to-transparent" />
-                    <Badge variant={p.status === 'open' ? 'default' : 'secondary'} className="absolute top-3 left-3 capitalize text-xs backdrop-blur-md">{p.status.replace('_', ' ')}</Badge>
-                  </div>
-                  <CardContent className="p-5">
-                    <h3 className="truncate font-semibold">{p.title}</h3>
-                    <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{p.description}</p>
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      <Badge variant={p.status === 'open' ? 'default' : 'secondary'} className="capitalize text-xs">{p.status.replace('_', ' ')}</Badge>
-                      <Badge variant="outline" className={`text-xs ${TONE_TEXT[toneOf('projects')]}`}>{formatBudget(p.budget_min, p.budget_max)}</Badge>
-                      {p.deadline && <Badge variant="outline" className="text-xs">{new Date(p.deadline).toLocaleDateString('id-ID')}</Badge>}
-                    </div>
-                    <p className="mt-2 text-xs text-muted-foreground">{t('by', 'oleh')} {p.profiles?.full_name ?? t('Anonymous', 'Anonim')}</p>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
-          </div>
+        <LoadData hideIcon customLoader response={data}>
+          {data.isLoading ? (
+            <CardGridSkeleton count={6} chips={0} lines={3} />
+          ) : (
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {data.data.map((project) => (
+                <ProjectsCard key={project.id} project={project} />
+              ))}
+            </div>
+          )}
         </LoadData>
       </div>
     </AppShell>

@@ -1,210 +1,171 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { Search } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { AppShell } from '@/components/app-shell';
-import { TONE_CHIP, TONE_TEXT, toneOf } from '@/shared/lib/tones';
-import { LoadData } from '@/components/load-data';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import ExternalJobsList from '@/features/external-jobs/components/ExternalJobsList';
+
 import type { DataJobs } from '@/features/jobs/types/jobsTypes';
 import { useJobsControllers } from '@/features/jobs/controllers/jobsControllers';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
-import { MobileFilterDrawer, MobileFilterField } from '@/components/mobile-filter-drawer';
+import { JobsCard } from '@/features/jobs/components/JobsCard';
+import ExternalJobsList from '@/features/external-jobs/components/ExternalJobsList';
+
+import { AppShell } from '@/components/app-shell';
+import { PageHeader } from '@/components/page-header';
+import { LoadData } from '@/components/load-data';
+import { BrowseToolbar } from '@/components/browse-toolbar';
+import { CardGridSkeleton } from '@/components/card-skeleton';
 import { useAuth } from '@/components/auth-provider';
 import { useLang } from '@/components/language-provider';
-import { calcMatchScore, matchScoreColor } from '@/shared/lib/match-score';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { toneOf } from '@/shared/lib/tones';
 
-// Mirrors the real job card's shape (logo + title/subtitle, badge row,
-// salary line) so the grid doesn't visibly reflow once data arrives.
-function JobCardSkeleton() {
-  return (
-    <Card className="glass h-full">
-      <CardContent className="p-5">
-        <div className="flex items-start gap-3">
-          <Skeleton className="h-10 w-10 shrink-0 rounded-lg" />
-          <div className="min-w-0 flex-1 space-y-2">
-            <Skeleton className="h-4 w-3/4" />
-            <Skeleton className="h-3 w-1/2" />
-          </div>
-        </div>
-        <div className="mt-3 flex flex-wrap gap-2">
-          <Skeleton className="h-5 w-20 rounded-full" />
-          <Skeleton className="h-5 w-16 rounded-full" />
-        </div>
-        <Skeleton className="mt-3 h-4 w-24" />
-      </CardContent>
-    </Card>
-  );
-}
+const JOB_TYPES = ['full-time', 'part-time', 'contract', 'internship', 'remote'];
+const LOCATIONS = ['Jakarta', 'Bandung', 'Surabaya', 'Yogyakarta', 'Medan', 'Makassar', 'Bali', 'Remote'];
 
 export default function JobsList() {
   const { t } = useLang();
   const { user } = useAuth();
-  const [search, setSearch] = useState('');
-  const [typeFilter, setTypeFilter] = useState('all');
-  const [locationFilter, setLocationFilter] = useState('all');
+  const { fetchJobs, setGetJobs } = useJobsControllers(user?.id);
 
-  const { fetchJobs, fetchJobsUserSkills, setGetJobs } = useJobsControllers(user?.id);
+  const [filters, setFilters] = useState({
+    search: '',
+    filter: { jobType: 'all', location: 'all' },
+  });
 
-  const jobs: DataJobs[] = fetchJobs.data ?? [];
-  const userSkills = fetchJobsUserSkills.data ?? [];
-  const loading = fetchJobs.isPending;
+  const data = useMemo(() => {
+    const getSalary = (min: number | null, max: number | null) => {
+      if (!min && !max) return t('Salary undisclosed', 'Gaji tidak disebutkan');
+      if (min && max) return `Rp ${(min / 1000000).toFixed(0)}-${(max / 1000000).toFixed(0)} jt`;
+      if (min) return `Rp ${(min / 1000000).toFixed(0)} jt+`;
+      return `${t('Up to', 'Hingga')} Rp ${((max as number) / 1000000).toFixed(0)} jt`;
+    };
+
+    const getDeadline = (deadline: string | null) =>
+      deadline ? `${t('Closes', 'Tutup')} ${new Date(deadline).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}` : null;
+
+    const getMappedJob = (job: DataJobs) => ({
+      id: job.id,
+      title: job.title,
+      companyName: job.companies?.name ?? t('Unknown company', 'Perusahaan tidak diketahui'),
+      companyLogo: job.companies?.logo_url ?? null,
+      jobType: job.job_type.replace('-', ' '),
+      location: job.location,
+      salary: getSalary(job.salary_min, job.salary_max),
+      deadline: getDeadline(job.deadline),
+    });
+
+    const list = (fetchJobs.data ?? []).map(getMappedJob);
+    const isFiltered = Boolean(filters.search) || filters.filter.jobType !== 'all' || filters.filter.location !== 'all';
+
+    return {
+      data: list,
+      isLoading: fetchJobs.isPending,
+      isError: fetchJobs.isError,
+      isEmpty: !fetchJobs.isPending && !fetchJobs.isError && list.length === 0,
+      errorTitle: t('Could not load jobs.', 'Gagal memuat lowongan.'),
+      errorSubtitle: t('Check your connection and try again.', 'Periksa koneksi lalu coba lagi.'),
+      emptyTitle: isFiltered
+        ? t('No jobs match these filters.', 'Tidak ada lowongan yang cocok.')
+        : t('No roles posted yet.', 'Belum ada lowongan yang dipasang.'),
+      emptySubtitle: isFiltered
+        ? t('Try a broader search, or clear the filters.', 'Coba kata kunci lain, atau hapus filternya.')
+        : t('Companies post here first — check back soon.', 'Perusahaan memasang di sini lebih dulu — cek lagi nanti.'),
+      isFiltered,
+    };
+  }, [fetchJobs.data, fetchJobs.isPending, fetchJobs.isError, filters, t]);
+
+  const toolbarFilters = useMemo(
+    () => [
+      {
+        key: 'jobType',
+        label: t('Job type', 'Tipe pekerjaan'),
+        value: filters.filter.jobType,
+        options: [
+          { value: 'all', label: t('All types', 'Semua tipe') },
+          ...JOB_TYPES.map((type) => ({ value: type, label: type.replace('-', ' ') })),
+        ],
+      },
+      {
+        key: 'location',
+        label: t('Location', 'Lokasi'),
+        value: filters.filter.location,
+        options: [
+          { value: 'all', label: t('All locations', 'Semua lokasi') },
+          ...LOCATIONS.map((location) => ({ value: location, label: location })),
+        ],
+      },
+    ],
+    [filters.filter, t]
+  );
+
+  const editJobsSearch = (value: string) => {
+    setFilters((prev) => ({ ...prev, search: value }));
+  };
+
+  const editJobsFilter = (key: string, value: string) => {
+    setFilters((prev) => ({ ...prev, filter: { ...prev.filter, [key]: value } }));
+  };
+
+  const clearJobsFilters = () => {
+    setFilters({ search: '', filter: { jobType: 'all', location: 'all' } });
+  };
 
   useEffect(() => {
     const timeout = setTimeout(() => {
-      setGetJobs({ search, typeFilter, locationFilter });
+      setGetJobs({
+        search: filters.search,
+        typeFilter: filters.filter.jobType,
+        locationFilter: filters.filter.location,
+      });
     }, 300);
     return () => clearTimeout(timeout);
-  }, [search, typeFilter, locationFilter, setGetJobs]);
-
-  const jobTypes = ['full-time', 'part-time', 'contract', 'internship', 'remote'];
-  const locations = ['Jakarta', 'Bandung', 'Surabaya', 'Yogyakarta', 'Medan', 'Makassar', 'Bali', 'Remote'];
-
-  const formatSalary = (min: number | null, max: number | null) => {
-    if (!min && !max) return null;
-    if (min && max) return `Rp ${(min / 1000000).toFixed(0)}-${(max / 1000000).toFixed(0)}M`;
-    if (min) return `Rp ${(min / 1000000).toFixed(0)}M+`;
-    return `Up to Rp ${(max! / 1000000).toFixed(0)}M`;
-  };
+  }, [filters, setGetJobs]);
 
   return (
     <AppShell>
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        {/* One header row, same shape as every other browse page (title
-            left, actions right) — the MasmasIT/web tab switcher rides
-            along on the right instead of adding its own full-width row, so
-            the filters below start at the same height as Projects/Courses/
-            etc. regardless of which page you land on. */}
+      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+        <PageHeader
+          eyebrow={t('Product · Work', 'Product · Kerja')}
+          tone={toneOf('jobs')}
+          title={t('Job Portal', 'Lowongan Pekerjaan')}
+          subtitle={t(
+            'Roles from verified Indonesian tech companies, plus remote roles from around the web.',
+            'Lowongan dari perusahaan tech terverifikasi di Indonesia, plus peran remote dari seluruh web.'
+          )}
+          action={
+            <Link href="/jobs/post">
+              <Button variant="outline">{t('Register company', 'Daftar perusahaan')}</Button>
+            </Link>
+          }
+        />
+
         <Tabs defaultValue="masmasit">
-          <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <h1 className={`font-display text-3xl font-semibold ${TONE_TEXT[toneOf('jobs')]}`}>{t('Job Portal', 'Lowongan Pekerjaan')}</h1>
-              <p className="mt-1 text-muted-foreground">{t('Discover opportunities from verified Indonesian tech companies — from startups to enterprises.', 'Temukan peluang dari perusahaan tech terverifikasi di Indonesia — dari startup hingga enterprise.')}</p>
-            </div>
-            <div className="flex flex-wrap items-center gap-3">
-              <TabsList>
-                <TabsTrigger value="masmasit">{t('Posted on MasmasIT', 'Diposting di MasmasIT')}</TabsTrigger>
-                <TabsTrigger value="external">{t('From around the web', 'Dari seluruh web')}</TabsTrigger>
-              </TabsList>
-              <Link href="/jobs/post">
-                <Button variant="outline">{t('Register Company', 'Daftar Perusahaan')}</Button>
-              </Link>
-            </div>
-          </div>
+          <TabsList className="mb-6">
+            <TabsTrigger value="masmasit">{t('Posted on MasmasIT', 'Diposting di MasmasIT')}</TabsTrigger>
+            <TabsTrigger value="external">{t('From around the web', 'Dari seluruh web')}</TabsTrigger>
+          </TabsList>
 
           <TabsContent value="masmasit">
-        {/* Filters: search always shows; Job Type/Location ride inline from sm
-            up, and collapse into a bottom-sheet triggered by a Filter button
-            below sm. */}
-        <div className="mb-6 space-y-3">
-          <div className="grid gap-3 sm:grid-cols-3">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input placeholder={t('Search jobs...', 'Cari lowongan...')} value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
-            </div>
-            <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="hidden sm:flex"><SelectValue placeholder={t('Job Type', 'Tipe Pekerjaan')} /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t('All Types', 'Semua Tipe')}</SelectItem>
-                {jobTypes.map((jt) => <SelectItem key={jt} value={jt} className="capitalize">{jt}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <Select value={locationFilter} onValueChange={setLocationFilter}>
-              <SelectTrigger className="hidden sm:flex"><SelectValue placeholder={t('Location', 'Lokasi')} /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t('All Locations', 'Semua Lokasi')}</SelectItem>
-                {locations.map((l) => <SelectItem key={l} value={l}>{l}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
+            <BrowseToolbar
+              searchValue={filters.search}
+              searchPlaceholder={t('Search roles or companies…', 'Cari posisi atau perusahaan…')}
+              onEditSearch={editJobsSearch}
+              filters={toolbarFilters}
+              onEditFilter={editJobsFilter}
+              onClearFilters={clearJobsFilters}
+            />
 
-          <MobileFilterDrawer
-            triggerLabel={t('Filter', 'Filter')}
-            title={t('Filter your search', 'Filter pencarianmu')}
-            applyLabel={t('Refine Jobs', 'Perbarui Lowongan')}
-            activeCount={(typeFilter !== 'all' ? 1 : 0) + (locationFilter !== 'all' ? 1 : 0)}
-          >
-            <MobileFilterField label={t('Job Type', 'Tipe Pekerjaan')}>
-              <Select value={typeFilter} onValueChange={setTypeFilter}>
-                <SelectTrigger><SelectValue placeholder={t('Job Type', 'Tipe Pekerjaan')} /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t('All Types', 'Semua Tipe')}</SelectItem>
-                  {jobTypes.map((jt) => <SelectItem key={jt} value={jt} className="capitalize">{jt}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </MobileFilterField>
-            <MobileFilterField label={t('Location', 'Lokasi')}>
-              <Select value={locationFilter} onValueChange={setLocationFilter}>
-                <SelectTrigger><SelectValue placeholder={t('Location', 'Lokasi')} /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t('All Locations', 'Semua Lokasi')}</SelectItem>
-                  {locations.map((l) => <SelectItem key={l} value={l}>{l}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </MobileFilterField>
-          </MobileFilterDrawer>
-        </div>
-
-        <LoadData
-          hideIcon
-          customLoader
-          response={{
-            isLoading: loading,
-            isEmpty: jobs.length === 0,
-            emptyTitle: t('No jobs found. Check back soon!', 'Belum ada lowongan. Cek lagi nanti!'),
-          }}
-        >
-          {loading ? (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {Array.from({ length: 6 }).map((_, i) => <JobCardSkeleton key={i} />)}
-            </div>
-          ) : (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {jobs.map((job) => (
-              <Link key={job.id} href={`/jobs/${job.id}`}>
-                <Card className="glass group h-full transition-all hover:border-primary/40 hover:-translate-y-0.5">
-                  <CardContent className="p-5">
-                    <div className="flex items-start gap-3">
-                      <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${TONE_CHIP[toneOf('jobs')]}`}>
-                        {job.companies?.logo_url ? (
-                          <img src={job.companies.logo_url} alt="" className="h-10 w-10 rounded-lg object-cover" />
-                        ) : (
-                          <span className="text-sm font-semibold">{(job.companies?.name ?? '?').charAt(0).toUpperCase()}</span>
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="truncate font-semibold">{job.title}</h3>
-                        <p className="text-sm text-muted-foreground">{job.companies?.name ?? t('Unknown company', 'Perusahaan tidak diketahui')}</p>
-                      </div>
-                    </div>
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      <Badge variant="secondary" className="capitalize text-xs">{job.job_type.replace('-', ' ')}</Badge>
-                      {job.location && <Badge variant="outline" className="text-xs">{job.location}</Badge>}
-                    </div>
-                    {formatSalary(job.salary_min, job.salary_max) && (
-                      <p className="mt-2 text-sm text-success">
-                        {formatSalary(job.salary_min, job.salary_max)}
-                      </p>
-                    )}
-                    {job.deadline && (
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        {t('Deadline', 'Tenggat')}: {new Date(job.deadline).toLocaleDateString('id-ID')}
-                      </p>
-                    )}
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
-          </div>
-          )}
-        </LoadData>
+            <LoadData hideIcon customLoader response={data}>
+              {data.isLoading ? (
+                <CardGridSkeleton count={6} chips={2} lines={1} />
+              ) : (
+                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                  {data.data.map((job) => (
+                    <JobsCard key={job.id} job={job} />
+                  ))}
+                </div>
+              )}
+            </LoadData>
           </TabsContent>
 
           <TabsContent value="external">
