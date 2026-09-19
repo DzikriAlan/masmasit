@@ -96,9 +96,20 @@ const roleFromJob = (title: string, tags: string[]): ExternalJobRole => {
   return 'software';
 };
 
-export const getExternalJobs = async (): Promise<ExternalJob[]> => {
+// A caller-supplied query is forwarded to Remotive's own `search` param
+// (nothing is stored on our side). With one, the developer/engineer title
+// gate is dropped — otherwise searching "designer" could never return
+// anything — while the staff/principal/lead/hybrid exclusion stays.
+const MAX_QUERY_LENGTH = 60;
+
+export const getExternalJobs = async (query?: string): Promise<ExternalJob[]> => {
+  const q = query?.trim().slice(0, MAX_QUERY_LENGTH) ?? '';
+  const endpoints = q
+    ? [`https://remotive.com/api/remote-jobs?search=${encodeURIComponent(q)}&limit=100`]
+    : REMOTIVE_ENDPOINTS;
+
   const responses = await Promise.all(
-    REMOTIVE_ENDPOINTS.map((url) =>
+    endpoints.map((url) =>
       fetch(url, {
         // Next.js data cache: one shared fetch per hour across every
         // visitor, not one fetch per page view — this is what keeps us
@@ -122,7 +133,7 @@ export const getExternalJobs = async (): Promise<ExternalJob[]> => {
   }
 
   return Array.from(byId.values())
-    .filter((j) => INCLUDE_TITLE.test(j.title) && !EXCLUDE_TITLE.test(j.title))
+    .filter((j) => (q || INCLUDE_TITLE.test(j.title)) && !EXCLUDE_TITLE.test(j.title))
     .sort((a, b) => new Date(b.publication_date).getTime() - new Date(a.publication_date).getTime())
     .map((j) => ({
       id: j.id,

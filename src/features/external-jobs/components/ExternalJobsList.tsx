@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Search, ExternalLink } from 'lucide-react';
 
 import { LoadData } from '@/components/load-data';
@@ -81,8 +81,8 @@ const roleLabels: Record<ExternalJobRole, { en: string; id: string }> = {
  * Real remote engineer/developer listings, fetched live on every page load
  * (via /api/v1/external-jobs → Remotive's public API, cached ~1h server
  * side — see server/jobs/externalJobsService.ts) rather than stored in our
- * own database. Search and the country/role filters narrow the one fetched
- * batch client-side; applying leaves the site for the original posting.
+ * own database. The search box is the scrape query (forwarded to Remotive, never stored);
+ * the country/role filters narrow the fetched batch client-side; applying leaves the site for the original posting.
  */
 // Remotive's `location` is often several regions in one string, e.g.
 // "LATAM, Europe, USA, Canada, APAC" — split so the filter dropdown lists
@@ -96,7 +96,13 @@ export default function ExternalJobsList() {
   const [search, setSearch] = useState('');
   const [country, setCountry] = useState('all');
   const [role, setRole] = useState('all');
-  const { fetchExternalJobs } = useExternalJobsControllers();
+  // The search box is the scrape query: debounced, then sent to the API.
+  const [query, setQuery] = useState('');
+  useEffect(() => {
+    const timeout = setTimeout(() => setQuery(search.trim()), 500);
+    return () => clearTimeout(timeout);
+  }, [search]);
+  const { fetchExternalJobs } = useExternalJobsControllers(query);
 
   const allJobs = fetchExternalJobs.data ?? [];
 
@@ -106,14 +112,12 @@ export default function ExternalJobsList() {
   );
 
   const jobs = useMemo(() => {
-    const q = search.trim().toLowerCase();
     return allJobs.filter((job) => {
       if (country !== 'all' && !splitLocations(job.location).includes(country)) return false;
       if (role !== 'all' && job.role_category !== role) return false;
-      if (q && !job.title.toLowerCase().includes(q) && !job.company_name.toLowerCase().includes(q)) return false;
       return true;
     });
-  }, [allJobs, search, country, role]);
+  }, [allJobs, country, role]);
 
   return (
     <div>
@@ -133,7 +137,7 @@ export default function ExternalJobsList() {
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder={t('Search title or company...', 'Cari judul atau perusahaan...')}
+              placeholder={t('Search jobs (e.g. react, devops)...', 'Cari lowongan (mis. react, devops)...')}
               className="pl-9"
             />
           </div>

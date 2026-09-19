@@ -1,17 +1,18 @@
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 
 import { unwrapApiResponse } from '@/shared/lib/apiResponse';
 
 import { getExternalJobs } from '../services/externalJobsServices';
 
-export const useExternalJobsControllers = () => {
-  // One request for the whole (cached, server-side) result set; search and
-  // the country/role filters narrow it client-side rather than each
-  // re-hitting the API — Remotive's own terms ask for infrequent requests.
+export const useExternalJobsControllers = (query = '') => {
+  // `query` is the scrape query: it is forwarded to Remotive (server-side,
+  // cached ~1h per query, never stored in our DB). Country/role filters
+  // narrow the returned batch client-side, so only a new query re-hits the API.
   const fetchExternalJobs = useQuery({
-    queryKey: ['externalJobs'],
-    queryFn: async () => unwrapApiResponse(await getExternalJobs()) ?? [],
+    queryKey: ['externalJobs', query],
+    queryFn: async () => unwrapApiResponse(await getExternalJobs(query)) ?? [],
     staleTime: 60 * 60 * 1000,
+    placeholderData: keepPreviousData,
   });
 
   return { fetchExternalJobs };
