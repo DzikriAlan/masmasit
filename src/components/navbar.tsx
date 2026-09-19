@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useState, useEffect, useRef } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { Menu, X } from 'lucide-react';
+import { Menu, MessageCircle, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -19,39 +19,48 @@ import { useLang } from '@/components/language-provider';
 import { NotificationBell } from '@/features/notifications/components/NotificationBell';
 import { GlobalSearch } from '@/features/search/components/GlobalSearch';
 import { StableLabel } from '@/components/stable-label';
-import { waLink } from '@/shared/lib/external';
 import { cn } from '@/shared/lib/utils';
 import mmitLogo from '@/shared/images/mmit-transparent.png';
 import mmitLogoWhite from '@/shared/images/mmitwhite-transparent.png';
 
 /* Header structure is fixed by the PRD: two dropdowns (Product, Ecosystem)
-   and three direct links (About, Discover, Contact Us). No "Home" — the
-   wordmark on the left is the way back to the landing page. */
+   and two direct links (Discover, Contact Us). No "Home" — the
+   wordmark on the left is the way back to the landing page.
+
+   Product groups what a member DOES on the platform (build a team, work,
+   show what shipped); Ecosystem is everything else around that — talent,
+   business, community. Team Collabs/Jobs/Projects moved here from
+   Ecosystem's old "Work" column because Team Collabs is the same
+   team-forming idea as Team Builder, and Jobs/Projects are the natural next
+   step once a team exists. */
 
 type MenuItem = { href: string; en: string; id: string; descEn: string; descId: string; external?: boolean };
+type MenuColumn = { eyebrowEn: string; eyebrowId: string; items: MenuItem[] };
 
-const productItems: MenuItem[] = [
+const productColumns: MenuColumn[] = [
   {
-    href: '/team-builder',
-    en: 'Team Builder', id: 'Team Builder',
-    descEn: 'Assemble a team, roles graded automatically', descId: 'Susun tim, grade tiap role otomatis',
+    eyebrowEn: 'Build', eyebrowId: 'Bangun',
+    items: [
+      { href: '/team-builder', en: 'Team Builder', id: 'Team Builder', descEn: 'Assemble a team, roles graded automatically', descId: 'Susun tim, grade tiap role otomatis' },
+      { href: '/team-collabs', en: 'Team Collabs', id: 'Team Collabs', descEn: 'Teams building R&D together', descId: 'Tim yang bangun R&D bareng' },
+    ],
   },
-  {
-    href: '/spotlight',
-    en: 'Spotlight', id: 'Spotlight',
-    descEn: 'Products and services members are shipping', descId: 'Produk dan jasa yang dirilis member',
-  },
-];
-
-const ecosystemColumns: { eyebrowEn: string; eyebrowId: string; items: MenuItem[] }[] = [
   {
     eyebrowEn: 'Work', eyebrowId: 'Kerja',
     items: [
       { href: '/jobs', en: 'Jobs', id: 'Lowongan', descEn: 'Full-time & freelance roles', descId: 'Peran full-time & freelance' },
       { href: '/projects', en: 'Projects', id: 'Proyek', descEn: 'Client projects open for bids', descId: 'Proyek klien yang dibuka' },
-      { href: '/team-collabs', en: 'Team Collabs', id: 'Team Collabs', descEn: 'Teams building R&D together', descId: 'Tim yang bangun R&D bareng' },
     ],
   },
+  {
+    eyebrowEn: 'Showcase', eyebrowId: 'Etalase',
+    items: [
+      { href: '/spotlight', en: 'Spotlight', id: 'Spotlight', descEn: 'Products and services members are shipping', descId: 'Produk dan jasa yang dirilis member' },
+    ],
+  },
+];
+
+const ecosystemColumns: MenuColumn[] = [
   {
     eyebrowEn: 'Talent', eyebrowId: 'Talent',
     items: [
@@ -76,8 +85,6 @@ const ecosystemColumns: { eyebrowEn: string; eyebrowId: string; items: MenuItem[
     ],
   },
 ];
-
-const CONTACT_WA = waLink('Halo MasmasIT, saya ingin bertanya.');
 
 export function Navbar() {
   const [open, setOpen] = useState(false);
@@ -150,10 +157,9 @@ export function Navbar() {
   };
 
   /* Mobile drawer: the same structure, flattened into one scrollable list. */
-  const mobileGroups = [
-    { titleEn: 'Product', titleId: 'Product', items: productItems },
-    ...ecosystemColumns.map((c) => ({ titleEn: c.eyebrowEn, titleId: c.eyebrowId, items: c.items })),
-  ];
+  const mobileGroups = [...productColumns, ...ecosystemColumns].map((c) => ({
+    titleEn: c.eyebrowEn, titleId: c.eyebrowId, items: c.items,
+  }));
 
   const triggerClass = (active: boolean) =>
     cn(
@@ -214,13 +220,6 @@ export function Navbar() {
           </Link>
 
           <nav ref={navRef} className="hidden items-center gap-0.5 lg:flex">
-            <Link href="/about" className={linkClass(pathname === '/about')}>
-              <StableLabel en="About" id="Tentang" />
-              {pathname === '/about' && (
-                <span className="absolute -bottom-px left-3.5 right-3.5 h-0.5 rounded-full bg-foreground" />
-              )}
-            </Link>
-
             <div className="relative" onPointerEnter={openMenu('product')} onPointerLeave={scheduleCloseMenu}>
               <button
                 type="button"
@@ -233,8 +232,17 @@ export function Navbar() {
               </button>
 
               {menu === 'product' && (
-                <div className="absolute left-1/2 top-full z-50 mt-2 w-[320px] -translate-x-1/2 animate-fade-up rounded-xl border border-border bg-white p-4 shadow-xl">
-                  <div className="flex flex-col gap-1">{productItems.map(panelItem)}</div>
+                <div className="absolute left-1/2 top-full z-50 mt-2 w-[min(640px,calc(100vw-3rem))] -translate-x-1/2 animate-fade-up rounded-xl border border-border bg-white p-6 shadow-xl">
+                  <div className="grid grid-cols-3 gap-6">
+                    {productColumns.map((col) => (
+                      <div key={col.eyebrowEn}>
+                        <p className="eyebrow text-muted-foreground">
+                          {t(col.eyebrowEn, col.eyebrowId)}
+                        </p>
+                        <div className="mt-3 flex flex-col gap-1">{col.items.map(panelItem)}</div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
@@ -251,13 +259,13 @@ export function Navbar() {
               </button>
 
               {menu === 'ecosystem' && (
-                <div className="absolute left-1/2 top-full z-50 mt-2 w-[min(880px,calc(100vw-3rem))] -translate-x-1/2 animate-fade-up rounded-xl border border-border bg-white p-6 shadow-xl">
-                  <div className="grid grid-cols-4 gap-6">
+                <div className="absolute left-1/2 top-full z-50 mt-2 w-[min(640px,calc(100vw-3rem))] -translate-x-1/2 animate-fade-up rounded-xl border border-border bg-white p-6 shadow-xl">
+                  <div className="grid grid-cols-3 gap-6">
                     {ecosystemColumns.map((col, i) => (
                       <div
                         key={col.eyebrowEn}
-                        /* Community is the ecosystem's own quarter, not a
-                           fourth category of listings — a rule sets it apart. */
+                        /* Community is the ecosystem's own third, not a
+                           regular category of listings — a rule sets it apart. */
                         className={i === ecosystemColumns.length - 1 ? 'border-l border-border pl-6' : ''}
                       >
                         <p className="eyebrow text-muted-foreground">
@@ -278,18 +286,23 @@ export function Navbar() {
               )}
             </Link>
 
-            <a href={CONTACT_WA} target="_blank" rel="noreferrer" className={linkClass(false)}>
+            <Link href="/contact" className={linkClass(pathname === '/contact')}>
               <StableLabel en="Contact Us" id="Hubungi Kami" />
-            </a>
+              {pathname === '/contact' && (
+                <span className="absolute -bottom-px left-3.5 right-3.5 h-0.5 rounded-full bg-foreground" />
+              )}
+            </Link>
           </nav>
 
           <div className="hidden shrink-0 items-center gap-1.5 lg:flex">
             <GlobalSearch />
             {user && (
-              <Link href="/pesan">
-                <Button variant="ghost" size="sm" className="h-10 text-base font-medium text-foreground/70">
-                  <StableLabel en="Messages" id="Pesan" />
-                </Button>
+              <Link
+                href="/pesan"
+                aria-label={t('Messages', 'Pesan')}
+                className="flex h-10 w-10 items-center justify-center rounded-md text-foreground/70 transition-colors hover:bg-muted hover:text-foreground"
+              >
+                <MessageCircle className="h-5 w-5" />
               </Link>
             )}
             {user && <NotificationBell />}
@@ -377,17 +390,6 @@ export function Navbar() {
         {open && (
           <div className="max-h-[calc(100vh-4rem)] overflow-y-auto border-t border-border bg-white lg:hidden animate-fade-up">
             <nav className="flex flex-col gap-0.5 px-4 py-4">
-              <Link
-                href="/about"
-                onClick={() => setOpen(false)}
-                className={cn(
-                  'rounded-md px-3 py-2.5 text-base font-medium transition-colors hover:bg-muted',
-                  pathname === '/about' ? 'bg-primary/5 text-primary' : 'text-foreground'
-                )}
-              >
-                {t('About', 'Tentang')}
-              </Link>
-
               {mobileGroups.map((group) => (
                 <div key={group.titleEn} className="mt-3">
                   <p className="eyebrow px-3 text-muted-foreground">{t(group.titleEn, group.titleId)}</p>
@@ -420,15 +422,16 @@ export function Navbar() {
                 >
                   {t('Discover', 'Discover')}
                 </Link>
-                <a
-                  href={CONTACT_WA}
-                  target="_blank"
-                  rel="noreferrer"
+                <Link
+                  href="/contact"
                   onClick={() => setOpen(false)}
-                  className="rounded-md px-3 py-2.5 text-base font-medium text-foreground transition-colors hover:bg-muted"
+                  className={cn(
+                    'rounded-md px-3 py-2.5 text-base font-medium transition-colors hover:bg-muted',
+                    pathname === '/contact' ? 'bg-primary/5 text-primary' : 'text-foreground'
+                  )}
                 >
                   {t('Contact Us', 'Hubungi Kami')}
-                </a>
+                </Link>
                 {user && (
                   <Link
                     href="/pesan"

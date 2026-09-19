@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { Bell } from 'lucide-react';
 import { useAuth } from '@/components/auth-provider';
 import { useLang } from '@/components/language-provider';
 import { Button } from '@/components/ui/button';
-import { StableLabel } from '@/components/stable-label';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import Link from 'next/link';
@@ -82,11 +82,12 @@ export function NotificationBell() {
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen(!open)}
-        className="flex h-10 items-center gap-1.5 rounded-md px-3 text-base font-medium text-foreground/70 transition-colors hover:bg-muted hover:text-foreground"
+        aria-label={t('Notifications', 'Notifikasi')}
+        className="relative flex h-10 w-10 items-center justify-center rounded-md text-foreground/70 transition-colors hover:bg-muted hover:text-foreground"
       >
-        <StableLabel en="Notifications" id="Notifikasi" />
+        <Bell className="h-5 w-5" />
         {unreadCount > 0 && (
-          <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground">
+          <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}

@@ -2,12 +2,12 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { Search } from 'lucide-react';
 import { useAuth } from '@/components/auth-provider';
 import { useLang } from '@/components/language-provider';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { StableLabel } from '@/components/stable-label';
 
 import type { DataSearch } from '@/features/search/types/searchTypes';
 import { useSearchControllers } from '@/features/search/controllers/searchControllers';
@@ -57,10 +57,10 @@ export function GlobalSearch() {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="flex h-10 items-center gap-2 rounded-md px-3 text-base font-medium text-foreground/70 transition-colors hover:bg-muted hover:text-foreground"
+        aria-label={t('Search', 'Cari')}
+        className="flex h-10 w-10 items-center justify-center rounded-md text-foreground/70 transition-colors hover:bg-muted hover:text-foreground"
       >
-        <StableLabel en="Search" id="Cari" className="justify-items-end" />
-        <kbd className="hidden rounded border border-border px-1.5 py-0.5 font-mono text-[10px] leading-none text-muted-foreground lg:inline">⌘K</kbd>
+        <Search className="h-5 w-5" />
       </button>
 
       <Dialog open={open} onOpenChange={setOpen}>
