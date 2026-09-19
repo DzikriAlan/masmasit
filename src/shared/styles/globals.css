@@ -164,6 +164,14 @@
     overflow-y: scroll;
     scrollbar-gutter: stable;
   }
+  /* Radix dialogs/sheets (react-remove-scroll) pad the body by the
+     scrollbar's width to hide the scrollbar disappearing. The scrollbar
+     never disappears here (html is overflow-y: scroll), so that padding
+     would itself shift the page — cancel it. */
+  html body[data-scroll-locked] {
+    margin-right: 0 !important;
+    padding-right: 0 !important;
+  }
   body {
     @apply bg-background text-foreground;
     overflow-x: clip;
