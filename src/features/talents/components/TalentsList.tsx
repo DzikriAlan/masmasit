@@ -1,19 +1,21 @@
 'use client';
 
-import { useState } from 'react';
-import { Search } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import Link from 'next/link';
+import { MapPin } from 'lucide-react';
 
 import type { Talent } from '@/features/talents/types/talentsTypes';
 import { useTalentsControllers } from '@/features/talents/controllers/talentsControllers';
+
 import { AppShell } from '@/components/app-shell';
-import { TONE_CHIP, TONE_TEXT, toneOf } from '@/shared/lib/tones';
+import { PageHeader } from '@/components/page-header';
 import { LoadData } from '@/components/load-data';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { BrowseToolbar } from '@/components/browse-toolbar';
+import { CardGridSkeleton } from '@/components/card-skeleton';
 import { useLang } from '@/components/language-provider';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { TONE_CHIP, toneOf } from '@/shared/lib/tones';
 
 const dummyTalents: Talent[] = [
   { id: 'dummy-t1', full_name: 'Rani Saraswati', bio: 'Senior UX Designer with 6 years at Tokopedia and Gojek. I help designers build portfolios that get hired and teach UX research methods.', avatar_url: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&h=200&w=200', location: 'Bandung, Indonesia', linkedin_url: 'https://linkedin.com/in/ranisaraswati', calendly_url: null, whatsapp: null, _isDummy: true },
@@ -25,75 +27,146 @@ const dummyTalents: Talent[] = [
 
 export default function TalentsList() {
   const { t } = useLang();
-  const [search, setSearch] = useState('');
-
   const { fetchTalents } = useTalentsControllers();
 
-  const loading = fetchTalents.isPending;
+  const [filters, setFilters] = useState({
+    search: '',
+    filter: { location: 'all' },
+  });
 
-  const mergeDummyTalents = (dbTalents: Talent[]) => {
-    const realNames = new Set(dbTalents.map((t2) => t2.full_name?.toLowerCase()));
-    return [...dbTalents, ...dummyTalents.filter((d) => !realNames.has(d.full_name?.toLowerCase()))];
+  const data = useMemo(() => {
+    const getMergedTalents = (dbTalents: Talent[]) => {
+      const realNames = new Set(dbTalents.map((talent) => talent.full_name?.toLowerCase()));
+      return [...dbTalents, ...dummyTalents.filter((dummy) => !realNames.has(dummy.full_name?.toLowerCase()))];
+    };
+
+    const getMappedTalent = (talent: Talent) => ({
+      id: talent.id,
+      name: talent.full_name ?? t('Anonymous', 'Anonim'),
+      bio: talent.bio ?? t('IT professional ready to help.', 'Profesional IT siap membantu.'),
+      avatarUrl: talent.avatar_url,
+      location: talent.location,
+      initial: (talent.full_name ?? '?').charAt(0).toUpperCase(),
+      linkedinUrl: talent.linkedin_url,
+    });
+
+    const getMatchesFilters = (talent: ReturnType<typeof getMappedTalent>) => {
+      const query = filters.search.trim().toLowerCase();
+      if (query && !talent.name.toLowerCase().includes(query) && !talent.bio.toLowerCase().includes(query)) return false;
+      if (filters.filter.location !== 'all' && talent.location !== filters.filter.location) return false;
+      return true;
+    };
+
+    const all = getMergedTalents(fetchTalents.data ?? []).map(getMappedTalent);
+    const list = all.filter(getMatchesFilters);
+    const isFiltered = Boolean(filters.search) || filters.filter.location !== 'all';
+
+    return {
+      data: list,
+      locations: Array.from(new Set(all.map((talent) => talent.location).filter(Boolean) as string[])).sort((a, b) => a.localeCompare(b)),
+      isLoading: fetchTalents.isPending,
+      isError: fetchTalents.isError,
+      isEmpty: !fetchTalents.isPending && !fetchTalents.isError && list.length === 0,
+      errorTitle: t('Could not load talent.', 'Gagal memuat talent.'),
+      errorSubtitle: t('Check your connection and try again.', 'Periksa koneksi lalu coba lagi.'),
+      emptyTitle: isFiltered
+        ? t('No practitioners match these filters.', 'Tidak ada praktisi yang cocok.')
+        : t('No talent profiles yet.', 'Belum ada profil talent.'),
+      emptySubtitle: isFiltered
+        ? t('Try another city, or a broader search.', 'Coba kota lain, atau kata kunci yang lebih umum.')
+        : t('Practitioners open to bookings will appear here.', 'Praktisi yang menerima booking akan muncul di sini.'),
+    };
+  }, [fetchTalents.data, fetchTalents.isPending, fetchTalents.isError, filters, t]);
+
+  const toolbarFilters = useMemo(
+    () => [
+      {
+        key: 'location',
+        label: t('Location', 'Lokasi'),
+        value: filters.filter.location,
+        width: 'sm:w-56',
+        options: [
+          { value: 'all', label: t('All locations', 'Semua lokasi') },
+          ...data.locations.map((location) => ({ value: location, label: location })),
+        ],
+      },
+    ],
+    [filters.filter.location, data.locations, t]
+  );
+
+  const editTalentsSearch = (value: string) => {
+    setFilters((prev) => ({ ...prev, search: value }));
   };
 
-  const talents = mergeDummyTalents(fetchTalents.data ?? []);
+  const editTalentsFilter = (key: string, value: string) => {
+    setFilters((prev) => ({ ...prev, filter: { ...prev.filter, [key]: value } }));
+  };
 
-  const filtered = talents.filter((tal) =>
-    !search ||
-    tal.full_name?.toLowerCase().includes(search.toLowerCase()) ||
-    tal.bio?.toLowerCase().includes(search.toLowerCase())
-  );
+  const clearTalentsFilters = () => {
+    setFilters({ search: '', filter: { location: 'all' } });
+  };
 
   return (
     <AppShell>
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mb-8">
-          <h1 className={`font-display text-3xl font-semibold ${TONE_TEXT[toneOf('talents')]}`}>{t('Talent Listing', 'Daftar Talent')}</h1>
-          <p className="mt-1 text-muted-foreground">{t('Book 1-on-1 consultations and mentoring sessions with vetted Indonesian IT experts.', 'Pesan konsultasi 1-on-1 dan mentoring dengan ahli IT Indonesia terverifikasi.')}</p>
-        </div>
+      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+        <PageHeader
+          eyebrow={t('Ecosystem · Talent', 'Ekosistem · Talent')}
+          tone={toneOf('talents')}
+          title={t('Talent', 'Talent')}
+          subtitle={t(
+            'Book 1-on-1 consultations and mentoring with vetted Indonesian IT practitioners.',
+            'Pesan konsultasi 1-on-1 dan mentoring dengan praktisi IT Indonesia terverifikasi.'
+          )}
+        />
 
-        <div className="relative mb-6 max-w-md">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input placeholder={t('Search talent...', 'Cari talent...')} value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
-        </div>
+        <BrowseToolbar
+          searchValue={filters.search}
+          searchPlaceholder={t('Search by name or expertise…', 'Cari nama atau keahlian…')}
+          onEditSearch={editTalentsSearch}
+          filters={toolbarFilters}
+          onEditFilter={editTalentsFilter}
+          onClearFilters={clearTalentsFilters}
+        />
 
-        <LoadData
-          hideIcon
-          response={{
-            isLoading: loading,
-            isEmpty: filtered.length === 0,
-            emptyTitle: t('No talent profiles available yet.', 'Belum ada profil talent.'),
-          }}
-        >
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {filtered.map((tal) => (
-              <Card key={tal.id} className="glass group transition-all hover:border-primary/40 hover:-translate-y-0.5">
-                <CardContent className="p-6">
-                  <div className="flex items-start gap-4">
-                    <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-primary/20 to-accent/20 text-lg font-bold">
-                      {tal.avatar_url ? <img src={tal.avatar_url} alt={tal.full_name ?? ''} className="h-14 w-14 rounded-full object-cover" /> : tal.full_name?.charAt(0)?.toUpperCase() ?? '?'}
+        <LoadData hideIcon customLoader response={data}>
+          {data.isLoading ? (
+            <CardGridSkeleton count={6} chips={0} lines={2} />
+          ) : (
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {data.data.map((talent) => (
+                <div key={talent.id} className="flex h-full min-w-0 flex-col rounded-xl border border-border bg-card p-5">
+                  <div className="flex items-start gap-3">
+                    <Avatar className="h-12 w-12 shrink-0">
+                      {talent.avatarUrl && <AvatarImage src={talent.avatarUrl} alt="" />}
+                      <AvatarFallback className={TONE_CHIP[toneOf('talents')]}>{talent.initial}</AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="truncate font-semibold">{talent.name}</h3>
+                      {talent.location && (
+                        <p className="mt-0.5 flex items-center gap-1 truncate text-sm text-muted-foreground">
+                          <MapPin className="h-3 w-3 shrink-0" />
+                          {talent.location}
+                        </p>
+                      )}
                     </div>
-                    <div className="flex-1">
-                      <h3 className="font-semibold">{tal.full_name ?? 'Anonymous'}</h3>
-                      {tal.location && <p className="text-sm text-muted-foreground">{tal.location}</p>}
-                    </div>
-                    <Badge variant="default" className={TONE_CHIP[toneOf('talents')]}>{t('Talent', 'Talent')}</Badge>
                   </div>
-                  <p className="mt-3 line-clamp-2 text-sm text-muted-foreground">{tal.bio ?? t('IT professional ready to help.', 'Profesional IT siap membantu.')}</p>
-                  <div className="mt-4 flex gap-2">
-                    {tal.linkedin_url && (
-                      <a href={tal.linkedin_url} target="_blank" rel="noreferrer" className="flex-1">
-                        <Button variant="outline" size="sm" className="w-full">LinkedIn</Button>
+
+                  <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-muted-foreground text-pretty">{talent.bio}</p>
+
+                  <div className="mt-auto flex gap-2 pt-4">
+                    <Link href={`/talents/${talent.id}`} className="flex-1">
+                      <Button size="sm" className="w-full">{t('Book a session', 'Pesan sesi')}</Button>
+                    </Link>
+                    {talent.linkedinUrl && (
+                      <a href={talent.linkedinUrl} target="_blank" rel="noreferrer">
+                        <Button variant="outline" size="sm">LinkedIn</Button>
                       </a>
                     )}
-                    <Link href={`/talents/${tal.id}`} className="flex-1">
-                      <Button size="sm" className="w-full">{t('Book', 'Pesan')}</Button>
-                    </Link>
                   </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                </div>
+              ))}
+            </div>
+          )}
         </LoadData>
       </div>
     </AppShell>

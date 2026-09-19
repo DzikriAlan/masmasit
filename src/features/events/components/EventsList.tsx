@@ -1,112 +1,217 @@
 'use client';
 
-import { useState } from 'react';
-import { Loader2, CheckCircle2, Search, ArrowRight } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { AppShell } from '@/components/app-shell';
-import { TONE_TEXT, toneOf } from '@/shared/lib/tones';
-import { LoadData } from '@/components/load-data';
-import { useAuth } from '@/components/auth-provider';
-import { useLang } from '@/components/language-provider';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ArrowRight, CalendarDays, CheckCircle2, Loader2, MapPin, Users } from 'lucide-react';
 import { toast } from 'sonner';
-import { PaymentCard } from '@/features/payments/components/PaymentCard';
 
-import { API_ERROR_CODE } from '@/shared/lib/apiResponse';
 import type { DataEvents } from '@/features/events/types/eventsTypes';
 import { useEventsControllers } from '@/features/events/controllers/eventsControllers';
+import { EventsCard } from '@/features/events/components/EventsCard';
+import { EventsCreateForm, type EventsFormValues } from '@/features/events/components/EventsCreateForm';
+import { PaymentCard } from '@/features/payments/components/PaymentCard';
 
-type EventItem = DataEvents;
+import { AppShell } from '@/components/app-shell';
+import { PageHeader } from '@/components/page-header';
+import { LoadData } from '@/components/load-data';
+import { BrowseToolbar } from '@/components/browse-toolbar';
+import { CardGridSkeleton } from '@/components/card-skeleton';
+import { useAuth } from '@/components/auth-provider';
+import { useLang } from '@/components/language-provider';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { API_ERROR_CODE } from '@/shared/lib/apiResponse';
+import { TONE_CHIP, toneOf } from '@/shared/lib/tones';
+import { cn } from '@/shared/lib/utils';
 
-const eventImages: Record<string, string> = {
-  meetup: 'https://images.pexels.com/photos/7652188/pexels-photo-7652188.jpeg?auto=compress&cs=tinysrgb&h=400&w=600',
-  workshop: 'https://images.pexels.com/photos/9301872/pexels-photo-9301872.jpeg?auto=compress&cs=tinysrgb&h=400&w=600',
-  hackathon: 'https://images.pexels.com/photos/17724731/pexels-photo-17724731.jpeg?auto=compress&cs=tinysrgb&h=400&w=600',
-  conference: 'https://images.pexels.com/photos/8761524/pexels-photo-8761524.jpeg?auto=compress&cs=tinysrgb&h=400&w=600',
-  default: 'https://images.pexels.com/photos/7643736/pexels-photo-7643736.jpeg?auto=compress&cs=tinysrgb&h=400&w=600',
+const EMPTY_FORM: EventsFormValues = {
+  title: '', description: '', event_type: 'meetup', location: '', event_date: '',
+  max_capacity: '50', is_paid: false, price: '0', region_id: '',
 };
-
-const getEventImage = (type: string) => eventImages[type] || eventImages.default;
 
 export default function EventsList() {
   const { user } = useAuth();
   const { t } = useLang();
-  const [regionFilter, setRegionFilter] = useState('all');
-  const [typeFilter, setTypeFilter] = useState('all');
-  const [search, setSearch] = useState('');
-  const [rsvpLoading, setRsvpLoading] = useState<string | null>(null);
-  const [paidRsvp, setPaidRsvp] = useState<{ rsvpId: string; eventId: string; amount: number; paymentStatus: string } | null>(null);
-  const [showCreate, setShowCreate] = useState(false);
-  const [eventForm, setEventForm] = useState({ title: '', description: '', event_type: 'meetup', location: '', event_date: '', max_capacity: '50', is_paid: false, price: '0', region_id: '' });
+  const { fetchEvents, fetchEventsRegions, fetchEventsSettings, storeEvents, storeEventsRsvp } = useEventsControllers();
 
-  const { fetchEvents, fetchEventsRegions, fetchEventsSettings, storeEvents, storeEventsRsvp } =
-    useEventsControllers();
+  const [filters, setFilters] = useState({
+    search: '',
+    filter: { type: 'all', region: 'all' },
+    isComposerOpen: false,
+    rsvpLoadingId: null as string | null,
+    paidRsvp: null as { rsvpId: string; eventId: string; amount: number; paymentStatus: string } | null,
+  });
+  const [form, setForm] = useState<EventsFormValues>(EMPTY_FORM);
 
-  const events: EventItem[] = fetchEvents.data ?? [];
-  const regions = fetchEventsRegions.data ?? [];
-  const lynkidEventsUrl = fetchEventsSettings.data ?? null;
-  const loading = fetchEvents.isPending;
-  const savingEvent = storeEvents.isPending;
+  const data = useMemo(() => {
+    const rows = fetchEvents.data ?? [];
 
-  const collectRsvpIds = () => {
-    const ids = new Set<string>();
-    if (!user) return ids;
-    events.forEach((e) => {
-      if (e.event_rsvps?.some((r) => r.user_id === user.id)) ids.add(e.id);
-    });
-    return ids;
+    const getRsvpIds = () => {
+      const ids = new Set<string>();
+      if (!user) return ids;
+      rows.forEach((event) => {
+        if (event.event_rsvps?.some((rsvp) => rsvp.user_id === user.id)) ids.add(event.id);
+      });
+      return ids;
+    };
+
+    const rsvpIds = getRsvpIds();
+
+    const getMappedEvent = (event: DataEvents) => {
+      const attending = event.event_rsvps?.length ?? 0;
+      return {
+        id: event.id,
+        title: event.title,
+        description: event.description,
+        type: event.event_type,
+        regionName: event.regions?.name ?? null,
+        location: event.location,
+        schedule: new Date(event.event_date).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }),
+        isPaid: event.is_paid,
+        priceLabel: event.is_paid && event.price ? `Rp ${(event.price / 1000).toFixed(0)}K` : null,
+        attending,
+        capacity: event.max_capacity,
+        spotsLeft: Math.max(event.max_capacity - attending, 0),
+        fillPercent: event.max_capacity ? Math.round((attending / event.max_capacity) * 100) : 0,
+        isRegistered: rsvpIds.has(event.id),
+      };
+    };
+
+    const getMatchesFilters = (event: DataEvents) => {
+      const query = filters.search.trim().toLowerCase();
+      if (filters.filter.region !== 'all' && event.regions?.name !== filters.filter.region) return false;
+      if (filters.filter.type !== 'all' && event.event_type !== filters.filter.type) return false;
+      if (query && !event.title.toLowerCase().includes(query) && !event.description.toLowerCase().includes(query)) return false;
+      return true;
+    };
+
+    const now = Date.now();
+    const matched = rows.filter(getMatchesFilters);
+    const upcoming = matched.filter((event) => new Date(event.event_date).getTime() > now).map(getMappedEvent);
+    const past = matched.filter((event) => new Date(event.event_date).getTime() <= now).map(getMappedEvent);
+    const isFiltered = Boolean(filters.search) || filters.filter.type !== 'all' || filters.filter.region !== 'all';
+
+    return {
+      data: upcoming,
+      featured: upcoming[0] ?? null,
+      rest: upcoming.slice(1),
+      past: past.slice(0, 6),
+      isLoading: fetchEvents.isPending,
+      isError: fetchEvents.isError,
+      isEmpty: !fetchEvents.isPending && !fetchEvents.isError && upcoming.length === 0 && past.length === 0,
+      errorTitle: t('Could not load events.', 'Gagal memuat event.'),
+      errorSubtitle: t('Check your connection and try again.', 'Periksa koneksi lalu coba lagi.'),
+      emptyTitle: isFiltered
+        ? t('No events match these filters.', 'Tidak ada event yang cocok.')
+        : t('No events scheduled yet.', 'Belum ada event terjadwal.'),
+      emptySubtitle: isFiltered
+        ? t('Try another region or type.', 'Coba wilayah atau tipe lain.')
+        : t('Host the first meetup in your city.', 'Adakan meetup pertama di kotamu.'),
+    };
+  }, [fetchEvents.data, fetchEvents.isPending, fetchEvents.isError, filters.search, filters.filter, user, t]);
+
+  const toolbarFilters = useMemo(
+    () => [
+      {
+        key: 'type',
+        label: t('Type', 'Tipe'),
+        value: filters.filter.type,
+        options: [
+          { value: 'all', label: t('All types', 'Semua tipe') },
+          { value: 'meetup', label: 'Meetup' },
+          { value: 'workshop', label: 'Workshop' },
+          { value: 'hackathon', label: 'Hackathon' },
+          { value: 'conference', label: 'Conference' },
+        ],
+      },
+      {
+        key: 'region',
+        label: t('Region', 'Wilayah'),
+        value: filters.filter.region,
+        width: 'sm:w-52',
+        options: [
+          { value: 'all', label: t('All regions', 'Semua wilayah') },
+          ...(fetchEventsRegions.data ?? []).map((region) => ({ value: region.name, label: region.name })),
+        ],
+      },
+    ],
+    [filters.filter, fetchEventsRegions.data, t]
+  );
+
+  const editEventsSearch = (value: string) => {
+    setFilters((prev) => ({ ...prev, search: value }));
   };
 
-  const rsvpIds = collectRsvpIds();
+  const editEventsFilter = (key: string, value: string) => {
+    setFilters((prev) => ({ ...prev, filter: { ...prev.filter, [key]: value } }));
+  };
 
-  const saveEvent = async () => {
-    if (!user) { toast.error(t('Please sign in to create an event', 'Silakan masuk untuk membuat event')); return; }
-    if (!eventForm.title || !eventForm.description || !eventForm.location || !eventForm.event_date || !eventForm.region_id) {
-      toast.error(t('Please fill all required fields', 'Mohon isi semua field wajib'));
+  const clearEventsFilters = () => {
+    setFilters((prev) => ({ ...prev, search: '', filter: { type: 'all', region: 'all' } }));
+  };
+
+  const editEventsComposer = () => {
+    if (!user) {
+      toast.error(t('Please sign in to create an event', 'Silakan masuk untuk membuat event'));
       return;
     }
+    setFilters((prev) => ({ ...prev, isComposerOpen: !prev.isComposerOpen }));
+  };
+
+  const editEventsForm = (patch: Partial<EventsFormValues>) => {
+    setForm((prev) => ({ ...prev, ...patch }));
+  };
+
+  const clearEventsForm = () => {
+    setForm(EMPTY_FORM);
+    setFilters((prev) => ({ ...prev, isComposerOpen: false }));
+  };
+
+  const clearEventsPayment = () => {
+    setFilters((prev) => ({ ...prev, paidRsvp: null }));
+  };
+
+  const submitEvents = async () => {
+    if (!user) return;
+
     try {
       await storeEvents.mutateAsync({
         created_by: user.id,
-        title: eventForm.title,
-        description: eventForm.description,
-        event_type: eventForm.event_type,
-        location: eventForm.location,
-        event_date: new Date(eventForm.event_date).toISOString(),
-        max_capacity: parseInt(eventForm.max_capacity) || 50,
-        is_paid: eventForm.is_paid,
-        price: eventForm.is_paid ? (parseInt(eventForm.price) || 0) : null,
-        region_id: eventForm.region_id,
+        title: form.title,
+        description: form.description,
+        event_type: form.event_type,
+        location: form.location,
+        event_date: new Date(form.event_date).toISOString(),
+        max_capacity: Number.parseInt(form.max_capacity, 10) || 50,
+        is_paid: form.is_paid,
+        price: form.is_paid ? Number.parseInt(form.price, 10) || 0 : null,
+        region_id: form.region_id,
       });
     } catch {
       toast.error(t('Failed to create event', 'Gagal membuat event'));
       return;
     }
+
     toast.success(
-      t(
-        'Event submitted! An admin will review it before it goes live.',
-        'Event terkirim! Admin akan meninjau sebelum tayang.'
-      )
+      t('Event submitted — an admin reviews it before it goes live.', 'Event terkirim — admin meninjau sebelum tayang.')
     );
-    setShowCreate(false);
-    setEventForm({ title: '', description: '', event_type: 'meetup', location: '', event_date: '', max_capacity: '50', is_paid: false, price: '0', region_id: '' });
+    clearEventsForm();
   };
 
-  const saveRsvp = async (eventId: string) => {
-    if (!user) { toast.error(t('Please sign in to RSVP', 'Silakan masuk untuk RSVP')); return; }
-    setRsvpLoading(eventId);
+  const submitEventsRsvp = async (eventId: string) => {
+    if (!user) {
+      toast.error(t('Please sign in to RSVP', 'Silakan masuk untuk RSVP'));
+      return;
+    }
+
+    setFilters((prev) => ({ ...prev, rsvpLoadingId: eventId }));
+
     let rsvpId: string | null = null;
     try {
       rsvpId = await storeEventsRsvp.mutateAsync({ event_id: eventId });
     } catch (error) {
-      setRsvpLoading(null);
+      setFilters((prev) => ({ ...prev, rsvpLoadingId: null }));
       const code = error instanceof Error ? error.name : '';
       const message = error instanceof Error ? error.message : '';
       if (code === API_ERROR_CODE.CONFLICT) toast.error(t('Already registered', 'Sudah terdaftar'));
@@ -114,285 +219,196 @@ export default function EventsList() {
       else toast.error(t('Failed to RSVP', 'Gagal RSVP'));
       return;
     }
-    setRsvpLoading(null);
-    toast.success(t('RSVP confirmed! See you there.', 'RSVP dikonfirmasi! Sampai jumpa.'));
-    const event = events.find((e) => e.id === eventId);
-    if (event && event.is_paid && event.price && rsvpId) {
-      setPaidRsvp({ rsvpId, eventId, amount: event.price, paymentStatus: 'unpaid' });
-    }
+
+    toast.success(t('RSVP confirmed — see you there.', 'RSVP dikonfirmasi — sampai jumpa.'));
+
+    const event = (fetchEvents.data ?? []).find((item) => item.id === eventId);
+    setFilters((prev) => ({
+      ...prev,
+      rsvpLoadingId: null,
+      paidRsvp:
+        event?.is_paid && event.price && rsvpId
+          ? { rsvpId, eventId, amount: event.price, paymentStatus: 'unpaid' }
+          : null,
+    }));
   };
-
-  const filtered = events.filter((e) => {
-    if (regionFilter !== 'all' && e.regions?.name !== regionFilter) return false;
-    if (typeFilter !== 'all' && e.event_type !== typeFilter) return false;
-    if (search && !e.title.toLowerCase().includes(search.toLowerCase()) && !e.description.toLowerCase().includes(search.toLowerCase())) return false;
-    return true;
-  });
-
-  const upcoming = filtered.filter((e) => new Date(e.event_date) > new Date());
-  const past = filtered.filter((e) => new Date(e.event_date) <= new Date());
 
   return (
     <AppShell>
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        {/* Hero header */}
-        <div className="mb-8">
-          <div className={`mb-2 inline-flex items-center rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs font-medium ${TONE_TEXT[toneOf('events')]}`}>
-            {t('Community Events', 'Event Komunitas')}
-          </div>
-          <h1 className={`font-display text-3xl font-semibold sm:text-4xl ${TONE_TEXT[toneOf('events')]}`}>{t('Regional Events', 'Event Daerah')}</h1>
-          <p className="mt-1 max-w-2xl text-muted-foreground">{t('Join meetups, workshops, and hackathons near you. Connect with people who share your passion.', 'Ikuti meetup, workshop, dan hackathon di dekat Anda. Terhubung dengan orang yang memiliki passion yang sama.')}</p>
-        </div>
+      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+        <PageHeader
+          eyebrow={t('Ecosystem · Community', 'Ekosistem · Komunitas')}
+          tone={toneOf('events')}
+          title={t('Events', 'Event')}
+          subtitle={t(
+            'Meetups, workshops and hackathons run by the community, region by region.',
+            'Meetup, workshop, dan hackathon dari komunitas, per wilayah.'
+          )}
+          action={
+            <Button onClick={editEventsComposer}>
+              {filters.isComposerOpen ? t('Close', 'Tutup') : t('Host an event', 'Adakan event')}
+            </Button>
+          }
+        />
 
-        <div className="mb-6 flex justify-end">
-          <Button onClick={() => user ? setShowCreate(!showCreate) : toast.error(t('Please sign in to create an event', 'Silakan masuk untuk membuat event'))}>
-            {t('Create Event', 'Buat Event')}
-          </Button>
-        </div>
-
-        {showCreate && (
-          <Card className="glass mb-8">
-            <CardHeader>
-              <CardTitle className="font-display">{t('Create a New Event', 'Buat Event Baru')}</CardTitle>
-              <CardDescription>{t('Host a meetup, workshop, or hackathon for the community.', 'Adakan meetup, workshop, atau hackathon untuk komunitas.')}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2"><Label htmlFor="etitle">{t('Event Title', 'Judul Event')}</Label><Input id="etitle" value={eventForm.title} onChange={(e) => setEventForm({ ...eventForm, title: e.target.value })} placeholder={t('Bandung UX Meetup', 'Bandung UX Meetup')} /></div>
-              <div className="space-y-2"><Label htmlFor="edesc">{t('Description', 'Deskripsi')}</Label><Textarea id="edesc" value={eventForm.description} onChange={(e) => setEventForm({ ...eventForm, description: e.target.value })} placeholder={t('What is this event about?', 'Tentang apa event ini?')} className="min-h-[100px]" /></div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label>{t('Event Type', 'Tipe Event')}</Label>
-                  <Select value={eventForm.event_type} onValueChange={(v) => setEventForm({ ...eventForm, event_type: v })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="meetup">Meetup</SelectItem>
-                      <SelectItem value="workshop">Workshop</SelectItem>
-                      <SelectItem value="hackathon">Hackathon</SelectItem>
-                      <SelectItem value="conference">Conference</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>{t('Region', 'Wilayah')}</Label>
-                  <Select value={eventForm.region_id} onValueChange={(v) => setEventForm({ ...eventForm, region_id: v })}>
-                    <SelectTrigger><SelectValue placeholder={t('Select region...', 'Pilih wilayah...')} /></SelectTrigger>
-                    <SelectContent>
-                      {regions.map((r) => <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2"><Label htmlFor="eloc">{t('Location', 'Lokasi')}</Label><Input id="eloc" value={eventForm.location} onChange={(e) => setEventForm({ ...eventForm, location: e.target.value })} placeholder={t('Venue name, city', 'Nama tempat, kota')} /></div>
-                <div className="space-y-2"><Label htmlFor="edate">{t('Date & Time', 'Tanggal & Waktu')}</Label><Input id="edate" type="datetime-local" value={eventForm.event_date} onChange={(e) => setEventForm({ ...eventForm, event_date: e.target.value })} /></div>
-              </div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2"><Label htmlFor="ecap">{t('Max Capacity', 'Kapasitas Maks')}</Label><Input id="ecap" type="number" min="1" value={eventForm.max_capacity} onChange={(e) => setEventForm({ ...eventForm, max_capacity: e.target.value })} placeholder="50" /></div>
-                {eventForm.is_paid && <div className="space-y-2"><Label htmlFor="eprice">{t('Price (IDR)', 'Harga (IDR)')}</Label><Input id="eprice" type="number" min="0" value={eventForm.price} onChange={(e) => setEventForm({ ...eventForm, price: e.target.value })} placeholder="100000" /></div>}
-              </div>
-              <div className="flex items-center justify-between rounded-lg border border-border/60 p-3">
-                <div>
-                  <span className="text-sm font-medium">{t('Paid Event', 'Event Berbayar')}</span>
-                  <p className="text-xs text-muted-foreground">{t('Charge a fee for attendance', 'Bayar biaya untuk kehadiran')}</p>
-                </div>
-                <Switch checked={eventForm.is_paid} onCheckedChange={(v) => setEventForm({ ...eventForm, is_paid: v })} />
-              </div>
-              <div className="flex gap-2">
-                <Button variant="outline" onClick={() => setShowCreate(false)}>{t('Cancel', 'Batal')}</Button>
-                <Button onClick={saveEvent} disabled={savingEvent || !eventForm.title || !eventForm.description || !eventForm.location || !eventForm.event_date || !eventForm.region_id} className="gap-2">
-                  {savingEvent && <Loader2 className="h-4 w-4 animate-spin" />} {t('Create Event', 'Buat Event')}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+        {filters.isComposerOpen && (
+          <EventsCreateForm
+            values={form}
+            regions={fetchEventsRegions.data ?? []}
+            saving={storeEvents.isPending}
+            onEditEvents={editEventsForm}
+            onSubmitEvents={submitEvents}
+            onClearEvents={clearEventsForm}
+          />
         )}
 
-        {/* Featured event banner */}
-        {upcoming.length > 0 && !loading && (
-          <div className="mb-8 overflow-hidden rounded-2xl border border-border/40">
-            <div className="relative h-[200px] sm:h-[260px]">
-              <img src={getEventImage(upcoming[0].event_type)} alt={upcoming[0].title} className="h-full w-full object-cover" />
-              <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
-              <div className="absolute bottom-0 left-0 right-0 p-5 sm:p-7">
-                <div className="mb-2 flex items-center gap-2">
-                  <Badge variant="default" className={TONE_TEXT[toneOf('events')]}>{t('Featured', 'Unggulan')}</Badge>
-                  <Badge variant="secondary" className="capitalize text-xs">{upcoming[0].event_type}</Badge>
-                  {upcoming[0].regions && <Badge variant="outline" className="text-xs">{upcoming[0].regions.name}</Badge>}
-                </div>
-                <h2 className="font-display text-xl font-semibold sm:text-2xl">{upcoming[0].title}</h2>
-                <div className="mt-2 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                  <span>{new Date(upcoming[0].event_date).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}</span>
-                  <span>{upcoming[0].location}</span>
-                  <span>{upcoming[0].event_rsvps?.length ?? 0}/{upcoming[0].max_capacity}</span>
-                </div>
-                <div className="mt-3">
-                  {rsvpIds.has(upcoming[0].id) ? (
-                    <Badge variant="default" className="gap-1"><CheckCircle2 className="h-3 w-3" /> {t('Registered', 'Terdaftar')}</Badge>
-                  ) : (
-                    <Button size="sm" className="glow-primary" onClick={() => saveRsvp(upcoming[0].id)} disabled={rsvpLoading === upcoming[0].id}>
-                      {rsvpLoading === upcoming[0].id ? <Loader2 className="h-4 w-4 animate-spin" /> : t('RSVP Now', 'RSVP Sekarang')}
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        <BrowseToolbar
+          searchValue={filters.search}
+          searchPlaceholder={t('Search events…', 'Cari event…')}
+          onEditSearch={editEventsSearch}
+          filters={toolbarFilters}
+          onEditFilter={editEventsFilter}
+          onClearFilters={clearEventsFilters}
+        />
 
-        {/* Filters */}
-        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder={t('Search events...', 'Cari event...')}
-              className="pl-9"
-            />
-          </div>
-          <Select value={typeFilter} onValueChange={setTypeFilter}>
-            <SelectTrigger className="w-full sm:w-40"><SelectValue placeholder={t('All Types', 'Semua Tipe')} /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t('All Types', 'Semua Tipe')}</SelectItem>
-              <SelectItem value="meetup">Meetup</SelectItem>
-              <SelectItem value="workshop">Workshop</SelectItem>
-              <SelectItem value="hackathon">Hackathon</SelectItem>
-              <SelectItem value="conference">Conference</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={regionFilter} onValueChange={setRegionFilter}>
-            <SelectTrigger className="w-full sm:w-40"><SelectValue placeholder={t('All Regions', 'Semua Wilayah')} /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t('All Regions', 'Semua Wilayah')}</SelectItem>
-              {regions.map((r) => <SelectItem key={r.id} value={r.name}>{r.name}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
+        <LoadData hideIcon customLoader response={data}>
+          {data.isLoading ? (
+            <CardGridSkeleton count={6} chips={2} lines={2} />
+          ) : (
+            <div className="space-y-10">
+              {data.featured && (
+                <section
+                  aria-label={t('Next event', 'Event berikutnya')}
+                  className="rounded-2xl border border-border bg-secondary/40 p-6 sm:p-8"
+                >
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge className={cn('text-[11px]', TONE_CHIP[toneOf('events')])} variant="outline">
+                      {t('Next up', 'Paling dekat')}
+                    </Badge>
+                    <Badge variant="outline" className="text-[11px] capitalize">{data.featured.type}</Badge>
+                    {data.featured.regionName && (
+                      <Badge variant="outline" className="text-[11px]">{data.featured.regionName}</Badge>
+                    )}
+                  </div>
 
-        {/* Events grid */}
-        <LoadData
-          hideIcon
-          response={{
-            isLoading: loading,
-            isEmpty: upcoming.length === 0 && past.length === 0,
-            emptyTitle: t('No events found. Try adjusting your filters.', 'Tidak ada event ditemukan. Coba ubah filter.'),
-          }}
-        >
-            {upcoming.length > 0 && (
-              <>
-                <h2 className="mb-4 flex items-center gap-2 font-display text-lg font-semibold">
-                  <span className="h-2 w-2 animate-pulse-soft rounded-full bg-primary" />
-                  {t('Upcoming', 'Mendatang')} ({upcoming.length})
-                </h2>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {upcoming.slice(1).map((e, i) => {
-                    const spotsLeft = e.max_capacity - (e.event_rsvps?.length ?? 0);
-                    const isRSVPed = rsvpIds.has(e.id);
-                    const fillPct = Math.round(((e.event_rsvps?.length ?? 0) / e.max_capacity) * 100);
-                    return (
-                      <Card key={e.id} className="group glass glass-hover overflow-hidden stagger-1" style={{ animationDelay: `${i * 0.06}s` }}>
-                        <div className="relative h-32 overflow-hidden">
-                          <img src={getEventImage(e.event_type)} alt={e.title} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" />
-                          <div className="absolute inset-0 bg-gradient-to-t from-card via-card/30 to-transparent" />
-                          <div className="absolute top-3 left-3 flex gap-2">
-                            <Badge variant="secondary" className="capitalize text-xs backdrop-blur-md">{e.event_type}</Badge>
-                            {e.is_paid && <Badge variant="default" className="text-xs backdrop-blur-md">{t('Paid', 'Berbayar')}</Badge>}
-                          </div>
-                          {e.regions && <Badge variant="outline" className="absolute bottom-3 left-3 text-xs backdrop-blur-md">{e.regions.name}</Badge>}
-                        </div>
-                        <CardContent className="p-4">
-                          <h3 className="font-semibold leading-tight">{e.title}</h3>
-                          <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{e.description}</p>
-                          <div className="mt-3 space-y-1.5 text-sm text-muted-foreground">
-                            <p>{new Date(e.event_date).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}</p>
-                            <p>{e.location}</p>
-                          </div>
-                          {/* Capacity bar */}
-                          <div className="mt-3">
-                            <div className="flex items-center justify-between text-xs">
-                              <span className="text-muted-foreground">{spotsLeft} {t('spots left', 'slot tersisa')}</span>
-                              <span className={`font-medium ${fillPct > 80 ? 'text-warning' : 'text-primary'}`}>{fillPct}%</span>
-                            </div>
-                            <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-muted">
-                              <div
-                                className={`h-full rounded-full transition-all duration-500 ${fillPct > 80 ? 'bg-warning' : 'bg-primary'}`}
-                                style={{ width: `${fillPct}%` }}
-                              />
-                            </div>
-                          </div>
-                          <div className="mt-3">
-                            {isRSVPed ? (
-                              <div className="flex items-center gap-2 text-success text-sm font-medium">
-                                <CheckCircle2 className="h-4 w-4" /> {t('Registered', 'Terdaftar')}
-                              </div>
-                            ) : spotsLeft > 0 ? (
-                              <Button size="sm" className="w-full" onClick={() => saveRsvp(e.id)} disabled={rsvpLoading === e.id}>
-                                {rsvpLoading === e.id ? <Loader2 className="h-4 w-4 animate-spin" /> : t('RSVP Now', 'RSVP Sekarang')}
-                              </Button>
-                            ) : (
-                              <Button size="sm" variant="outline" disabled className="w-full">{t('Sold Out', 'Penuh')}</Button>
-                            )}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
-                </div>
-              </>
-            )}
+                  <h2 className="mt-3 font-display text-2xl font-semibold text-balance sm:text-3xl">
+                    {data.featured.title}
+                  </h2>
+                  <p className="mt-2 max-w-2xl leading-relaxed text-muted-foreground text-pretty">
+                    {data.featured.description}
+                  </p>
 
-            {past.length > 0 && (
-              <>
-                <h2 className="mb-4 mt-10 font-display text-lg font-semibold text-muted-foreground">{t('Past Events', 'Event Sebelumnya')} ({past.length})</h2>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {past.slice(0, 6).map((e) => (
-                    <Card key={e.id} className="glass opacity-70">
-                      <div className="relative h-24 overflow-hidden rounded-t-lg">
-                        <img src={getEventImage(e.event_type)} alt={e.title} className="h-full w-full object-cover grayscale" />
-                        <div className="absolute inset-0 bg-background/50" />
-                        <Badge variant="secondary" className="absolute bottom-2 left-2 text-xs backdrop-blur-md">{t('Ended', 'Selesai')}</Badge>
+                  <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
+                    <span className="flex items-center gap-1.5"><CalendarDays className="h-4 w-4" />{data.featured.schedule}</span>
+                    <span className="flex items-center gap-1.5"><MapPin className="h-4 w-4" />{data.featured.location}</span>
+                    <span className="flex items-center gap-1.5"><Users className="h-4 w-4" />{data.featured.attending}/{data.featured.capacity}</span>
+                  </div>
+
+                  <div className="mt-5">
+                    {data.featured.isRegistered ? (
+                      <p className="flex items-center gap-1.5 text-sm font-medium text-success">
+                        <CheckCircle2 className="h-4 w-4" />
+                        {t('Registered', 'Terdaftar')}
+                      </p>
+                    ) : (
+                      <Button
+                        className="gap-2"
+                        disabled={filters.rsvpLoadingId === data.featured.id || data.featured.spotsLeft <= 0}
+                        onClick={() => submitEventsRsvp(data.featured?.id ?? '')}
+                      >
+                        {filters.rsvpLoadingId === data.featured.id && <Loader2 className="h-4 w-4 animate-spin" />}
+                        {data.featured.spotsLeft > 0 ? t('RSVP now', 'RSVP sekarang') : t('Sold out', 'Penuh')}
+                      </Button>
+                    )}
+                  </div>
+                </section>
+              )}
+
+              {data.rest.length > 0 && (
+                <section>
+                  <h2 className="mb-4 font-display text-xl font-semibold">
+                    {t('Upcoming', 'Mendatang')} <span className="text-muted-foreground">({data.data.length})</span>
+                  </h2>
+                  <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                    {data.rest.map((event) => (
+                      <EventsCard
+                        key={event.id}
+                        event={event}
+                        isSubmitting={filters.rsvpLoadingId === event.id}
+                        onSubmitRsvp={submitEventsRsvp}
+                      />
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {data.past.length > 0 && (
+                <section>
+                  <h2 className="mb-4 font-display text-xl font-semibold text-muted-foreground">
+                    {t('Past events', 'Event sebelumnya')}
+                  </h2>
+                  <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                    {data.past.map((event) => (
+                      <div key={event.id} className="rounded-xl border border-border/70 bg-card/50 p-5">
+                        <Badge variant="outline" className="text-[11px]">{t('Ended', 'Selesai')}</Badge>
+                        <h3 className="mt-2.5 line-clamp-2 font-medium leading-snug">{event.title}</h3>
+                        <p className="mt-1 truncate text-sm text-muted-foreground">{event.location}</p>
+                        <p className="mt-0.5 text-xs text-muted-foreground">
+                          {event.attending} {t('attended', 'hadir')}
+                        </p>
                       </div>
-                      <CardContent className="p-4">
-                        <h3 className="text-sm font-semibold">{e.title}</h3>
-                        <p className="mt-1 text-xs text-muted-foreground">{e.location}</p>
-                        <p className="mt-0.5 text-xs text-muted-foreground">{e.event_rsvps?.length ?? 0} {t('attended', 'hadir')}</p>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </>
-            )}
+                    ))}
+                  </div>
+                </section>
+              )}
+            </div>
+          )}
         </LoadData>
 
-        {/* CTA */}
-        {!user && !loading && (
-          <div className="mt-10 rounded-2xl border border-primary/20 bg-primary/5 p-6 text-center sm:p-8">
-            <h3 className="font-display text-lg font-semibold">{t('Want to host an event?', 'Ingin mengadakan event?')}</h3>
-            <p className="mt-1 text-sm text-muted-foreground">{t('Join the community and start organizing meetups in your region.', 'Gabung komunitas dan mulai mengorganisir meetup di daerah Anda.')}</p>
-            <Link href="/register"><Button className="mt-4 gap-2">{t('Join Now', 'Gabung Sekarang')} <ArrowRight className="h-4 w-4" /></Button></Link>
-          </div>
-        )}
-
-        {/* Paid event payment modal */}
-        {paidRsvp && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={() => setPaidRsvp(null)}>
-            <div className="w-full max-w-md" onClick={(e) => e.stopPropagation()}>
-              <PaymentCard
-                table="event_rsvps"
-                recordId={paidRsvp.rsvpId}
-                itemName={t('Event Registration', 'Pendaftaran Event')}
-                amount={paidRsvp.amount}
-                paymentStatus={paidRsvp.paymentStatus}
-                paymentLinkUrl={null}
-                paymentNote={null}
-                fallbackUrl={lynkidEventsUrl}
-                onStatusChange={(s) => setPaidRsvp({ ...paidRsvp, paymentStatus: s })}
-              />
-              <Button variant="outline" className="mt-3 w-full" onClick={() => setPaidRsvp(null)}>{t('Close', 'Tutup')}</Button>
-            </div>
-          </div>
+        {!user && !data.isLoading && (
+          <section className="mt-12 rounded-2xl border border-border bg-secondary/40 p-6 text-center sm:p-8">
+            <h2 className="font-display text-xl font-semibold">{t('Want to host an event?', 'Ingin mengadakan event?')}</h2>
+            <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
+              {t('Join the community and start organising meetups in your region.', 'Gabung komunitas dan mulai mengorganisir meetup di wilayahmu.')}
+            </p>
+            <Link href="/register">
+              <Button className="mt-5 gap-2">
+                {t('Join now', 'Gabung sekarang')}
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </Link>
+          </section>
         )}
       </div>
+
+      <Dialog open={Boolean(filters.paidRsvp)} onOpenChange={(open) => !open && clearEventsPayment()}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t('Complete your payment', 'Selesaikan pembayaran')}</DialogTitle>
+            <DialogDescription>
+              {t('Your seat is held once the payment is confirmed.', 'Kursimu diamankan setelah pembayaran dikonfirmasi.')}
+            </DialogDescription>
+          </DialogHeader>
+          {filters.paidRsvp && (
+            <PaymentCard
+              table="event_rsvps"
+              recordId={filters.paidRsvp.rsvpId}
+              itemName={t('Event registration', 'Pendaftaran event')}
+              amount={filters.paidRsvp.amount}
+              paymentStatus={filters.paidRsvp.paymentStatus}
+              paymentLinkUrl={null}
+              paymentNote={null}
+              fallbackUrl={fetchEventsSettings.data ?? null}
+              onStatusChange={(status) =>
+                setFilters((prev) => ({
+                  ...prev,
+                  paidRsvp: prev.paidRsvp ? { ...prev.paidRsvp, paymentStatus: status } : null,
+                }))
+              }
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </AppShell>
   );
 }

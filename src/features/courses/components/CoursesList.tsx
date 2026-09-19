@@ -1,88 +1,181 @@
 'use client';
 
+import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { AppShell } from '@/components/app-shell';
-import { TONE_TEXT, toneOf } from '@/shared/lib/tones';
-import { LoadData } from '@/components/load-data';
+import { Users } from 'lucide-react';
+
 import type { DataCourses } from '@/features/courses/types/coursesTypes';
 import { useCoursesControllers } from '@/features/courses/controllers/coursesControllers';
+
+import { AppShell } from '@/components/app-shell';
+import { PageHeader } from '@/components/page-header';
+import { LoadData } from '@/components/load-data';
+import { BrowseToolbar } from '@/components/browse-toolbar';
+import { CardGridSkeleton } from '@/components/card-skeleton';
 import { useLang } from '@/components/language-provider';
-import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-
-const courseImages: Record<string, string> = {
-  'Software Engineering': 'https://images.pexels.com/photos/270404/pexels-photo-270404.jpeg?auto=compress&cs=tinysrgb&h=200&w=400',
-  'Data & AI': 'https://images.pexels.com/photos/8386440/pexels-photo-8386440.jpeg?auto=compress&cs=tinysrgb&h=200&w=400',
-  'Product Management': 'https://images.pexels.com/photos/3184292/pexels-photo-3184292.jpeg?auto=compress&cs=tinysrgb&h=200&w=400',
-  'UI/UX & Creative': 'https://images.pexels.com/photos/1966452/pexels-photo-1966452.jpeg?auto=compress&cs=tinysrgb&h=200&w=400',
-  'DevOps & Infrastructure': 'https://images.pexels.com/photos/10727821/pexels-photo-10727821.jpeg?auto=compress&cs=tinysrgb&h=200&w=400',
-  'Cybersecurity': 'https://images.pexels.com/photos/60504/security-protection-anti-virus-software-60504.jpeg?auto=compress&cs=tinysrgb&h=200&w=400',
-  default: 'https://images.pexels.com/photos/5905717/pexels-photo-5905717.jpeg?auto=compress&cs=tinysrgb&h=200&w=400',
-};
-
-const getCourseImage = (cat: string | null) => (cat && courseImages[cat]) ? courseImages[cat] : courseImages.default;
+import { TONE_CHIP, TONE_TEXT, toneOf } from '@/shared/lib/tones';
+import { cn } from '@/shared/lib/utils';
 
 export default function CoursesList() {
   const { t } = useLang();
   const { fetchCourses } = useCoursesControllers();
 
-  const courses: DataCourses[] = fetchCourses.data ?? [];
-  const loading = fetchCourses.isPending;
+  const [filters, setFilters] = useState({
+    search: '',
+    filter: { level: 'all', price: 'all' },
+  });
+
+  const data = useMemo(() => {
+    const getPriceLabel = (price: number) =>
+      price === 0 ? t('Free', 'Gratis') : `Rp ${(price / 1000).toFixed(0)}K`;
+
+    const getMappedCourse = (course: DataCourses) => ({
+      id: course.id,
+      title: course.title,
+      description: course.description,
+      level: course.level,
+      category: course.category,
+      price: course.price,
+      priceLabel: getPriceLabel(course.price),
+      coach: course.profiles?.full_name ?? t('Coach', 'Coach'),
+      enrolled: course.enrollments?.length ?? 0,
+    });
+
+    const getMatchesFilters = (course: ReturnType<typeof getMappedCourse>) => {
+      const query = filters.search.trim().toLowerCase();
+      if (query && !course.title.toLowerCase().includes(query) && !course.coach.toLowerCase().includes(query)) return false;
+      if (filters.filter.level !== 'all' && course.level !== filters.filter.level) return false;
+      if (filters.filter.price === 'free' && course.price !== 0) return false;
+      if (filters.filter.price === 'paid' && course.price === 0) return false;
+      return true;
+    };
+
+    const all = (fetchCourses.data ?? []).map(getMappedCourse);
+    const list = all.filter(getMatchesFilters);
+    const isFiltered = Boolean(filters.search) || filters.filter.level !== 'all' || filters.filter.price !== 'all';
+
+    return {
+      data: list,
+      levels: Array.from(new Set(all.map((course) => course.level))).sort((a, b) => a.localeCompare(b)),
+      isLoading: fetchCourses.isPending,
+      isError: fetchCourses.isError,
+      isEmpty: !fetchCourses.isPending && !fetchCourses.isError && list.length === 0,
+      errorTitle: t('Could not load courses.', 'Gagal memuat kursus.'),
+      errorSubtitle: t('Check your connection and try again.', 'Periksa koneksi lalu coba lagi.'),
+      emptyTitle: isFiltered
+        ? t('No courses match these filters.', 'Tidak ada kursus yang cocok.')
+        : t('No courses published yet.', 'Belum ada kursus tersedia.'),
+      emptySubtitle: isFiltered
+        ? t('Try another level, or clear the filters.', 'Coba level lain, atau hapus filternya.')
+        : t('Teach what you know — see "Become a coach" above.', 'Ajarkan yang kamu kuasai — lihat "Jadi coach" di atas.'),
+    };
+  }, [fetchCourses.data, fetchCourses.isPending, fetchCourses.isError, filters, t]);
+
+  const toolbarFilters = useMemo(
+    () => [
+      {
+        key: 'level',
+        label: t('Level', 'Level'),
+        value: filters.filter.level,
+        options: [
+          { value: 'all', label: t('All levels', 'Semua level') },
+          ...data.levels.map((level) => ({ value: level, label: level })),
+        ],
+      },
+      {
+        key: 'price',
+        label: t('Price', 'Harga'),
+        value: filters.filter.price,
+        options: [
+          { value: 'all', label: t('Any price', 'Semua harga') },
+          { value: 'free', label: t('Free', 'Gratis') },
+          { value: 'paid', label: t('Paid', 'Berbayar') },
+        ],
+      },
+    ],
+    [filters.filter, data.levels, t]
+  );
+
+  const editCoursesSearch = (value: string) => {
+    setFilters((prev) => ({ ...prev, search: value }));
+  };
+
+  const editCoursesFilter = (key: string, value: string) => {
+    setFilters((prev) => ({ ...prev, filter: { ...prev.filter, [key]: value } }));
+  };
+
+  const clearCoursesFilters = () => {
+    setFilters({ search: '', filter: { level: 'all', price: 'all' } });
+  };
 
   return (
     <AppShell>
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <h1 className={`font-display text-3xl font-semibold ${TONE_TEXT[toneOf('courses')]}`}>{t('Learning Management System', 'Sistem Pembelajaran')}</h1>
-            <p className="mt-1 text-muted-foreground">{t('Level up your skills with courses from verified Indonesian IT coaches — get certificates upon completion.', 'Tingkatkan skill dengan kursus dari coach IT Indonesia terverifikasi — dapatkan sertifikat setelah selesai.')}</p>
-          </div>
-          <Link href="/coach">
-            <Button variant="outline">{t('Become a Coach', 'Jadilah Coach')}</Button>
-          </Link>
-        </div>
+      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+        <PageHeader
+          eyebrow={t('Ecosystem · Talent', 'Ekosistem · Talent')}
+          tone={toneOf('courses')}
+          title={t('Courses', 'Kursus')}
+          subtitle={t(
+            'Courses taught by verified Indonesian IT practitioners, with a certificate on completion.',
+            'Kursus dari praktisi IT Indonesia terverifikasi, dengan sertifikat setelah selesai.'
+          )}
+          action={
+            <Link href="/coach">
+              <Button variant="outline">{t('Become a coach', 'Jadi coach')}</Button>
+            </Link>
+          }
+        />
 
-        <LoadData
-          hideIcon
-          response={{
-            isLoading: loading,
-            isEmpty: courses.length === 0,
-            emptyTitle: t('No courses available yet.', 'Belum ada kursus tersedia.'),
-            emptySubtitle: t('Be the first to create one — see "Become a Coach" above.', 'Jadilah yang pertama membuat kursus — lihat "Jadilah Coach" di atas.'),
-          }}
-        >
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {courses.map((c) => (
-              <Link key={c.id} href={`/courses/${c.id}`}>
-                <Card className="glass group h-full overflow-hidden transition-all hover:border-primary/40 hover:-translate-y-0.5">
-                  <div className="relative h-32 overflow-hidden">
-                    <img src={getCourseImage(c.category)} alt={c.title} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-card via-card/30 to-transparent" />
-                    <div className="absolute top-3 left-3 flex gap-2">
-                      <Badge variant="secondary" className="capitalize text-xs backdrop-blur-md">{c.level}</Badge>
-                    </div>
+        <BrowseToolbar
+          searchValue={filters.search}
+          searchPlaceholder={t('Search courses or coaches…', 'Cari kursus atau coach…')}
+          onEditSearch={editCoursesSearch}
+          filters={toolbarFilters}
+          onEditFilter={editCoursesFilter}
+          onClearFilters={clearCoursesFilters}
+        />
+
+        <LoadData hideIcon customLoader response={data}>
+          {data.isLoading ? (
+            <CardGridSkeleton count={6} chips={2} lines={2} />
+          ) : (
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {data.data.map((course) => (
+                <Link
+                  key={course.id}
+                  href={`/courses/${course.id}`}
+                  className="group flex h-full min-w-0 flex-col rounded-xl border border-border bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-foreground/25 hover:shadow-[var(--shadow-card-hover)]"
+                >
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge variant="outline" className={cn('text-[11px] capitalize', TONE_CHIP[toneOf('courses')])}>
+                      {course.level}
+                    </Badge>
+                    {course.category && (
+                      <Badge variant="outline" className="text-[11px]">{course.category}</Badge>
+                    )}
                   </div>
-                  <CardContent className="p-5">
-                    {c.category && <Badge variant="outline" className="mb-2 text-xs">{c.category}</Badge>}
-                    <h3 className="font-semibold leading-tight">{c.title}</h3>
-                    <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{c.description}</p>
-                    <div className="mt-3 flex items-center justify-between">
-                      <p className="text-xs text-muted-foreground">{t('by', 'oleh')} {c.profiles?.full_name ?? t('Coach', 'Coach')}</p>
-                      <p className="text-xs text-muted-foreground">{c.enrollments?.length ?? 0} {t('enrolled', 'terdaftar')}</p>
-                    </div>
-                    <div className="mt-2">
-                      {c.price === 0 ? (
-                        <Badge variant="default" className="text-xs">{t('Free', 'Gratis')}</Badge>
-                      ) : (
-                        <Badge variant="outline" className={`text-xs ${TONE_TEXT[toneOf('courses')]}`}>Rp {(c.price / 1000).toFixed(0)}K</Badge>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
-          </div>
+
+                  <h3 className="mt-3 line-clamp-2 font-semibold leading-snug group-hover:underline">{course.title}</h3>
+                  <p className="mt-1.5 text-sm text-muted-foreground">{course.coach}</p>
+                  <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-muted-foreground text-pretty">
+                    {course.description}
+                  </p>
+
+                  <div className="mt-auto flex items-center justify-between gap-3 border-t border-border/60 pt-4">
+                    <span className={cn('font-semibold', course.price === 0 ? 'text-success' : TONE_TEXT[toneOf('courses')])}>
+                      {course.priceLabel}
+                    </span>
+                    <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <Users className="h-3.5 w-3.5" />
+                      {course.enrolled} {t('enrolled', 'terdaftar')}
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
         </LoadData>
       </div>
     </AppShell>

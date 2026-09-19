@@ -1,21 +1,24 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { Search } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { AppShell } from '@/components/app-shell';
-import { TONE_CHIP, TONE_TEXT, toneOf } from '@/shared/lib/tones';
-import { LoadData } from '@/components/load-data';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { useLang } from '@/components/language-provider';
+import { MapPin } from 'lucide-react';
 
 import type { DataDirectory } from '@/features/directory/types/directoryTypes';
 import { useDirectoryControllers } from '@/features/directory/controllers/directoryControllers';
 import { DIRECTORY_PAGE_SIZE } from '@/features/directory/services/directoryServices';
+
+import { AppShell } from '@/components/app-shell';
+import { PageHeader } from '@/components/page-header';
+import { LoadData } from '@/components/load-data';
+import { BrowseToolbar } from '@/components/browse-toolbar';
+import { CardGridSkeleton } from '@/components/card-skeleton';
+import { useLang } from '@/components/language-provider';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { TONE_CHIP, toneOf } from '@/shared/lib/tones';
+import { cn } from '@/shared/lib/utils';
 
 type DirectoryMember = DataDirectory;
 
@@ -28,147 +31,235 @@ const dummyMembers: DirectoryMember[] = [
   { id: 'dummy-m6', full_name: 'Citra Dewi', bio: 'Product Manager transitioning from software engineering. Building products that solve real Indonesian problems.', avatar_url: 'https://images.pexels.com/photos/733872/pexels-photo-733872.jpeg?auto=compress&cs=tinysrgb&h=200&w=200', location: 'Bali', current_job_status: 'Employed', user_skills: [{ level: 'intermediate', skills: { name: 'Product Management' } }, { level: 'beginner', skills: { name: 'React' } }], _isDummy: true } as any,
 ];
 
+const LOCATIONS = ['Jakarta', 'Bandung', 'Surabaya', 'Yogyakarta', 'Medan', 'Makassar', 'Bali', 'Online'];
+const STATUSES = ['Employed', 'Freelancing', 'Looking for work', 'Open to opportunities', 'Student'];
+
 export default function DirectoryList() {
   const { t } = useLang();
-  const [search, setSearch] = useState('');
-  const [skillFilter, setSkillFilter] = useState('all');
-  const [locationFilter, setLocationFilter] = useState('all');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [page, setPage] = useState(1);
-
   const { fetchDirectory, fetchDirectorySkills, setGetDirectory } = useDirectoryControllers();
 
-  const skills = fetchDirectorySkills.data ?? [];
-  const loading = fetchDirectory.isPending;
+  const [filters, setFilters] = useState({
+    search: '',
+    filter: { location: 'all', status: 'all', skill: 'all' },
+    pagination: { currentPage: 1, perPage: DIRECTORY_PAGE_SIZE },
+  });
 
-  const isFirstUnfilteredPage =
-    page === 1 && !search && locationFilter === 'all' && statusFilter === 'all' && skillFilter === 'all';
+  const data = useMemo(() => {
+    const isFiltered =
+      Boolean(filters.search) ||
+      filters.filter.location !== 'all' ||
+      filters.filter.status !== 'all' ||
+      filters.filter.skill !== 'all';
 
-  const mergeDummyMembers = (dbMembers: DirectoryMember[]) => {
-    if (!isFirstUnfilteredPage) return dbMembers;
-    const realIds = new Set(dbMembers.map((m) => m.id));
-    return [...dbMembers, ...dummyMembers.filter((d) => !realIds.has(d.id))];
+    // The seeded profiles only stand in for a first, unfiltered page — never
+    // for a search that genuinely returned nothing.
+    const getMergedMembers = (dbMembers: DirectoryMember[]) => {
+      if (filters.pagination.currentPage !== 1 || isFiltered) return dbMembers;
+      const realIds = new Set(dbMembers.map((member) => member.id));
+      return [...dbMembers, ...dummyMembers.filter((dummy) => !realIds.has(dummy.id))];
+    };
+
+    const getMappedMember = (member: DirectoryMember) => ({
+      id: member.id,
+      name: member.full_name ?? t('Anonymous', 'Anonim'),
+      bio: member.bio,
+      avatarUrl: member.avatar_url,
+      initial: (member.full_name ?? '?').charAt(0).toUpperCase(),
+      location: member.location,
+      status: member.current_job_status,
+      skills: (member.user_skills ?? []).slice(0, 3).map((entry) => entry.skills?.name).filter(Boolean) as string[],
+      extraSkills: Math.max((member.user_skills?.length ?? 0) - 3, 0),
+      isTalent: member.is_talent && member.talent_approved === 'approved',
+    });
+
+    const rows = fetchDirectory.data ?? [];
+    const list = getMergedMembers(rows).map(getMappedMember);
+
+    return {
+      data: list,
+      isLoading: fetchDirectory.isPending,
+      isError: fetchDirectory.isError,
+      isEmpty: !fetchDirectory.isPending && !fetchDirectory.isError && list.length === 0,
+      errorTitle: t('Could not load members.', 'Gagal memuat member.'),
+      errorSubtitle: t('Check your connection and try again.', 'Periksa koneksi lalu coba lagi.'),
+      emptyTitle: isFiltered
+        ? t('No members match these filters.', 'Tidak ada member yang cocok.')
+        : t('No members listed yet.', 'Belum ada member terdaftar.'),
+      emptySubtitle: isFiltered
+        ? t('Try a different skill or city.', 'Coba skill atau kota lain.')
+        : t('Profiles appear here once members complete onboarding.', 'Profil muncul di sini setelah member menyelesaikan onboarding.'),
+      pagination: filters.pagination,
+      hasNextPage: rows.length === DIRECTORY_PAGE_SIZE,
+    };
+  }, [fetchDirectory.data, fetchDirectory.isPending, fetchDirectory.isError, filters, t]);
+
+  const toolbarFilters = useMemo(
+    () => [
+      {
+        key: 'location',
+        label: t('Location', 'Lokasi'),
+        value: filters.filter.location,
+        options: [
+          { value: 'all', label: t('All locations', 'Semua lokasi') },
+          ...LOCATIONS.map((location) => ({ value: location, label: location })),
+        ],
+      },
+      {
+        key: 'status',
+        label: t('Status', 'Status'),
+        value: filters.filter.status,
+        width: 'sm:w-52',
+        options: [
+          { value: 'all', label: t('Any status', 'Semua status') },
+          ...STATUSES.map((status) => ({ value: status, label: status })),
+        ],
+      },
+      {
+        key: 'skill',
+        label: t('Skill', 'Skill'),
+        value: filters.filter.skill,
+        options: [
+          { value: 'all', label: t('All skills', 'Semua skill') },
+          ...(fetchDirectorySkills.data ?? []).map((skill) => ({ value: skill.id, label: skill.name })),
+        ],
+      },
+    ],
+    [filters.filter, fetchDirectorySkills.data, t]
+  );
+
+  const editDirectorySearch = (value: string) => {
+    setFilters((prev) => ({ ...prev, search: value, pagination: { ...prev.pagination, currentPage: 1 } }));
   };
 
-  const members = mergeDummyMembers(fetchDirectory.data ?? []);
-  const hasNextPage = (fetchDirectory.data ?? []).length === DIRECTORY_PAGE_SIZE;
+  const editDirectoryFilter = (key: string, value: string) => {
+    setFilters((prev) => ({
+      ...prev,
+      filter: { ...prev.filter, [key]: value },
+      pagination: { ...prev.pagination, currentPage: 1 },
+    }));
+  };
+
+  const clearDirectoryFilters = () => {
+    setFilters((prev) => ({
+      ...prev,
+      search: '',
+      filter: { location: 'all', status: 'all', skill: 'all' },
+      pagination: { ...prev.pagination, currentPage: 1 },
+    }));
+  };
+
+  const loadDirectory = (page: number) => {
+    setFilters((prev) => ({ ...prev, pagination: { ...prev.pagination, currentPage: page } }));
+  };
 
   useEffect(() => {
     const timeout = setTimeout(() => {
-      setGetDirectory({ search, locationFilter, statusFilter, skillFilter, page });
+      setGetDirectory({
+        search: filters.search,
+        locationFilter: filters.filter.location,
+        statusFilter: filters.filter.status,
+        skillFilter: filters.filter.skill,
+        page: filters.pagination.currentPage,
+      });
     }, 300);
     return () => clearTimeout(timeout);
-  }, [search, locationFilter, statusFilter, skillFilter, page, setGetDirectory]);
-
-  // Any filter change restarts paging so page 2 of an old filter is never shown.
-  useEffect(() => {
-    setPage(1);
-  }, [search, locationFilter, statusFilter, skillFilter]);
-
-  const locations = ['Jakarta', 'Bandung', 'Surabaya', 'Yogyakarta', 'Medan', 'Makassar', 'Bali', 'Online'];
-  const statuses = ['Employed', 'Freelancing', 'Looking for work', 'Open to opportunities', 'Student'];
+  }, [filters, setGetDirectory]);
 
   return (
     <AppShell>
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mb-8">
-          <h1 className={`font-display text-3xl font-semibold ${TONE_TEXT[toneOf('directory')]}`}>{t('Member Directory', 'Direktori Member')}</h1>
-          <p className="mt-1 text-muted-foreground">{t('Connect with IT practitioners across Indonesia.', 'Terhubung dengan praktisi IT di seluruh Indonesia.')}</p>
-        </div>
+      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+        <PageHeader
+          eyebrow={t('Ecosystem · Community', 'Ekosistem · Komunitas')}
+          tone={toneOf('directory')}
+          title={t('Members', 'Member')}
+          subtitle={t('Connect with IT practitioners across Indonesia.', 'Terhubung dengan praktisi IT di seluruh Indonesia.')}
+        />
 
-        {/* Filters */}
-        <div className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder={t('Search by name or bio...', 'Cari berdasarkan nama atau bio...')}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9"
-            />
-          </div>
-          <Select value={locationFilter} onValueChange={setLocationFilter}>
-            <SelectTrigger><SelectValue placeholder={t('Location', 'Lokasi')} /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t('All Locations', 'Semua Lokasi')}</SelectItem>
-              {locations.map((l) => <SelectItem key={l} value={l}>{l}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger><SelectValue placeholder={t('Status', 'Status')} /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t('All Statuses', 'Semua Status')}</SelectItem>
-              {statuses.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <Select value={skillFilter} onValueChange={setSkillFilter}>
-            <SelectTrigger><SelectValue placeholder={t('Skill', 'Skill')} /></SelectTrigger>
-            <SelectContent className="max-h-60">
-              <SelectItem value="all">{t('All Skills', 'Semua Skill')}</SelectItem>
-              {skills.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
+        <BrowseToolbar
+          searchValue={filters.search}
+          searchPlaceholder={t('Search by name or bio…', 'Cari nama atau bio…')}
+          onEditSearch={editDirectorySearch}
+          filters={toolbarFilters}
+          onEditFilter={editDirectoryFilter}
+          onClearFilters={clearDirectoryFilters}
+        />
 
-        {/* Results */}
-        <LoadData
-          hideIcon
-          response={{
-            isLoading: loading,
-            isEmpty: members.length === 0,
-            emptyTitle: t('No members found matching your filters.', 'Tidak ada member yang cocok dengan filter Anda.'),
-          }}
-        >
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {members.map((m) => (
-                <Link key={m.id} href={`/directory/${m.id}`}>
-                  <Card className="glass group h-full transition-all hover:border-primary/40 hover:-translate-y-0.5">
-                    <CardContent className="p-5">
-                      <div className="flex items-start gap-3">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-primary/20 to-accent/20 text-base font-bold overflow-hidden">
-                          {m.avatar_url ? <img src={m.avatar_url} alt={m.full_name ?? ''} className="h-12 w-12 rounded-full object-cover" /> : m.full_name?.charAt(0)?.toUpperCase() ?? '?'}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h3 className="truncate font-semibold">{m.full_name ?? 'Anonymous'}</h3>
-                          {m.location && (
-                            <p className="text-sm text-muted-foreground">{m.location}</p>
-                          )}
-                        </div>
-                      </div>
-                      {m.bio && <p className="mt-3 line-clamp-2 text-sm text-muted-foreground">{m.bio}</p>}
-                      <div className="mt-3 flex flex-wrap gap-1.5">
-                        {m.user_skills?.slice(0, 3).map((us, i) => (
-                          <Badge key={i} variant="secondary" className="text-xs">{us.skills?.name}</Badge>
-                        ))}
-                        {(m.user_skills?.length ?? 0) > 3 && (
-                          <Badge variant="outline" className="text-xs">+{m.user_skills!.length - 3}</Badge>
+        <LoadData hideIcon customLoader response={data}>
+          {data.isLoading ? (
+            <CardGridSkeleton count={6} chips={3} lines={2} />
+          ) : (
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {data.data.map((member) => (
+                <Link
+                  key={member.id}
+                  href={`/directory/${member.id}`}
+                  className="group flex h-full min-w-0 flex-col rounded-xl border border-border bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-foreground/25 hover:shadow-[var(--shadow-card-hover)]"
+                >
+                  <div className="flex items-start gap-3">
+                    <Avatar className="h-12 w-12 shrink-0">
+                      {member.avatarUrl && <AvatarImage src={member.avatarUrl} alt="" />}
+                      <AvatarFallback className={TONE_CHIP[toneOf('directory')]}>{member.initial}</AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <h3 className="min-w-0 flex-1 truncate font-semibold group-hover:underline">{member.name}</h3>
+                        {member.isTalent && (
+                          <Badge variant="outline" className={cn('shrink-0 text-[11px]', TONE_CHIP[toneOf('talents')])}>
+                            {t('Talent', 'Talent')}
+                          </Badge>
                         )}
                       </div>
-                      <div className="mt-3 flex items-center justify-between">
-                        {m.current_job_status && (
-                          <span className="text-xs text-muted-foreground">{m.current_job_status}</span>
-                        )}
-                        {m.is_talent && m.talent_approved === 'approved' && (
-                          <Badge variant="default" className={`text-xs ${TONE_CHIP[toneOf('directory')]}`}>Talent</Badge>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
+                      {member.location && (
+                        <p className="mt-0.5 flex items-center gap-1 truncate text-sm text-muted-foreground">
+                          <MapPin className="h-3 w-3 shrink-0" />
+                          {member.location}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {member.bio && (
+                    <p className="mt-3 line-clamp-2 text-sm leading-relaxed text-muted-foreground text-pretty">{member.bio}</p>
+                  )}
+
+                  {member.skills.length > 0 && (
+                    <div className="mt-3 flex flex-wrap gap-1.5">
+                      {member.skills.map((skill) => (
+                        <Badge key={skill} variant="secondary" className="text-[11px]">{skill}</Badge>
+                      ))}
+                      {member.extraSkills > 0 && (
+                        <Badge variant="outline" className="text-[11px]">+{member.extraSkills}</Badge>
+                      )}
+                    </div>
+                  )}
+
+                  {member.status && <p className="mt-auto pt-4 text-xs text-muted-foreground">{member.status}</p>}
                 </Link>
               ))}
-          </div>
+            </div>
+          )}
         </LoadData>
 
-        {!loading && (page > 1 || hasNextPage) && (
-          <div className="mt-8 flex items-center justify-center gap-3">
-            <Button variant="outline" disabled={page === 1} onClick={() => setPage(page - 1)}>
+        {!data.isLoading && (data.pagination.currentPage > 1 || data.hasNextPage) && (
+          <nav className="mt-10 flex items-center justify-center gap-3" aria-label={t('Pagination', 'Paginasi')}>
+            <Button
+              variant="outline"
+              disabled={data.pagination.currentPage === 1}
+              onClick={() => loadDirectory(data.pagination.currentPage - 1)}
+            >
               {t('Previous', 'Sebelumnya')}
             </Button>
-            <span className="text-sm text-muted-foreground">{t('Page', 'Halaman')} {page}</span>
-            <Button variant="outline" disabled={!hasNextPage} onClick={() => setPage(page + 1)}>
+            <span className="text-sm text-muted-foreground">
+              {t('Page', 'Halaman')} {data.pagination.currentPage}
+            </span>
+            <Button
+              variant="outline"
+              disabled={!data.hasNextPage}
+              onClick={() => loadDirectory(data.pagination.currentPage + 1)}
+            >
               {t('Next', 'Berikutnya')}
             </Button>
-          </div>
+          </nav>
         )}
       </div>
     </AppShell>
