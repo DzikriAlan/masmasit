@@ -20,6 +20,7 @@ import type { DataAdminPayments } from '@/features/admin/types/adminTypes';
 import { useAdminControllers } from '@/features/admin/controllers/adminControllers';
 import AdminRoles from '@/features/admin/components/AdminRoles';
 import AdminAuditLog from '@/features/admin/components/AdminAuditLog';
+import AdminUserActivity from '@/features/admin/components/AdminUserActivity';
 import AdminCatalog from '@/features/admin/components/AdminCatalog';
 
 export default function AdminDashboard() {
@@ -263,6 +264,7 @@ export default function AdminDashboard() {
             <TabsTrigger value="payments">{t('Payments', 'Pembayaran')}</TabsTrigger>
             <TabsTrigger value="agency">{t('Agency Projects', 'Proyek Agency')}</TabsTrigger>
             <TabsTrigger value="analytics">{t('Analytics', 'Analitik')}</TabsTrigger>
+            <TabsTrigger value="users">{t('User Activity', 'Aktivitas User')}</TabsTrigger>
             <TabsTrigger value="fees">{t('Fee Management', 'Kelola Biaya')}</TabsTrigger>
             <TabsTrigger value="moderation">{t('Moderation', 'Moderasi')}</TabsTrigger>
             <TabsTrigger value="catalog">{t('Catalog', 'Katalog')}</TabsTrigger>
@@ -641,6 +643,10 @@ export default function AdminDashboard() {
 
           <TabsContent value="roles">
             <AdminRoles isSuperAdmin={isSuperAdmin} currentUserId={user?.id} />
+          </TabsContent>
+
+          <TabsContent value="users">
+            <AdminUserActivity enabled={authChecked} />
           </TabsContent>
 
           <TabsContent value="audit">

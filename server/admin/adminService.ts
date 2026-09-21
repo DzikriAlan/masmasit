@@ -165,3 +165,17 @@ export const deleteAdminCaseStudy = async (id: string) => {
   const supabase = getServerSupabase();
   return supabase.from('case_studies').delete().eq('id', id);
 };
+
+/**
+ * Per-member feature usage for the admin panel.
+ *
+ * Goes through the admin_user_activity() RPC rather than counting here: the
+ * counts span tables whose RLS hides other people's rows, so a client-side
+ * tally would silently report only what the admin happens to own. The
+ * function is SECURITY DEFINER and re-checks is_admin() itself.
+ */
+export const getAdminUserActivity = async () => {
+  const supabase = getServerSupabase();
+  return supabase.rpc('admin_user_activity');
+};
+

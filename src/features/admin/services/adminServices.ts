@@ -17,6 +17,7 @@ import type {
   DataAdminStats,
   DataAdminTeamCollabs,
   DataAdminUser,
+  DataAdminUserActivity,
   PayloadPatchAdminSettings,
   PayloadPostAdminRole,
 } from '../types/adminTypes';
@@ -311,6 +312,10 @@ export const getAdminRoleDistribution = async () => {
 
 export const getAdminAuditLogs = async () => {
   return apiGet<DataAdminAuditLog[]>('/admin/audit-logs');
+};
+
+export const getAdminUserActivity = async () => {
+  return apiGet<DataAdminUserActivity[]>('/admin/user-activity');
 };
 
 export const getAdminAgencyServices = async () => {

@@ -201,3 +201,41 @@ export interface PayloadPostAdminRole {
   role: string;
   regionId: string | null;
 }
+
+/** One row per member from the admin_user_activity() RPC. */
+export interface DataAdminUserActivity {
+  user_id: string;
+  full_name: string | null;
+  email: string;
+  avatar_url: string | null;
+  location: string | null;
+  roles: string[];
+  joined_at: string;
+  last_active_at: string;
+  jobs_posted: number;
+  job_applications: number;
+  projects_posted: number;
+  project_bids: number;
+  courses_taught: number;
+  enrollments: number;
+  certificates: number;
+  events_created: number;
+  event_rsvps: number;
+  bookings_as_talent: number;
+  bookings_as_client: number;
+  discussions: number;
+  discussion_comments: number;
+  builds: number;
+  build_likes: number;
+  teams_owned: number;
+  team_memberships: number;
+  team_collabs: number;
+  agencies_owned: number;
+  articles: number;
+  messages_sent: number;
+  experiences: number;
+  skills: number;
+  total_records: number;
+  features_used: number;
+}
+

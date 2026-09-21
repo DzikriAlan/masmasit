@@ -12,6 +12,7 @@ import {
   getAdminApprovals,
   getAdminArticles,
   getAdminAuditLogs,
+  getAdminUserActivity,
   getAdminCaseStudies,
   getAdminTeamCollabs,
   getAdminRoleDistribution,
@@ -274,6 +275,17 @@ export const useAdminAuditControllers = (enabled: boolean) => {
   });
 
   return { fetchAdminAuditLogs };
+};
+
+/** Per-member feature usage, for the User Activity tab. */
+export const useAdminUserActivityControllers = (enabled: boolean) => {
+  const fetchAdminUserActivity = useQuery({
+    queryKey: ['adminUserActivity'],
+    queryFn: async () => unwrapApiResponse(await getAdminUserActivity()) ?? [],
+    enabled,
+  });
+
+  return { fetchAdminUserActivity };
 };
 
 /** Catalogue CRUD: agency services and case studies. */
