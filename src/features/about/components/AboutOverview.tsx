@@ -19,14 +19,18 @@ type Bilingual = { en: string; id: string };
 
 /* The founder block is the one part of this page that is about a person
    rather than the product, so everything editable about it lives here.
-   `photo` is a plain public/ path, not an imported asset: dropping a new
-   JPEG in at that path replaces the portrait without touching the build,
-   and if the file is missing the block falls back to the monogram below
-   instead of shipping a broken image. */
+   `photo` is a plain public/ path, not an imported asset: replacing the
+   file at that path swaps the portrait without touching the build, and if
+   it ever goes missing the block falls back to the monogram below instead
+   of shipping a broken image.
+
+   The source is square. In the 4/5 frame below, object-cover matches the
+   height and trims about 10% from each side, so the face is never cropped
+   vertically. */
 const FOUNDER = {
-  name: 'Dzikri Rama',
+  name: 'Muh Tri Nur Pamungkas',
   role: { en: 'Founder', id: 'Founder' },
-  photo: '/images/founder.jpg',
+  photo: '/muhtrinur.png',
   location: 'Indonesia',
 };
 
