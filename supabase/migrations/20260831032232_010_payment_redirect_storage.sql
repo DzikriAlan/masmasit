@@ -4,7 +4,7 @@
 ## What this migration does
 
 ### 1. Payment columns on app_settings
-- lynkid_bookings_url, lynkid_agency_url, lynkid_courses_url, lynkid_events_url (text) — default fallback payment links per category, set by admin.
+- lynkid_bookings_url, lynkid_agency_url, lynkid_courses_url, lynkid_events_url (text) - default fallback payment links per category, set by admin.
 
 ### 2. Payment columns on bookings, enrollments, event_rsvps
 - payment_status text NOT NULL DEFAULT 'unpaid' CHECK IN ('unpaid','awaiting_confirmation','paid')

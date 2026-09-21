@@ -2,9 +2,9 @@
 # Projects: Project Portal with Bids and Reviews
 
 1. New Tables
-- `projects` — member-posted projects (title, description, budget, deadline, status)
-- `project_bids` — bids by other members on projects
-- `project_reviews` — two-way reviews after project completion
+- `projects` - member-posted projects (title, description, budget, deadline, status)
+- `project_bids` - bids by other members on projects
+- `project_reviews` - two-way reviews after project completion
 
 2. Security
 - projects: any authenticated user can SELECT; owner can INSERT/UPDATE/DELETE own.

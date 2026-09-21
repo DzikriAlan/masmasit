@@ -15,6 +15,7 @@ import { BrowseToolbar } from '@/components/browse-toolbar';
 import { RowSkeleton } from '@/components/card-skeleton';
 import { useAuth } from '@/components/auth-provider';
 import { useLang } from '@/components/language-provider';
+import { signedOutState } from '@/shared/lib/browse-gate';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -28,7 +29,7 @@ import { cn, loginHref } from '@/shared/lib/utils';
 // REST.md Bagian 4/9: "forum ringan (topik + komentar)" — deliberately just
 // a title, a body, and a reply thread. No sub-forums, no reputation points.
 export default function DiscussionsList() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { t } = useLang();
   const { fetchDiscussions, storeDiscussions } = useDiscussionsControllers();
 
@@ -77,6 +78,7 @@ export default function DiscussionsList() {
       data: list,
       isLoading: fetchDiscussions.isPending,
       isError: fetchDiscussions.isError,
+      ...signedOutState(!authLoading && !user, t, t('discussions', 'diskusi')),
       isEmpty: !fetchDiscussions.isPending && !fetchDiscussions.isError && list.length === 0,
       errorTitle: t('Could not load topics.', 'Gagal memuat topik.'),
       errorSubtitle: t('Check your connection and try again.', 'Periksa koneksi lalu coba lagi.'),
@@ -87,7 +89,7 @@ export default function DiscussionsList() {
         ? t('Try different words, or show all topics.', 'Coba kata lain, atau tampilkan semua topik.')
         : t('Ask the first question — someone here has the answer.', 'Ajukan pertanyaan pertama — ada yang tahu jawabannya.'),
     };
-  }, [fetchDiscussions.data, fetchDiscussions.isPending, fetchDiscussions.isError, filters, t]);
+  }, [fetchDiscussions.data, fetchDiscussions.isPending, fetchDiscussions.isError, filters, t, user, authLoading]);
 
   const toolbarFilters = useMemo(
     () => [

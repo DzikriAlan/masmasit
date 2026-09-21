@@ -9,6 +9,7 @@ import { ArrowRight, Calendar, MapPin, Search } from 'lucide-react';
 import { AppShell } from '@/components/app-shell';
 import { LoadData } from '@/components/load-data';
 import { useLang } from '@/components/language-provider';
+import { useAuth } from '@/components/auth-provider';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -72,6 +73,7 @@ const KIND_LABEL: Record<LatestKind, { en: string; id: string }> = {
 
 export default function DiscoverList() {
   const { t } = useLang();
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
 
   // Inline hero search: its own debounced query against the same search
@@ -155,7 +157,29 @@ export default function DiscoverList() {
             )}
           </p>
 
-          <div className="relative mx-auto mt-8 max-w-xl text-left">
+          {!authLoading && !user && (
+            <div className="mx-auto mt-8 max-w-xl rounded-xl border border-border bg-card px-5 py-4 text-left">
+              <p className="text-sm font-semibold">
+                {t('Sign in to see what is live right now.', 'Masuk untuk melihat apa yang sedang berjalan.')}
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground text-pretty">
+                {t(
+                  'Search, listings and member profiles are open to members. The sections below fill in once you are signed in.',
+                  'Pencarian, listing dan profil member terbuka untuk member. Bagian di bawah akan terisi setelah kamu masuk.'
+                )}
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Link href="/register">
+                  <Button size="sm" className="h-9 rounded-full px-4 font-semibold">{t('Get Started', 'Daftar')}</Button>
+                </Link>
+                <Link href="/login">
+                  <Button size="sm" variant="outline" className="h-9 rounded-full px-4 font-semibold">{t('Sign in', 'Masuk')}</Button>
+                </Link>
+              </div>
+            </div>
+          )}
+
+          <div className={cn('relative mx-auto mt-8 max-w-xl text-left', (!authLoading && !user) && 'hidden')}>
             <Search className="pointer-events-none absolute left-5 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={searchTerm}

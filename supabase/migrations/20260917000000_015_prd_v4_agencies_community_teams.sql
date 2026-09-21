@@ -1,12 +1,12 @@
 -- =============================================================================
--- 015: PRD v4.0 (masmasit/REST.md) — Agency, Team Builder, Team Collabs,
+-- 015: PRD v4.0 (masmasit/REST.md) - Agency, Team Builder, Team Collabs,
 -- Discussions, Builds/Spotlight, Articles, and the "agency_owner" role.
 --
 -- Scope decisions (documented here since REST.md doesn't specify schema):
 --  - Team membership is owner-adds-directly, no invite/accept step.
 --  - Spotlight has no table of its own: it is `builds` filtered to
 --    `promoted_to_spotlight = true`. A Build's own like count IS its Hot
---    Rank signal — no separate boost mechanism.
+--    Rank signal - no separate boost mechanism.
 --  - Team Collabs matching is admin-mediated (status + free-text
 --    `matched_with`), matching the PRD's own human-in-the-loop description
 --    ("Tri buatkan grup WA manual") rather than an automated pairing engine.
@@ -36,7 +36,7 @@ CREATE POLICY "insert_own_roles" ON user_roles FOR INSERT
   );
 
 -- ---------------------------------------------------------------------------
--- 2. AGENCIES — one row per agency, member-owned or the in-house one.
+-- 2. AGENCIES - one row per agency, member-owned or the in-house one.
 -- ---------------------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS agencies (
@@ -70,7 +70,7 @@ CREATE POLICY "update_agency_admin" ON agencies FOR UPDATE
   TO authenticated USING (is_admin()) WITH CHECK (true);
 
 -- Postgres OR's every applicable policy's WITH CHECK together for the same
--- command, on the same table, regardless of which policy's USING matched —
+-- command, on the same table, regardless of which policy's USING matched -
 -- so the admin policy's WITH CHECK (true) above silently overrides
 -- update_own_agency's "approval_status = 'pending'" restriction, and an
 -- owner's own UPDATE can self-approve. A trigger is the only reliable guard
@@ -94,7 +94,7 @@ DROP TRIGGER IF EXISTS guard_agencies_approval ON agencies;
 CREATE TRIGGER guard_agencies_approval BEFORE UPDATE ON agencies
   FOR EACH ROW EXECUTE FUNCTION guard_agency_approval();
 
--- `agency_services` (migration 006) already carries the in-house catalogue —
+-- `agency_services` (migration 006) already carries the in-house catalogue -
 -- give every row a home agency instead of duplicating the table. Existing
 -- rows are backfilled onto the seeded in-house agency below.
 ALTER TABLE agency_services ADD COLUMN IF NOT EXISTS agency_id uuid REFERENCES agencies(id) ON DELETE CASCADE;
@@ -105,7 +105,7 @@ VALUES (
   NULL,
   'MasmasIT',
   'masmasit',
-  'Agency in-house MasmasIT — tim produk, AI, kreatif dan HR yang membangun bersama klien.',
+  'Agency in-house MasmasIT - tim produk, AI, kreatif dan HR yang membangun bersama klien.',
   true,
   'approved'
 )
@@ -129,7 +129,7 @@ CREATE POLICY "manage_own_agency_services" ON agency_services FOR ALL
   );
 
 -- ---------------------------------------------------------------------------
--- 3. TEAM BUILDER — teams, members with a role title, grade computed live.
+-- 3. TEAM BUILDER - teams, members with a role title, grade computed live.
 -- ---------------------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS teams (
@@ -210,8 +210,8 @@ DROP POLICY IF EXISTS "delete_team_members_owner" ON team_members;
 CREATE POLICY "delete_team_members_owner" ON team_members FOR DELETE
   TO authenticated USING (team_id IN (SELECT id FROM teams WHERE owner_id = auth.uid()));
 
--- Reads experiences + user_skills + certificates — exactly the three
--- signals REST.md Bagian 8 names ("skill, pengalaman, sertifikat") — and
+-- Reads experiences + user_skills + certificates - exactly the three
+-- signals REST.md Bagian 8 names ("skill, pengalaman, sertifikat") - and
 -- buckets a weighted score into junior/mid/senior. SECURITY DEFINER matches
 -- the house style of is_admin()/is_super_admin(); the underlying tables are
 -- already `USING (true)` for any authenticated reader, so this only adds
@@ -281,7 +281,7 @@ $$;
 GRANT EXECUTE ON FUNCTION get_team_roster(uuid) TO authenticated;
 
 -- ---------------------------------------------------------------------------
--- 4. TEAM COLLABS — a team registers to build R&D; admin marks the match.
+-- 4. TEAM COLLABS - a team registers to build R&D; admin marks the match.
 -- ---------------------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS team_collabs (
@@ -320,7 +320,7 @@ CREATE POLICY "update_team_collabs_admin" ON team_collabs FOR UPDATE
 -- team could mark its own listing "matched" and fill in matched_with,
 -- which is exactly the step REST.md Bagian 6.2 reserves for a human admin
 -- ("Tri buatkan grup WA manual"). Owners keep the one self-service move the
--- PRD doesn't reserve for admins — withdrawing an open listing.
+-- PRD doesn't reserve for admins - withdrawing an open listing.
 CREATE OR REPLACE FUNCTION guard_team_collabs_match()
 RETURNS trigger
 LANGUAGE plpgsql
@@ -341,7 +341,7 @@ CREATE TRIGGER guard_team_collabs_match BEFORE UPDATE ON team_collabs
   FOR EACH ROW EXECUTE FUNCTION guard_team_collabs_match();
 
 -- ---------------------------------------------------------------------------
--- 5. DISCUSSIONS — topics + comments. `is_featured` is how a thread
+-- 5. DISCUSSIONS - topics + comments. `is_featured` is how a thread
 --    graduates into Discover's "Tulisan Member" strand (Bagian 3/9).
 -- ---------------------------------------------------------------------------
 
@@ -369,10 +369,10 @@ CREATE POLICY "update_own_discussions" ON discussions FOR UPDATE
   TO authenticated USING (user_id = auth.uid() OR is_admin()) WITH CHECK (true);
 
 -- WITH CHECK (true) above lets an author edit their own title/body, which
--- is intended — but it also lets them flip is_featured themselves, the
+-- is intended - but it also lets them flip is_featured themselves, the
 -- editorial call that promotes a thread into Discover's "Tulisan Member"
 -- (Bagian 3/9). Single policy, so (unlike agencies/team_collabs above)
--- there's no second policy to silently OR the check away — a trigger is
+-- there's no second policy to silently OR the check away - a trigger is
 -- still the simplest guard against this table's own WITH CHECK (true).
 CREATE OR REPLACE FUNCTION guard_discussion_featured()
 RETURNS trigger
@@ -421,7 +421,7 @@ CREATE POLICY "delete_own_discussion_comments" ON discussion_comments FOR DELETE
 CREATE INDEX IF NOT EXISTS idx_discussion_comments_discussion ON discussion_comments(discussion_id);
 
 -- ---------------------------------------------------------------------------
--- 6. BUILDS — "what everyone is building". `promoted_to_spotlight = true`
+-- 6. BUILDS - "what everyone is building". `promoted_to_spotlight = true`
 --    is how a row also appears on /spotlight (Bagian 2/9); `likes_count`
 --    doubles as Spotlight's Hot Rank signal, so no separate boost table.
 -- ---------------------------------------------------------------------------
@@ -456,7 +456,7 @@ CREATE POLICY "insert_own_builds" ON builds FOR INSERT
     )
   );
 
--- Re-asserts the same agency-ownership rule insert_own_builds enforces —
+-- Re-asserts the same agency-ownership rule insert_own_builds enforces -
 -- otherwise an author could UPDATE a build after the fact to point
 -- source_type/agency_id at an agency they don't own, impersonating that
 -- agency's submission on Spotlight.
@@ -523,7 +523,7 @@ CREATE TRIGGER on_build_like_delete AFTER DELETE ON build_likes
   FOR EACH ROW EXECUTE FUNCTION trg_build_likes_count();
 
 -- ---------------------------------------------------------------------------
--- 7. ARTICLES — platform-authored (admin), the "Article" strand of Discover.
+-- 7. ARTICLES - platform-authored (admin), the "Article" strand of Discover.
 --    ("Tulisan Member" is `discussions.is_featured`, not this table.)
 -- ---------------------------------------------------------------------------
 

@@ -12,7 +12,9 @@ import { PageHeader } from '@/components/page-header';
 import { LoadData } from '@/components/load-data';
 import { BrowseToolbar } from '@/components/browse-toolbar';
 import { CardGridSkeleton } from '@/components/card-skeleton';
+import { useAuth } from '@/components/auth-provider';
 import { useLang } from '@/components/language-provider';
+import { signedOutState } from '@/shared/lib/browse-gate';
 import { Button } from '@/components/ui/button';
 import { TONE_CHIP, TONE_TEXT, toneOf } from '@/shared/lib/tones';
 import { cn } from '@/shared/lib/utils';
@@ -23,6 +25,7 @@ import { cn } from '@/shared/lib/utils';
 // and it's informational, not a privileged placement).
 export default function AgencyList() {
   const { t } = useLang();
+  const { user, loading: authLoading } = useAuth();
   const { fetchAgency } = useAgencyControllers();
 
   const [filters, setFilters] = useState({ search: '' });
@@ -51,6 +54,7 @@ export default function AgencyList() {
       data: list,
       isLoading: fetchAgency.isPending,
       isError: fetchAgency.isError,
+      ...signedOutState(!authLoading && !user, t, t('agencies', 'agency')),
       isEmpty: !fetchAgency.isPending && !fetchAgency.isError && list.length === 0,
       errorTitle: t('Could not load agencies.', 'Gagal memuat agency.'),
       errorSubtitle: t('Check your connection and try again.', 'Periksa koneksi lalu coba lagi.'),
@@ -61,7 +65,7 @@ export default function AgencyList() {
         ? t('Try a different name or specialism.', 'Coba nama atau spesialisasi lain.')
         : t('Register yours — approval is manual and usually quick.', 'Daftarkan milikmu — persetujuan manual dan biasanya cepat.'),
     };
-  }, [fetchAgency.data, fetchAgency.isPending, fetchAgency.isError, filters.search, t]);
+  }, [fetchAgency.data, fetchAgency.isPending, fetchAgency.isError, filters.search, t, user, authLoading]);
 
   const editAgencySearch = (value: string) => {
     setFilters((prev) => ({ ...prev, search: value }));

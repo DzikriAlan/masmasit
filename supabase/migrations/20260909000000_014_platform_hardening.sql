@@ -1,5 +1,5 @@
 /*
-  # 014 — Platform hardening
+  # 014 - Platform hardening
 
   Closes the gaps found in the September 2026 audit:
 

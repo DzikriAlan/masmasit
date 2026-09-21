@@ -12,7 +12,9 @@ import { PageHeader } from '@/components/page-header';
 import { LoadData } from '@/components/load-data';
 import { BrowseToolbar } from '@/components/browse-toolbar';
 import { CardGridSkeleton } from '@/components/card-skeleton';
+import { useAuth } from '@/components/auth-provider';
 import { useLang } from '@/components/language-provider';
+import { signedOutState } from '@/shared/lib/browse-gate';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { TONE_CHIP, TONE_TEXT, toneOf } from '@/shared/lib/tones';
@@ -20,6 +22,7 @@ import { cn } from '@/shared/lib/utils';
 
 export default function CoursesList() {
   const { t } = useLang();
+  const { user, loading: authLoading } = useAuth();
   const { fetchCourses } = useCoursesControllers();
 
   const [filters, setFilters] = useState({
@@ -61,6 +64,7 @@ export default function CoursesList() {
       levels: Array.from(new Set(all.map((course) => course.level))).sort((a, b) => a.localeCompare(b)),
       isLoading: fetchCourses.isPending,
       isError: fetchCourses.isError,
+      ...signedOutState(!authLoading && !user, t, t('courses', 'kursus')),
       isEmpty: !fetchCourses.isPending && !fetchCourses.isError && list.length === 0,
       errorTitle: t('Could not load courses.', 'Gagal memuat kursus.'),
       errorSubtitle: t('Check your connection and try again.', 'Periksa koneksi lalu coba lagi.'),
@@ -71,7 +75,7 @@ export default function CoursesList() {
         ? t('Try another level, or clear the filters.', 'Coba level lain, atau hapus filternya.')
         : t('Teach what you know — see "Become a coach" above.', 'Ajarkan yang kamu kuasai — lihat "Jadi coach" di atas.'),
     };
-  }, [fetchCourses.data, fetchCourses.isPending, fetchCourses.isError, filters, t]);
+  }, [fetchCourses.data, fetchCourses.isPending, fetchCourses.isError, filters, t, user, authLoading]);
 
   const toolbarFilters = useMemo(
     () => [

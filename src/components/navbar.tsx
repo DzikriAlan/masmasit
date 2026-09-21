@@ -82,6 +82,7 @@ const ecosystemColumns: MenuColumn[] = [
       { href: '/directory', en: 'Members', id: 'Member', descEn: 'Who is on the platform', descId: 'Siapa saja yang ada di sini' },
       { href: '/builds', en: 'Builds', id: 'Builds', descEn: 'What members are building now', descId: 'Yang lagi dibangun member' },
       { href: '/events', en: 'Events', id: 'Event', descEn: 'Meetups & hackathons', descId: 'Meetup & hackathon' },
+      { href: '/about', en: 'About', id: 'Tentang', descEn: 'Why MasmasIT exists, and who started it', descId: 'Kenapa MasmasIT ada, dan siapa yang memulai' },
     ],
   },
 ];
@@ -204,20 +205,29 @@ export function Navbar() {
       )}
     >
       <div className="mx-auto max-w-7xl">
-        <div className="flex h-16 items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+        {/* Three tracks, not justify-between: the wordmark and the action
+            cluster are never the same width, so space-between leaves the nav
+            sitting off to one side. Equal flex-1 basis-0 rails on both ends
+            put the nav on the true centre line of the bar instead. */}
+        <div className="flex h-16 items-center gap-4 px-4 sm:px-6 lg:px-8">
           {/* Logomark + wordmark: Plus Jakarta Sans ExtraBold, tightly tracked.
-              This is also the only route home — there is no "Home" nav item. */}
-          <Link href="/" aria-label="MasmasIT home" className="flex shrink-0 items-center gap-2">
-            <img
-              src={(overDarkHero ? mmitLogoWhite : mmitLogo).src}
-              alt=""
-              aria-hidden
-              className="h-6 w-auto shrink-0"
-            />
-            <span className="font-brand text-[22px] font-extrabold leading-none tracking-[-0.035em]">
-              MasmasIT
-            </span>
-          </Link>
+              This is also the only route home — there is no "Home" nav item.
+              The mark is h-5, not h-6: its ink fills the full frame while the
+              wordmark only fills its cap height, so matching the two boxes
+              made the mark read a head taller than the type next to it. */}
+          <div className="flex flex-1 basis-0 justify-start">
+            <Link href="/" aria-label="MasmasIT home" className="flex shrink-0 items-center gap-2">
+              <img
+                src={(overDarkHero ? mmitLogoWhite : mmitLogo).src}
+                alt=""
+                aria-hidden
+                className="h-5 w-auto shrink-0"
+              />
+              <span className="font-brand text-[22px] font-extrabold leading-none tracking-[-0.035em]">
+                MasmasIT
+              </span>
+            </Link>
+          </div>
 
           <nav ref={navRef} className="hidden items-center gap-0.5 lg:flex">
             <div className="relative" onPointerEnter={openMenu('product')} onPointerLeave={scheduleCloseMenu}>
@@ -294,8 +304,11 @@ export function Navbar() {
             </Link>
           </nav>
 
-          <div className="hidden shrink-0 items-center gap-1.5 lg:flex">
-            <GlobalSearch />
+          <div className="hidden flex-1 basis-0 items-center justify-end gap-1.5 lg:flex">
+            {/* Search is a signed-in tool: a logged-out visitor can only see
+                public marketing pages, so a search box on the landing page
+                promises results the RLS policies will never return. */}
+            {user && <GlobalSearch />}
             {user && (
               <Link
                 href="/pesan"
@@ -378,7 +391,7 @@ export function Navbar() {
           </div>
 
           <button
-            className="rounded-md p-2 lg:hidden"
+            className="ml-auto rounded-md p-2 lg:hidden"
             onClick={() => setOpen(!open)}
             aria-expanded={open}
             aria-label={open ? t('Close menu', 'Tutup menu') : t('Open menu', 'Buka menu')}
@@ -477,7 +490,7 @@ export function Navbar() {
                   fit on one line at phone width without wrapping mid-word. */}
               <div className="mt-3 flex items-center justify-between gap-2 border-t border-border/40 pt-3">
                 <div className="flex min-w-0 items-center gap-1">
-                  <GlobalSearch />
+                  {user && <GlobalSearch />}
                   {user && <NotificationBell />}
                 </div>
                 <button

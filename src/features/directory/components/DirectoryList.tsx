@@ -13,7 +13,9 @@ import { PageHeader } from '@/components/page-header';
 import { LoadData } from '@/components/load-data';
 import { BrowseToolbar } from '@/components/browse-toolbar';
 import { CardGridSkeleton } from '@/components/card-skeleton';
+import { useAuth } from '@/components/auth-provider';
 import { useLang } from '@/components/language-provider';
+import { signedOutState } from '@/shared/lib/browse-gate';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -36,6 +38,7 @@ const STATUSES = ['Employed', 'Freelancing', 'Looking for work', 'Open to opport
 
 export default function DirectoryList() {
   const { t } = useLang();
+  const { user, loading: authLoading } = useAuth();
   const { fetchDirectory, fetchDirectorySkills, setGetDirectory } = useDirectoryControllers();
 
   const [filters, setFilters] = useState({
@@ -79,6 +82,7 @@ export default function DirectoryList() {
       data: list,
       isLoading: fetchDirectory.isPending,
       isError: fetchDirectory.isError,
+      ...signedOutState(!authLoading && !user, t, t('members', 'member')),
       isEmpty: !fetchDirectory.isPending && !fetchDirectory.isError && list.length === 0,
       errorTitle: t('Could not load members.', 'Gagal memuat member.'),
       errorSubtitle: t('Check your connection and try again.', 'Periksa koneksi lalu coba lagi.'),
@@ -91,7 +95,7 @@ export default function DirectoryList() {
       pagination: filters.pagination,
       hasNextPage: rows.length === DIRECTORY_PAGE_SIZE,
     };
-  }, [fetchDirectory.data, fetchDirectory.isPending, fetchDirectory.isError, filters, t]);
+  }, [fetchDirectory.data, fetchDirectory.isPending, fetchDirectory.isError, filters, t, user, authLoading]);
 
   const toolbarFilters = useMemo(
     () => [

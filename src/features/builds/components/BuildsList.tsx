@@ -14,6 +14,7 @@ import { LoadData } from '@/components/load-data';
 import { RowSkeleton } from '@/components/card-skeleton';
 import { useAuth } from '@/components/auth-provider';
 import { useLang } from '@/components/language-provider';
+import { signedOutState } from '@/shared/lib/browse-gate';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -30,7 +31,7 @@ const EMPTY_FORM = { title: '', description: '', link_url: '', spotlight: false 
 // is how a post also becomes a Spotlight submission (source_type flips to
 // 'solo_builder').
 export default function BuildsList() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { t } = useLang();
   const { fetchBuilds, fetchBuildsLiked, storeBuilds, storeBuildsLike, removeBuildsLike } = useBuildsControllers(user?.id);
 
@@ -71,6 +72,7 @@ export default function BuildsList() {
       data: list,
       isLoading: fetchBuilds.isPending,
       isError: fetchBuilds.isError,
+      ...signedOutState(!authLoading && !user, t, t('builds', 'builds')),
       isEmpty: !fetchBuilds.isPending && !fetchBuilds.isError && list.length === 0,
       errorTitle: t('Could not load the feed.', 'Gagal memuat feed.'),
       errorSubtitle: t('Check your connection and try again.', 'Periksa koneksi lalu coba lagi.'),
@@ -80,7 +82,7 @@ export default function BuildsList() {
         'Bagikan yang sedang kamu kerjakan — belum selesai justru intinya.'
       ),
     };
-  }, [fetchBuilds.data, fetchBuilds.isPending, fetchBuilds.isError, fetchBuildsLiked.data, t]);
+  }, [fetchBuilds.data, fetchBuilds.isPending, fetchBuilds.isError, fetchBuildsLiked.data, t, user, authLoading]);
 
   const editBuildsComposer = () => {
     if (!user) {

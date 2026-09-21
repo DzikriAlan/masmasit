@@ -15,6 +15,7 @@ import { BrowseToolbar } from '@/components/browse-toolbar';
 import { CardGridSkeleton } from '@/components/card-skeleton';
 import { useAuth } from '@/components/auth-provider';
 import { useLang } from '@/components/language-provider';
+import { signedOutState } from '@/shared/lib/browse-gate';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toneOf } from '@/shared/lib/tones';
@@ -24,7 +25,7 @@ const LOCATIONS = ['Jakarta', 'Bandung', 'Surabaya', 'Yogyakarta', 'Medan', 'Mak
 
 export default function JobsList() {
   const { t } = useLang();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { fetchJobs, setGetJobs } = useJobsControllers(user?.id);
 
   const [filters, setFilters] = useState({
@@ -61,6 +62,7 @@ export default function JobsList() {
       data: list,
       isLoading: fetchJobs.isPending,
       isError: fetchJobs.isError,
+      ...signedOutState(!authLoading && !user, t, t('roles', 'lowongan')),
       isEmpty: !fetchJobs.isPending && !fetchJobs.isError && list.length === 0,
       errorTitle: t('Could not load jobs.', 'Gagal memuat lowongan.'),
       errorSubtitle: t('Check your connection and try again.', 'Periksa koneksi lalu coba lagi.'),
@@ -72,7 +74,7 @@ export default function JobsList() {
         : t('Companies post here first — check back soon.', 'Perusahaan memasang di sini lebih dulu — cek lagi nanti.'),
       isFiltered,
     };
-  }, [fetchJobs.data, fetchJobs.isPending, fetchJobs.isError, filters, t]);
+  }, [fetchJobs.data, fetchJobs.isPending, fetchJobs.isError, filters, t, user, authLoading]);
 
   const toolbarFilters = useMemo(
     () => [

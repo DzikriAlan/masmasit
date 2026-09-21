@@ -2,11 +2,11 @@
 # Talent & Agency: Bookings, Agency Services, Agency Projects, Case Studies, Settings
 
 1. New Tables
-- `bookings` — talent booking (consultation/mentoring) with admin fee percentage
-- `agency_services` — service listings by category (SaaS, AI, Creative, HR)
-- `agency_projects` — client project requests with DP, admin fee, and revenue share
-- `case_studies` — showcase completed projects (challenge, solution, result)
-- `app_settings` — configurable fee percentages and module activation flags (singleton)
+- `bookings` - talent booking (consultation/mentoring) with admin fee percentage
+- `agency_services` - service listings by category (SaaS, AI, Creative, HR)
+- `agency_projects` - client project requests with DP, admin fee, and revenue share
+- `case_studies` - showcase completed projects (challenge, solution, result)
+- `app_settings` - configurable fee percentages and module activation flags (singleton)
 
 2. Security
 - bookings: talent can SELECT bookings for themselves; client can SELECT own; client can INSERT; talent can UPDATE status.
@@ -173,10 +173,14 @@ CREATE POLICY "update_app_settings_admin" ON app_settings FOR UPDATE
     EXISTS (SELECT 1 FROM user_roles WHERE user_id = auth.uid() AND role = 'super_admin')
   ) WITH CHECK (true);
 
--- Seed default settings row
+-- Seed default settings row.
+-- ON CONFLICT cannot help here: the id is freshly generated every run, so it
+-- never collides and each replay appended another row. app_settings is read
+-- with maybeSingle(), which errors on more than one row, so the duplicates
+-- broke the admin settings page and every payment-link lookup.
 INSERT INTO app_settings (id, talent_admin_fee_percentage, agency_admin_fee_percentage, agency_revenue_share_percentage)
-VALUES (gen_random_uuid(), 15.00, 10.00, 10.00)
-ON CONFLICT DO NOTHING;
+SELECT gen_random_uuid(), 15.00, 10.00, 10.00
+WHERE NOT EXISTS (SELECT 1 FROM app_settings);
 
 CREATE INDEX IF NOT EXISTS idx_bookings_talent ON bookings(talent_id);
 CREATE INDEX IF NOT EXISTS idx_bookings_client ON bookings(client_id);

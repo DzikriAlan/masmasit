@@ -9,10 +9,10 @@
 - INSERT via triggers (SECURITY DEFINER functions)
 
 ## Triggers
-- New message → notify receiver
-- Job application status change → notify applicant
-- Booking status change → notify client and talent
-- Agency project status change → notify (no client_id, so we skip — admin handles externally)
+- New message -> notify receiver
+- Job application status change -> notify applicant
+- Booking status change -> notify client and talent
+- Agency project status change -> notify (no client_id, so we skip - admin handles externally)
 */
 CREATE TABLE IF NOT EXISTS notifications (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -53,7 +53,7 @@ BEGIN
 END;
 $$;
 
--- Trigger: new message → notify receiver
+-- Trigger: new message -> notify receiver
 CREATE OR REPLACE FUNCTION trg_notify_message()
 RETURNS trigger
 LANGUAGE plpgsql
@@ -72,7 +72,7 @@ DROP TRIGGER IF EXISTS on_message_insert ON messages;
 CREATE TRIGGER on_message_insert AFTER INSERT ON messages
   FOR EACH ROW EXECUTE FUNCTION trg_notify_message();
 
--- Trigger: job application status change → notify applicant
+-- Trigger: job application status change -> notify applicant
 CREATE OR REPLACE FUNCTION trg_notify_job_application()
 RETURNS trigger
 LANGUAGE plpgsql
@@ -91,7 +91,7 @@ DROP TRIGGER IF EXISTS on_job_application_update ON job_applications;
 CREATE TRIGGER on_job_application_update AFTER UPDATE ON job_applications
   FOR EACH ROW EXECUTE FUNCTION trg_notify_job_application();
 
--- Trigger: booking status change → notify client and talent
+-- Trigger: booking status change -> notify client and talent
 CREATE OR REPLACE FUNCTION trg_notify_booking()
 RETURNS trigger
 LANGUAGE plpgsql
