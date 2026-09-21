@@ -34,59 +34,74 @@ const FOUNDER = {
   location: 'Indonesia',
 };
 
-/* Why "mas-mas IT". The name is the joke and the thesis at once, so it is
-   told before the origin story rather than after it. */
+/* Why "Mas Mas IT". The name is where the story starts, so it is told
+   before the founder's own reasoning rather than after it. */
 const founderStory: Bilingual[] = [
   {
-    en: 'The name is a joke that turned out to be the whole idea. In Indonesia "mas" is what you call the guy next to you — not sir, not doctor, just mas. Mas-mas IT are the people who quietly keep everything running: the one who fixes the deploy at 2am, the one who built the company dashboard nobody credits, the one teaching themselves Go on the commute home.',
-    id: 'Namanya lelucon yang ternyata jadi seluruh idenya. Di Indonesia, "mas" itu panggilan untuk orang di sebelah kita — bukan pak, bukan dok, cuma mas. Mas-mas IT adalah orang-orang yang diam-diam bikin semuanya tetap jalan: yang benerin deploy jam 2 pagi, yang bikin dashboard kantor tanpa pernah disebut namanya, yang belajar Go sendiri di perjalanan pulang.',
+    en: 'The name "Mas Mas IT" started as a warm, peer-to-peer way of addressing one another. Today it is more than a local nickname. It describes technology talent from Indonesia now spread across the world — keeping global infrastructure running, leading product roadmaps and executing complex systems behind the scenes.',
+    id: 'Nama "Mas Mas IT" berawal dari sapaan akrab yang setara. Namun hari ini, panggilan tersebut bukan sekadar sebutan lokal. Mereka adalah talenta teknologi dari Indonesia yang kini tersebar dan berkontribusi di seluruh dunia, menjaga infrastruktur global tetap berjalan, memimpin peta jalan produk, hingga mengeksekusi sistem kompleks di balik layar.',
   },
   {
-    en: 'I spent years as one of them. The work was never the hard part. The hard part was that every piece of a career sat in a different place — the job board did not know my portfolio, the portfolio did not know the client who wanted to hire me, the community group where I actually learned things had no way to turn a conversation into work. Everyone I knew was rebuilding the same scaffolding by hand, over and over.',
-    id: 'Saya bertahun-tahun jadi salah satunya. Kerjaannya tidak pernah jadi bagian yang sulit. Yang sulit adalah setiap potongan karier ada di tempat berbeda — job board tidak tahu portofolio saya, portofolio tidak tahu klien yang mau merekrut saya, grup komunitas tempat saya benar-benar belajar tidak punya cara mengubah obrolan jadi pekerjaan. Semua orang yang saya kenal menyusun ulang perancah yang sama, berulang-ulang, dengan tangan.',
+    en: 'After close to a decade in project and product management, working at the intersection of digitalisation and technology transformation, I saw an urgent need through the eyes of a Product Lead. Years of serving clients from agencies and startups to large enterprises led me to one conclusion: we need an ecosystem built for collaboration if we are to go further.',
+    id: 'Setelah menuju satu dekade berkarir di ranah manajemen proyek dan produk yang beririsan erat dengan digitalisasi dan transformasi teknologi, saya melihat sebuah urgensi melalui kacamata seorang Product Lead. Pengalaman panjang menangani klien dari skala agensi, startup, hingga korporasi besar memberikan saya satu kesimpulan penting: kita membutuhkan sebuah ekosistem wadah kolaborasi untuk bisa melangkah lebih jauh.',
   },
   {
-    en: 'MasmasIT is the thing I wanted to exist: one account where the conversation, the portfolio, the team you assemble and the invoice you send all live in the same place. Not a job board with a forum bolted on. A community that happens to be an economy.',
-    id: 'MasmasIT adalah hal yang saya ingin ada: satu akun tempat obrolan, portofolio, tim yang kamu susun, dan invoice yang kamu kirim berada di tempat yang sama. Bukan job board dengan forum yang ditempel. Komunitas yang kebetulan juga sebuah ekonomi.',
+    en: 'In an era where technology and artificial intelligence move this fast, tech talent must be connected to one another with a clear structure. MasmasIT exists so Indonesian IT talent can collaborate with each other, and reach fellow practitioners in other countries to execute promising projects at a global scale together.',
+    id: 'Di era di mana teknologi dan kecerdasan buatan berkembang sangat cepat, talenta teknologi mutlak perlu terhubung satu sama lain dengan struktur yang jelas. MasmasIT dibangun agar talenta IT Indonesia dapat saling berkolaborasi, sekaligus menjangkau rekan sejawat praktisi IT di negara lain untuk bersama-sama mengeksekusi berbagai proyek potensial berskala global.',
+  },
+  {
+    en: 'The biggest challenge in a tech career has never been the work itself, but a fragmented ecosystem. Job platforms are disconnected from portfolios. Portfolio sites do not connect you directly with clients. The community groups where we learn and discuss have no infrastructure to turn ideas into professional collaboration. Everyone builds the foundation of their career from scratch, alone.',
+    id: 'Selama ini, tantangan terbesar dalam karir teknologi bukanlah pekerjaannya, melainkan ekosistem yang terfragmentasi. Platform pencari kerja tidak terhubung dengan portofolio karya. Situs portofolio tidak menghubungkan Anda langsung dengan klien. Grup komunitas tempat kita belajar dan berdiskusi tidak memiliki infrastruktur untuk mengubah ide menjadi kolaborasi profesional. Setiap orang membangun fondasi karirnya dari nol secara sendirian.',
+  },
+  {
+    en: 'MasmasIT is built from Indonesia to break through those limits. We created one platform where your network, the teams you form, the products you ship and commercial opportunities all live in the same space. This is not a job board with a forum bolted on. It is a community that works as an economic ecosystem.',
+    id: 'MasmasIT dibangun dari Indonesia untuk mendobrak batasan tersebut. Kami menciptakan satu platform di mana jaringan, tim yang Anda bentuk, produk yang Anda rilis, hingga peluang komersial berada di dalam ruang yang sama. Ini bukan sekadar papan lowongan kerja yang ditempelkan fitur forum. Ini adalah komunitas yang berfungsi sebagai ekosistem ekonomi.',
+  },
+  {
+    en: 'This is the first step of a long-term vision. There is still much for us to build and achieve together on this platform.',
+    id: 'Langkah ini adalah awal dari visi jangka panjang. Masih banyak hal yang harus kita bangun dan capai bersama di platform ini.',
   },
 ];
 
+/* Ordered by the three groups the copy describes — Careers & Opportunities,
+   Collaboration & Growth, Talent & Expertise — so the flat list still reads
+   in that sequence. */
 const areas: { href: string; name: Bilingual; desc: Bilingual }[] = [
-  { href: '/jobs', name: { en: 'Jobs', id: 'Lowongan' }, desc: { en: 'Full-time and freelance roles.', id: 'Peran full-time dan freelance.' } },
-  { href: '/projects', name: { en: 'Projects', id: 'Proyek' }, desc: { en: 'Client briefs open for bids.', id: 'Brief klien yang dibuka untuk bid.' } },
-  { href: '/team-collabs', name: { en: 'Team Collabs', id: 'Team Collabs' }, desc: { en: 'Teams building R&D together.', id: 'Tim yang bangun R&D bareng.' } },
-  { href: '/talents', name: { en: 'Talent', id: 'Talent' }, desc: { en: 'Practitioners you can book 1-on-1.', id: 'Praktisi yang bisa dibooking 1-on-1.' } },
-  { href: '/courses', name: { en: 'Courses', id: 'Kursus' }, desc: { en: 'Taught by people doing the work.', id: 'Diajar orang yang menjalani pekerjaannya.' } },
-  { href: '/agency', name: { en: 'Agency', id: 'Agency' }, desc: { en: 'Approved agencies and their catalogues.', id: 'Agency terverifikasi dan katalognya.' } },
-  { href: '/services', name: { en: 'Services', id: 'Layanan' }, desc: { en: 'Professional IT services.', id: 'Layanan IT profesional.' } },
-  { href: '/discussions', name: { en: 'Discussions', id: 'Diskusi' }, desc: { en: 'A light forum: topics and comments.', id: 'Forum ringan: topik dan komentar.' } },
-  { href: '/directory', name: { en: 'Members', id: 'Member' }, desc: { en: 'Everyone on the platform.', id: 'Semua orang di platform ini.' } },
-  { href: '/builds', name: { en: 'Builds', id: 'Builds' }, desc: { en: 'What members are building now.', id: 'Yang sedang dibangun member.' } },
-  { href: '/events', name: { en: 'Events', id: 'Event' }, desc: { en: 'Meetups and hackathons.', id: 'Meetup dan hackathon.' } },
+  { href: '/jobs', name: { en: 'Jobs', id: 'Jobs' }, desc: { en: 'Curated full-time and freelance openings.', id: 'Lowongan pekerjaan penuh waktu dan freelance yang terkurasi.' } },
+  { href: '/projects', name: { en: 'Projects', id: 'Projects' }, desc: { en: 'Client project briefs open for proposals.', id: 'Kumpulan ringkasan proyek dari klien yang terbuka untuk penawaran.' } },
+  { href: '/services', name: { en: 'Services', id: 'Services' }, desc: { en: 'Professional IT services, booked as you need them.', id: 'Layanan IT profesional yang dapat dipesan sesuai kebutuhan.' } },
+  { href: '/team-collabs', name: { en: 'Team Collabs', id: 'Team Collabs' }, desc: { en: 'Where practitioners form R&D teams or launch ventures together.', id: 'Ruang bagi praktisi untuk membentuk tim R&D atau meluncurkan proyek usaha bersama.' } },
+  { href: '/discussions', name: { en: 'Discussions', id: 'Discussions' }, desc: { en: 'A focused forum for industry insight, technical discussion and networking.', id: 'Forum terarah untuk wawasan industri, diskusi teknis, dan jejaring.' } },
+  { href: '/events', name: { en: 'Events', id: 'Events' }, desc: { en: 'Exclusive meetups, hackathons and community gatherings.', id: 'Meetup eksklusif, hackathon, dan sesi kumpul komunitas.' } },
+  { href: '/builds', name: { en: 'Builds', id: 'Builds' }, desc: { en: 'A showcase of the products, SaaS and projects members are building.', id: 'Etalase pameran untuk produk, SaaS, atau proyek yang sedang dibangun oleh member.' } },
+  { href: '/talents', name: { en: 'Talent', id: 'Talent' }, desc: { en: 'A directory of practitioners you can book directly for private sessions.', id: 'Direktori praktisi yang dapat dipesan langsung untuk sesi privat.' } },
+  { href: '/courses', name: { en: 'Courses', id: 'Courses' }, desc: { en: 'Practical learning taught by active practitioners.', id: 'Pembelajaran praktis yang diajarkan langsung oleh praktisi aktif.' } },
+  { href: '/agency', name: { en: 'Agency', id: 'Agency' }, desc: { en: 'Service catalogues from verified technology agencies.', id: 'Katalog layanan dari agensi teknologi terverifikasi.' } },
+  { href: '/directory', name: { en: 'Members', id: 'Members' }, desc: { en: 'Professional profiles of all the talent powering the platform.', id: 'Profil profesional dari seluruh talenta yang menggerakkan platform ini.' } },
 ];
 
-/* The four routes to hire. They differ in where the supply comes from and
-   where a buyer discovers it, but all end at the same hiring step. */
+/* The four collaboration routes. They differ in where the supply comes from
+   and where a client discovers it, but all end at the same hiring step. */
 const hiringRoutes: { route: Bilingual; source: Bilingual; discovery: Bilingual }[] = [
   {
     route: { en: 'Solo Builder', id: 'Solo Builder' },
-    source: { en: 'A member showcasing their own product.', id: 'Member yang memajang produknya sendiri.' },
+    source: { en: 'Hire members based on the products they showcase.', id: 'Merekrut member berdasarkan produk yang mereka pamerkan.' },
     discovery: { en: 'Spotlight', id: 'Spotlight' },
   },
   {
-    route: { en: 'Agency', id: 'Agency' },
-    source: { en: 'A team or company catalogue, in-house and member agencies alike.', id: 'Katalog tim atau perusahaan, agency in-house maupun member.' },
-    discovery: { en: 'Agency page and Spotlight', id: 'Halaman Agency dan Spotlight' },
-  },
-  {
     route: { en: 'Freelancer', id: 'Freelancer' },
-    source: { en: 'An individual practitioner.', id: 'Praktisi perorangan.' },
+    source: { en: 'Book an individual practitioner directly.', id: 'Memesan jasa individu praktisi secara langsung.' },
     discovery: { en: 'Talents', id: 'Talents' },
   },
   {
-    route: { en: 'Community', id: 'Community' },
-    source: { en: 'A team assembled in Team Builder.', id: 'Tim yang disusun lewat Team Builder.' },
+    route: { en: 'Community Team', id: 'Community Team' },
+    source: { en: 'Form a cross-functional team tailored to the project.', id: 'Membentuk tim lintas fungsi yang disesuaikan dengan kebutuhan proyek.' },
     discovery: { en: 'Team Collabs', id: 'Team Collabs' },
+  },
+  {
+    route: { en: 'Agency', id: 'Agency' },
+    source: { en: 'Contract a verified agency for end-to-end product development.', id: 'Mengontrak agensi terverifikasi untuk pengembangan produk menyeluruh.' },
+    discovery: { en: 'Agency page and Spotlight', id: 'Agency Page & Spotlight' },
   },
 ];
 
@@ -102,20 +117,20 @@ export default function AboutOverview() {
             <p className="eyebrow text-muted-foreground">{t('About', 'Tentang')}</p>
             <h1 className="mt-3 font-display text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">
               {t(
-                'One place for Indonesian IT practitioners to work, learn and build together.',
-                'Satu tempat bagi praktisi IT Indonesia untuk bekerja, belajar dan membangun bersama.'
+                'An Integrated Ecosystem for Tech Talent: Built in Indonesia, Connected to the World',
+                'Ekosistem Terpadu untuk Tech Talent: Dibangun dari Indonesia, Terhubung ke Seluruh Dunia'
               )}
             </h1>
             <p className="mt-5 max-w-2xl text-base leading-relaxed text-muted-foreground text-pretty">
               {t(
-                'MasmasIT is a community and an ecosystem in the same account. The community is where people talk, post what they are building and turn up to events; the ecosystem is where that turns into paid work — jobs, client projects, bookings, courses and services.',
-                'MasmasIT adalah komunitas sekaligus ekosistem dalam satu akun. Komunitasnya tempat orang berbincang, memposting apa yang sedang dibangun, dan datang ke event; ekosistemnya tempat semua itu menjadi pekerjaan berbayar — lowongan, proyek klien, booking, kursus dan layanan.'
+                'MasmasIT is more than a community — it is the engine of an ecosystem for technology practitioners. We bring community, portfolio and workspace together in one platform. This is where industry conversations happen, side projects get showcased, and networks naturally grow into professional opportunities: full-time roles, project collaborations and B2B services.',
+                'MasmasIT lebih dari sekadar komunitas, ini adalah mesin penggerak ekosistem bagi praktisi teknologi. Kami meleburkan komunitas, portofolio, dan ruang kerja ke dalam satu platform. Di sinilah diskusi industri terjadi, proyek sampingan dipamerkan, dan jejaring secara natural berkembang menjadi peluang profesional yang mencakup pekerjaan penuh waktu, kolaborasi proyek, hingga layanan B2B.'
               )}
             </p>
           </header>
 
           <section className="mt-14 border-t border-border pt-10">
-            <h2 className="eyebrow text-muted-foreground">{t('Why it exists', 'Kenapa ada')}</h2>
+            <h2 className="eyebrow text-muted-foreground">{t('Why MasmasIT Exists', 'Mengapa MasmasIT Hadir')}</h2>
             <div className="mt-6 grid gap-8 sm:grid-cols-[220px_1fr] sm:gap-10">
               <div>
                 <div className="relative aspect-[4/5] w-full overflow-hidden rounded-xl border border-border bg-muted">
@@ -149,32 +164,32 @@ export default function AboutOverview() {
           </section>
 
           <section className="mt-14">
-            <h2 className="eyebrow text-muted-foreground">{t('Who it is for', 'Untuk siapa')}</h2>
+            <h2 className="eyebrow text-muted-foreground">{t('Who Is This Platform For?', 'Untuk Siapa Platform Ini?')}</h2>
             <div className="mt-4 grid gap-6 sm:grid-cols-3">
               <div className="border-t border-border pt-4">
-                <p className="font-display text-lg font-semibold tracking-tight">{t('IT practitioners', 'Praktisi IT')}</p>
+                <p className="font-display text-lg font-semibold tracking-tight">{t('Global IT Practitioners', 'Praktisi IT Global')}</p>
                 <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground text-pretty">
                   {t(
-                    'Engineers, designers, data and security people in Indonesia looking for the next role, the next project, or people to build with.',
-                    'Engineer, desainer, orang data dan security di Indonesia yang mencari peran berikutnya, proyek berikutnya, atau orang untuk membangun bersama.'
+                    'Engineers, UI/UX designers, data scientists, product managers and cybersecurity specialists looking for a new role, freelance projects, or co-founders to build products with.',
+                    'Engineer, UI/UX designer, data scientist, product manager, hingga spesialis keamanan siber yang mencari peran baru, proyek lepas, atau rekan pendiri untuk membangun produk bersama.'
                   )}
                 </p>
               </div>
               <div className="border-t border-border pt-4">
-                <p className="font-display text-lg font-semibold tracking-tight">{t('Companies & clients', 'Perusahaan & klien')}</p>
+                <p className="font-display text-lg font-semibold tracking-tight">{t('Companies & Clients', 'Perusahaan & Klien')}</p>
                 <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground text-pretty">
                   {t(
-                    'Teams hiring, or bringing a brief that needs a team assembled around it rather than a single hire.',
-                    'Tim yang merekrut, atau membawa brief yang butuh tim dibentuk di sekitarnya, bukan sekadar satu orang.'
+                    'Founders and managers bringing a project brief who need verified talent or a cross-functional team ready to execute end to end.',
+                    'Founder dan manajer yang membawa ringkasan proyek dan membutuhkan talenta terverifikasi atau tim lintas fungsi yang siap mengeksekusi secara penuh.'
                   )}
                 </p>
               </div>
               <div className="border-t border-border pt-4">
-                <p className="font-display text-lg font-semibold tracking-tight">{t('Agencies & coaches', 'Agency & coach')}</p>
+                <p className="font-display text-lg font-semibold tracking-tight">{t('Agencies & Mentors', 'Agensi & Mentor')}</p>
                 <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground text-pretty">
                   {t(
-                    'Agencies listing a service catalogue, and practitioners teaching or mentoring alongside their day job.',
-                    'Agency yang memajang katalog jasa, dan praktisi yang mengajar atau membimbing di samping pekerjaan utamanya.'
+                    'Independent technology agencies offering a service catalogue, and senior practitioners opening private consulting and mentoring sessions alongside their main work.',
+                    'Agensi teknologi independen yang menawarkan katalog layanan, serta praktisi senior yang membuka sesi konsultasi dan bimbingan privat di luar pekerjaan utama mereka.'
                   )}
                 </p>
               </div>
@@ -182,11 +197,11 @@ export default function AboutOverview() {
           </section>
 
           <section className="mt-14">
-            <h2 className="eyebrow text-muted-foreground">{t('What is inside', 'Apa isinya')}</h2>
+            <h2 className="eyebrow text-muted-foreground">{t('One Account, a Borderless Ecosystem', 'Satu Akun, Ekosistem Tanpa Batas')}</h2>
             <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground text-pretty">
               {t(
-                'Eleven connected areas, one account. Community sits inside the ecosystem rather than beside it, so a conversation and the work it leads to are never two separate products.',
-                'Sebelas area yang saling terhubung, satu akun. Community berada di dalam ekosistem, bukan di sampingnya, sehingga percakapan dan pekerjaan yang lahir darinya tidak pernah jadi dua produk terpisah.'
+                'Eleven fully integrated areas. Because the community sits right inside the work ecosystem, an expert conversation is never cut off from the professional opportunity that follows it.',
+                'Sebelas area yang terintegrasi penuh. Karena komunitas berada tepat di dalam ekosistem kerja, sebuah percakapan ahli tidak akan pernah terputus dari peluang profesional yang mengikutinya.'
               )}
             </p>
             <ul className="mt-5 divide-y divide-border border-y border-border">
@@ -205,11 +220,11 @@ export default function AboutOverview() {
           </section>
 
           <section className="mt-14">
-            <h2 className="eyebrow text-muted-foreground">{t('Four ways to hire', 'Empat jalur jasa')}</h2>
+            <h2 className="eyebrow text-muted-foreground">{t('Four Collaboration Routes', 'Empat Jalur Kolaborasi')}</h2>
             <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground text-pretty">
               {t(
-                'Services reach a buyer through four different routes. They are discovered in different places, but they all end at the same hiring step.',
-                'Jasa sampai ke pembeli lewat empat jalur berbeda. Ditemukan di tempat yang berbeda, tapi semuanya bermuara ke langkah hire yang sama.'
+                'Clients and companies can find services and talent through four connected routes. Every route leads to one seamless hiring process.',
+                'Klien dan perusahaan dapat menemukan layanan serta talenta melalui empat jalur yang saling terhubung. Seluruh jalur ini bermuara pada satu proses perekrutan yang mulus.'
               )}
             </p>
             <div className="mt-5 overflow-x-auto">
@@ -217,7 +232,7 @@ export default function AboutOverview() {
                 <thead>
                   <tr className="border-y border-border text-left">
                     <th className="py-3 pr-6 font-semibold">{t('Route', 'Jalur')}</th>
-                    <th className="py-3 pr-6 font-semibold">{t('Where supply comes from', 'Sumber')}</th>
+                    <th className="py-3 pr-6 font-semibold">{t('How it works', 'Cara kerja')}</th>
                     <th className="py-3 font-semibold">{t('Discovered in', 'Ditemukan di')}</th>
                   </tr>
                 </thead>
@@ -235,23 +250,23 @@ export default function AboutOverview() {
           </section>
 
           <section className="mt-14">
-            <h2 className="eyebrow text-muted-foreground">{t('How access works', 'Aturan akses')}</h2>
+            <h2 className="eyebrow text-muted-foreground">{t('How Access Works', 'Bagaimana Akses Bekerja')}</h2>
             <div className="mt-4 grid gap-6 sm:grid-cols-2">
               <div className="border-t border-border pt-4">
-                <p className="font-display text-lg font-semibold tracking-tight">{t('Reading about it is open', 'Membaca tentangnya terbuka')}</p>
+                <p className="font-display text-lg font-semibold tracking-tight">{t('Open Exploration', 'Eksplorasi yang Terbuka')}</p>
                 <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground text-pretty">
                   {t(
-                    'Anyone can read this page, Discover and Contact without signing in. The listings themselves — jobs, projects, members, courses and the rest — are visible to members, so an account comes first.',
-                    'Siapa pun bisa membaca halaman ini, Discover dan Contact tanpa masuk. Listing-nya sendiri — lowongan, proyek, member, kursus dan lainnya — hanya terlihat oleh member, jadi akun dulu.'
+                    'Anyone can read this page, browse the public insight catalogue and discover talent without signing in. Transparency is our foundation.',
+                    'Siapa pun dapat membaca halaman ini, melihat katalog wawasan publik, dan menemukan talenta tanpa perlu masuk ke sistem. Transparansi adalah fondasi kami.'
                   )}
                 </p>
               </div>
               <div className="border-t border-border pt-4">
-                <p className="font-display text-lg font-semibold tracking-tight">{t('Acting needs an account', 'Beraksi perlu akun')}</p>
+                <p className="font-display text-lg font-semibold tracking-tight">{t('Actions Require Verification', 'Aksi Membutuhkan Verifikasi')}</p>
                 <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground text-pretty">
                   {t(
-                    'Applying, bidding, joining a team, booking and buying all sit behind a login wall, and every account goes through onboarding first so nobody appears without a role.',
-                    'Apply, bid, gabung tim, booking dan beli semuanya di balik login wall, dan setiap akun melewati onboarding lebih dulu agar tidak ada orang yang muncul tanpa peran.'
+                    'Applying for jobs, submitting project proposals, joining a team and booking services all sit behind a login. Every account goes through onboarding to validate its role and keep the quality of interactions in the ecosystem high.',
+                    'Melamar pekerjaan, mengajukan penawaran proyek, bergabung dengan tim, atau memesan layanan sepenuhnya berada di balik sistem login. Setiap akun melewati proses orientasi untuk memastikan validitas peran dan menjaga kualitas interaksi dalam ekosistem.'
                   )}
                 </p>
               </div>
