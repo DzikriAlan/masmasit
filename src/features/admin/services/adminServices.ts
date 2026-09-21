@@ -123,9 +123,11 @@ export const getAdminPayments = async () => {
         .order('created_at', { ascending: false }),
       supabase
         .from('enrollments')
-        .select('id, payment_status, payment_note, created_at, user_id, courses(title, price)')
+        // enrollments timestamps its rows as enrolled_at; aliasing keeps the
+        // shared DataAdminPayments shape while querying the real column.
+        .select('id, payment_status, payment_note, created_at:enrolled_at, user_id, courses(title, price)')
         .in('payment_status', pending)
-        .order('created_at', { ascending: false }),
+        .order('enrolled_at', { ascending: false }),
       supabase
         .from('event_rsvps')
         .select('id, payment_status, payment_note, created_at, user_id, events(title, price)')
