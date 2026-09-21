@@ -5,7 +5,7 @@
  * here instead of a sweep through pages.
  */
 
-export const WA_NUMBER = '6281234567890';
+export const WA_NUMBER = '6289614924059';
 
 export const CONTACT_EMAIL = 'hello@masmasit.online';
 
