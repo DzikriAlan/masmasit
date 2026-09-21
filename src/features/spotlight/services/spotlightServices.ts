@@ -10,7 +10,7 @@ export const getSpotlight = async () => {
   return toApiResponse<DataSpotlight[]>(
     supabase
       .from('builds')
-      .select('*, profiles(full_name, avatar_url), agencies(name, slug)')
+      .select('*, profiles!builds_user_id_profiles_fkey(full_name, avatar_url), agencies(name, slug)')
       .eq('promoted_to_spotlight', true)
       .order('likes_count', { ascending: false })
       .order('created_at', { ascending: false }),

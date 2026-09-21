@@ -5,7 +5,7 @@ import type { DataBuilds, PayloadPostBuilds } from '../types/buildsTypes';
 
 export const getBuilds = async () => {
   return toApiResponse<DataBuilds[]>(
-    supabase.from('builds').select('*, profiles(full_name, avatar_url)').order('created_at', { ascending: false }),
+    supabase.from('builds').select('*, profiles!builds_user_id_profiles_fkey(full_name, avatar_url)').order('created_at', { ascending: false }),
     'Builds retrieved successfully'
   );
 };
