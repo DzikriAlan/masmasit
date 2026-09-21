@@ -13,6 +13,7 @@ import { CardGridSkeleton } from '@/components/card-skeleton';
 import { MatchedBadge, MatchedHandoff } from '@/components/matched-handoff';
 import { useAuth } from '@/components/auth-provider';
 import { useLang } from '@/components/language-provider';
+import { signedOutState } from '@/shared/lib/browse-gate';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { TONE_CHIP, toneOf } from '@/shared/lib/tones';
@@ -21,7 +22,7 @@ import { TONE_CHIP, toneOf } from '@/shared/lib/tones';
 // is a distinct status from an instant booking — see MatchedHandoff, the
 // same component Projects uses for an accepted bid.
 export default function TeamCollabsList() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { t } = useLang();
   const { fetchTeamCollabs, changeTeamCollabsWithdraw } = useTeamCollabsControllers();
 
@@ -42,6 +43,7 @@ export default function TeamCollabsList() {
       data: list,
       isLoading: fetchTeamCollabs.isPending,
       isError: fetchTeamCollabs.isError,
+      ...signedOutState(!authLoading && !user, t, t('collabs', 'kolaborasi')),
       isEmpty: !fetchTeamCollabs.isPending && !fetchTeamCollabs.isError && list.length === 0,
       errorTitle: t('Could not load listings.', 'Gagal memuat listing.'),
       errorSubtitle: t('Check your connection and try again.', 'Periksa koneksi lalu coba lagi.'),
@@ -51,7 +53,7 @@ export default function TeamCollabsList() {
         'Bentuk tim dulu, lalu daftarkan di sini untuk cari tim lain.'
       ),
     };
-  }, [fetchTeamCollabs.data, fetchTeamCollabs.isPending, fetchTeamCollabs.isError, user?.id, t]);
+  }, [fetchTeamCollabs.data, fetchTeamCollabs.isPending, fetchTeamCollabs.isError, user?.id, t, user, authLoading]);
 
   const clearTeamCollabs = (id: string) => {
     changeTeamCollabsWithdraw.mutate(id);

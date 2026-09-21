@@ -3,7 +3,9 @@
 import { AppShell } from '@/components/app-shell';
 import { TONE_TEXT, toneOf } from '@/shared/lib/tones';
 import { LoadData } from '@/components/load-data';
+import { useAuth } from '@/components/auth-provider';
 import { useLang } from '@/components/language-provider';
+import { signedOutState } from '@/shared/lib/browse-gate';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
@@ -11,6 +13,7 @@ import { useCaseStudiesControllers } from '@/features/case-studies/controllers/c
 
 export default function CaseStudiesList() {
   const { t } = useLang();
+  const { user, loading: authLoading } = useAuth();
   const { fetchCaseStudies } = useCaseStudiesControllers();
 
   const studies = fetchCaseStudies.data ?? [];
@@ -28,6 +31,7 @@ export default function CaseStudiesList() {
           hideIcon
           response={{
             isLoading: loading,
+            ...signedOutState(!authLoading && !user, t, t('case studies', 'studi kasus')),
             isEmpty: studies.length === 0,
             emptyTitle: t('No case studies published yet.', 'Belum ada studi kasus yang dipublikasikan.'),
           }}

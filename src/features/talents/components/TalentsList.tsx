@@ -12,7 +12,9 @@ import { PageHeader } from '@/components/page-header';
 import { LoadData } from '@/components/load-data';
 import { BrowseToolbar } from '@/components/browse-toolbar';
 import { CardGridSkeleton } from '@/components/card-skeleton';
+import { useAuth } from '@/components/auth-provider';
 import { useLang } from '@/components/language-provider';
+import { signedOutState } from '@/shared/lib/browse-gate';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { TONE_CHIP, toneOf } from '@/shared/lib/tones';
@@ -27,6 +29,7 @@ const dummyTalents: Talent[] = [
 
 export default function TalentsList() {
   const { t } = useLang();
+  const { user, loading: authLoading } = useAuth();
   const { fetchTalents } = useTalentsControllers();
 
   const [filters, setFilters] = useState({
@@ -66,6 +69,7 @@ export default function TalentsList() {
       locations: Array.from(new Set(all.map((talent) => talent.location).filter(Boolean) as string[])).sort((a, b) => a.localeCompare(b)),
       isLoading: fetchTalents.isPending,
       isError: fetchTalents.isError,
+      ...signedOutState(!authLoading && !user, t, t('talent', 'talent')),
       isEmpty: !fetchTalents.isPending && !fetchTalents.isError && list.length === 0,
       errorTitle: t('Could not load talent.', 'Gagal memuat talent.'),
       errorSubtitle: t('Check your connection and try again.', 'Periksa koneksi lalu coba lagi.'),
@@ -76,7 +80,7 @@ export default function TalentsList() {
         ? t('Try another city, or a broader search.', 'Coba kota lain, atau kata kunci yang lebih umum.')
         : t('Practitioners open to bookings will appear here.', 'Praktisi yang menerima booking akan muncul di sini.'),
     };
-  }, [fetchTalents.data, fetchTalents.isPending, fetchTalents.isError, filters, t]);
+  }, [fetchTalents.data, fetchTalents.isPending, fetchTalents.isError, filters, t, user, authLoading]);
 
   const toolbarFilters = useMemo(
     () => [

@@ -15,6 +15,7 @@ import { LoadData } from '@/components/load-data';
 import { RowSkeleton } from '@/components/card-skeleton';
 import { useAuth } from '@/components/auth-provider';
 import { useLang } from '@/components/language-provider';
+import { signedOutState } from '@/shared/lib/browse-gate';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -51,6 +52,7 @@ export default function TeamBuilderList() {
       data: list,
       isLoading: isBlocked || fetchTeamBuilder.isPending,
       isError: fetchTeamBuilder.isError,
+      ...signedOutState(!loading && !user, t, t('teams', 'tim')),
       isEmpty: !isBlocked && !fetchTeamBuilder.isPending && !fetchTeamBuilder.isError && list.length === 0,
       errorTitle: t('Could not load your teams.', 'Gagal memuat tim kamu.'),
       errorSubtitle: t('Check your connection and try again.', 'Periksa koneksi lalu coba lagi.'),
@@ -60,7 +62,7 @@ export default function TeamBuilderList() {
         'Buat satu, tambahkan member, dan tiap role otomatis dapat grade.'
       ),
     };
-  }, [fetchTeamBuilder.data, fetchTeamBuilder.isPending, fetchTeamBuilder.isError, loading, user, t]);
+  }, [fetchTeamBuilder.data, fetchTeamBuilder.isPending, fetchTeamBuilder.isError, loading, user, t, user, loading]);
 
   const editTeamBuilderComposer = () => {
     setFilters((prev) => ({ ...prev, isComposerOpen: !prev.isComposerOpen }));

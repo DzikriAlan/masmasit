@@ -1,13 +1,19 @@
-import { Inbox, LoaderCircle, ServerCrash, ShieldAlert } from 'lucide-react'
+import { Inbox, LoaderCircle, LogIn, ServerCrash, ShieldAlert } from 'lucide-react'
+import Link from 'next/link'
 import type * as React from 'react'
 
-import { cn } from '@/shared/lib/utils'
+import { cn, loginHref } from '@/shared/lib/utils'
 
 export interface LoadDataResponse {
   data?: unknown
   isLoading?: boolean
   isError?: boolean
   isEmpty?: boolean
+  /* Every listing table's RLS grants SELECT to `authenticated` only, so a
+     signed-out visitor gets zero rows rather than an error. Without this
+     branch that reads as "there is nothing here", which is the wrong story
+     to tell someone who just arrived from Google. */
+  isSignedOut?: boolean
   isNoVerified?: boolean
   errorTitle?: string
   errorSubtitle?: string
@@ -15,6 +21,10 @@ export interface LoadDataResponse {
   emptyTitle?: string
   emptySubtitle?: string
   emptyImage?: string
+  signedOutTitle?: string
+  signedOutSubtitle?: string
+  signedOutCta?: string
+  signedOutCtaAlt?: string
   noVerifiedTitle?: string
   noVerifiedSubtitle?: string
   noVerifiedImage?: string
@@ -45,6 +55,14 @@ interface Placeholder {
 }
 
 function getPlaceholder(response?: LoadDataResponse): Placeholder | null {
+  // Checked before isEmpty: a signed-out visitor is always also "empty", and
+  // the sign-in explanation is the more useful of the two.
+  if (response?.isSignedOut) {
+    return {
+      title: response.signedOutTitle,
+      subtitle: response.signedOutSubtitle,
+    }
+  }
   if (response?.isEmpty) {
     return {
       title: response.emptyTitle,
@@ -85,9 +103,32 @@ function FallbackIcon({
   size,
   color,
 }: Readonly<{ response?: LoadDataResponse; size: number; color?: string }>) {
+  if (response?.isSignedOut) return <LogIn size={size} color={color} aria-hidden />
   if (response?.isError) return <ServerCrash size={size} color={color} aria-hidden />
   if (response?.isNoVerified) return <ShieldAlert size={size} color={color} aria-hidden />
   return <Inbox size={size} color={color} aria-hidden />
+}
+
+/* Plain links rather than <Button asChild>: this file is imported by both
+   server and client components, and keeping it free of client-only imports
+   means the gate can appear anywhere a list can. */
+function SignInActions({ cta, ctaAlt }: Readonly<{ cta?: string; ctaAlt?: string }>) {
+  return (
+    <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+      <Link
+        href="/register"
+        className="inline-flex h-10 items-center rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
+      >
+        {cta ?? 'Get Started'}
+      </Link>
+      <Link
+        href={loginHref()}
+        className="inline-flex h-10 items-center rounded-full border border-border px-5 text-sm font-semibold transition-colors hover:bg-muted"
+      >
+        {ctaAlt ?? 'Sign in'}
+      </Link>
+    </div>
+  )
 }
 
 function PlaceholderSection({
@@ -129,6 +170,9 @@ function PlaceholderSection({
       <p className="text-muted-foreground text-sm" style={subtitleStyle}>
         {placeholder.subtitle ?? ''}
       </p>
+      {response?.isSignedOut && (
+        <SignInActions cta={response.signedOutCta} ctaAlt={response.signedOutCtaAlt} />
+      )}
     </div>
   )
 }

@@ -18,6 +18,7 @@ import { BrowseToolbar } from '@/components/browse-toolbar';
 import { CardGridSkeleton } from '@/components/card-skeleton';
 import { useAuth } from '@/components/auth-provider';
 import { useLang } from '@/components/language-provider';
+import { signedOutState } from '@/shared/lib/browse-gate';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -31,7 +32,7 @@ const EMPTY_FORM: EventsFormValues = {
 };
 
 export default function EventsList() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { t } = useLang();
   const { fetchEvents, fetchEventsRegions, fetchEventsSettings, storeEvents, storeEventsRsvp } = useEventsControllers();
 
@@ -99,6 +100,7 @@ export default function EventsList() {
       past: past.slice(0, 6),
       isLoading: fetchEvents.isPending,
       isError: fetchEvents.isError,
+      ...signedOutState(!authLoading && !user, t, t('events', 'event')),
       isEmpty: !fetchEvents.isPending && !fetchEvents.isError && upcoming.length === 0 && past.length === 0,
       errorTitle: t('Could not load events.', 'Gagal memuat event.'),
       errorSubtitle: t('Check your connection and try again.', 'Periksa koneksi lalu coba lagi.'),
@@ -109,7 +111,7 @@ export default function EventsList() {
         ? t('Try another region or type.', 'Coba wilayah atau tipe lain.')
         : t('Host the first meetup in your city.', 'Adakan meetup pertama di kotamu.'),
     };
-  }, [fetchEvents.data, fetchEvents.isPending, fetchEvents.isError, filters.search, filters.filter, user, t]);
+  }, [fetchEvents.data, fetchEvents.isPending, fetchEvents.isError, filters.search, filters.filter, user, t, user, authLoading]);
 
   const toolbarFilters = useMemo(
     () => [

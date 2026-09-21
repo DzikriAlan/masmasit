@@ -12,7 +12,9 @@ import { PageHeader } from '@/components/page-header';
 import { LoadData } from '@/components/load-data';
 import { BrowseToolbar } from '@/components/browse-toolbar';
 import { CardGridSkeleton } from '@/components/card-skeleton';
+import { useAuth } from '@/components/auth-provider';
 import { useLang } from '@/components/language-provider';
+import { signedOutState } from '@/shared/lib/browse-gate';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -26,6 +28,7 @@ const EMPTY_FORM = { client_name: '', client_email: '', client_company: '', scop
 
 export default function ServicesList() {
   const { t } = useLang();
+  const { user, loading: authLoading } = useAuth();
   const { fetchServices, storeServicesRequest } = useServicesControllers();
 
   const [filters, setFilters] = useState({
@@ -65,6 +68,7 @@ export default function ServicesList() {
       selected: all.find((service) => service.id === filters.selectedServiceId) ?? null,
       isLoading: fetchServices.isPending,
       isError: fetchServices.isError,
+      ...signedOutState(!authLoading && !user, t, t('services', 'layanan')),
       isEmpty: !fetchServices.isPending && !fetchServices.isError && list.length === 0,
       errorTitle: t('Could not load services.', 'Gagal memuat layanan.'),
       errorSubtitle: t('Check your connection and try again.', 'Periksa koneksi lalu coba lagi.'),
@@ -75,7 +79,7 @@ export default function ServicesList() {
         ? t('Try another category, or a broader search.', 'Coba kategori lain, atau kata kunci yang lebih umum.')
         : t('The catalogue is being prepared.', 'Katalog sedang disiapkan.'),
     };
-  }, [fetchServices.data, fetchServices.isPending, fetchServices.isError, filters, t]);
+  }, [fetchServices.data, fetchServices.isPending, fetchServices.isError, filters, t, user, authLoading]);
 
   const toolbarFilters = useMemo(
     () => [

@@ -14,6 +14,7 @@ import { LoadData } from '@/components/load-data';
 import { CardGridSkeleton } from '@/components/card-skeleton';
 import { useAuth } from '@/components/auth-provider';
 import { useLang } from '@/components/language-provider';
+import { signedOutState } from '@/shared/lib/browse-gate';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -31,7 +32,7 @@ const EMPTY_FORM = { title: '', description: '', link_url: '', as: 'solo_builder
 // (Community) + submission langsung dari Solo Builder & Agency", ranked by
 // Hot Rank (here: like count — the same signal Builds already tracks).
 export default function SpotlightList() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { t } = useLang();
   const { fetchSpotlight, fetchSpotlightAgenciesOwned, storeSpotlight } = useSpotlightControllers(user?.id);
 
@@ -70,13 +71,14 @@ export default function SpotlightList() {
       data: list,
       isLoading: fetchSpotlight.isPending,
       isError: fetchSpotlight.isError,
+      ...signedOutState(!authLoading && !user, t, t('Spotlight', 'Spotlight')),
       isEmpty: !fetchSpotlight.isPending && !fetchSpotlight.isError && list.length === 0,
       errorTitle: t('Could not load Spotlight.', 'Gagal memuat Spotlight.'),
       errorSubtitle: t('Check your connection and try again.', 'Periksa koneksi lalu coba lagi.'),
       emptyTitle: t('Nothing on the shelf yet.', 'Belum ada yang tayang di etalase.'),
       emptySubtitle: t('Shipped something? Submit it and start the ranking.', 'Baru rilis sesuatu? Submit dan mulai peringkatnya.'),
     };
-  }, [fetchSpotlight.data, fetchSpotlight.isPending, fetchSpotlight.isError, t]);
+  }, [fetchSpotlight.data, fetchSpotlight.isPending, fetchSpotlight.isError, t, user, authLoading]);
 
   const ownedAgencies = fetchSpotlightAgenciesOwned.data ?? [];
 
