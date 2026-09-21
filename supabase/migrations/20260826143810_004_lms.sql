@@ -2,13 +2,13 @@
 # LMS: Courses, Modules, Quizzes, Enrollments, Certificates
 
 1. New Tables
-- `courses` — created by approved coaches (title, description, level, price)
-- `course_modules` — modules within a course, ordered, with is_free flag
-- `course_materials` — materials within modules (video/text/file URLs)
-- `quizzes` — quizzes attached to modules with passing grade
-- `quiz_questions` — individual questions for quizzes
-- `enrollments` — member enrollment in courses with progress tracking
-- `certificates` — auto-issued certificates on course completion
+- `courses` - created by approved coaches (title, description, level, price)
+- `course_modules` - modules within a course, ordered, with is_free flag
+- `course_materials` - materials within modules (video/text/file URLs)
+- `quizzes` - quizzes attached to modules with passing grade
+- `quiz_questions` - individual questions for quizzes
+- `enrollments` - member enrollment in courses with progress tracking
+- `certificates` - auto-issued certificates on course completion
 
 2. Security
 - courses: any authenticated user can SELECT; coach owner can INSERT/UPDATE/DELETE own courses.

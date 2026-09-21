@@ -2,9 +2,9 @@
 # Events: Regions, Events, RSVPs
 
 1. New Tables
-- `regions` — regional community areas with assigned admin
-- `events` — events created by regional admins (location, date, capacity, paid flag)
-- `event_rsvps` — member registrations and check-ins
+- `regions` - regional community areas with assigned admin
+- `events` - events created by regional admins (location, date, capacity, paid flag)
+- `event_rsvps` - member registrations and check-ins
 
 2. Security
 - regions: any authenticated user can SELECT; super_admin can INSERT/UPDATE.

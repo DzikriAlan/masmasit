@@ -2,11 +2,11 @@
 # Core: User Profiles, Roles, Skills, Experiences
 
 1. New Tables
-- `profiles` — extends auth.users with public profile data (full_name, bio, avatar, location, job status, links, coach/talent flags)
-- `user_roles` — multi-role per user (member, company, client, coach, talent, regional_admin, super_admin)
-- `skills` — master skill list (name, category)
-- `user_skills` — links users to skills with a proficiency level
-- `experiences` — work history entries per user
+- `profiles` - extends auth.users with public profile data (full_name, bio, avatar, location, job status, links, coach/talent flags)
+- `user_roles` - multi-role per user (member, company, client, coach, talent, regional_admin, super_admin)
+- `skills` - master skill list (name, category)
+- `user_skills` - links users to skills with a proficiency level
+- `experiences` - work history entries per user
 
 2. Security
 - RLS enabled on all tables.

@@ -2,11 +2,11 @@
 # Talent & Agency: Bookings, Agency Services, Agency Projects, Case Studies, Settings
 
 1. New Tables
-- `bookings` — talent booking (consultation/mentoring) with admin fee percentage
-- `agency_services` — service listings by category (SaaS, AI, Creative, HR)
-- `agency_projects` — client project requests with DP, admin fee, and revenue share
-- `case_studies` — showcase completed projects (challenge, solution, result)
-- `app_settings` — configurable fee percentages and module activation flags (singleton)
+- `bookings` - talent booking (consultation/mentoring) with admin fee percentage
+- `agency_services` - service listings by category (SaaS, AI, Creative, HR)
+- `agency_projects` - client project requests with DP, admin fee, and revenue share
+- `case_studies` - showcase completed projects (challenge, solution, result)
+- `app_settings` - configurable fee percentages and module activation flags (singleton)
 
 2. Security
 - bookings: talent can SELECT bookings for themselves; client can SELECT own; client can INSERT; talent can UPDATE status.

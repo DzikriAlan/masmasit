@@ -2,9 +2,9 @@
 # Jobs: Companies, Jobs, Applications
 
 1. New Tables
-- `companies` — company profiles registered by users, require admin approval
-- `jobs` — job postings by approved companies
-- `job_applications` — member applications to jobs with tracking status
+- `companies` - company profiles registered by users, require admin approval
+- `jobs` - job postings by approved companies
+- `job_applications` - member applications to jobs with tracking status
 
 2. Security
 - companies: any authenticated user can SELECT (directory); owner can INSERT/UPDATE own company; super_admin can UPDATE (approval).

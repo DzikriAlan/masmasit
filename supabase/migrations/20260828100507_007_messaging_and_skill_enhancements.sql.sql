@@ -2,7 +2,7 @@
 # Messaging System & Skill Enhancements
 
 1. New Tables
-- `messages` — real-time chat between members, and between clients and talents/agency_ops
+- `messages` - real-time chat between members, and between clients and talents/agency_ops
   - id (uuid PK)
   - sender_id (uuid, references auth.users, the logged-in user)
   - recipient_id (uuid, references auth.users, the message receiver)
@@ -10,7 +10,7 @@
   - read (boolean, default false, tracks if recipient has read it)
   - created_at (timestamptz, default now())
 2. Modified Tables
-- `user_skills` — added `years_experience` (integer, default 0) and `verification_status` (text, default 'self_declared', check constraint for valid values)
+- `user_skills` - added `years_experience` (integer, default 0) and `verification_status` (text, default 'self_declared', check constraint for valid values)
 3. Security
 - Enable RLS on `messages`
 - Owner-scoped policies: users can only see messages they sent or received
