@@ -77,8 +77,18 @@ export const postAuthSignIn = async (email: string, password: string) => {
   return supabase.auth.signInWithPassword({ email, password });
 };
 
+// Without emailRedirectTo the confirmation link falls back to the Supabase
+// "Site URL" (was localhost:3000), so users on the real domain got bounced to
+// a dead localhost page. Send them through the same code-exchange route as OAuth.
+const emailRedirectTo = () =>
+  typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : undefined;
+
 export const postAuthSignUp = async (email: string, password: string, fullName: string) => {
-  return supabase.auth.signUp({ email, password, options: { data: { full_name: fullName } } });
+  return supabase.auth.signUp({
+    email,
+    password,
+    options: { data: { full_name: fullName }, emailRedirectTo: emailRedirectTo() },
+  });
 };
 
 export const postAuthGoogleSignIn = async (redirectTo: string | undefined) => {
@@ -91,7 +101,7 @@ export const postAuthGoogleSignIn = async (redirectTo: string | undefined) => {
 export const postAuthSignOut = async () => supabase.auth.signOut();
 
 export const postAuthResendVerification = async (email: string) =>
-  supabase.auth.resend({ type: 'signup', email });
+  supabase.auth.resend({ type: 'signup', email, options: { emailRedirectTo: emailRedirectTo() } });
 
 export const getAuthStateChange = (
   callback: (event: AuthChangeEvent, session: Session | null) => void
