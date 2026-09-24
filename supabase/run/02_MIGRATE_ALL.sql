@@ -1,5 +1,5 @@
 -- =========================================================================
--- SCRIPT 2 dari 2 - MIGRATE PENUH 001 sampai 025
+-- SCRIPT 2 dari 2 - MIGRATE PENUH 001 sampai 026
 -- =========================================================================
 -- Jalankan SETELAH 01_DELETE_ALL.sql.
 --
@@ -20,7 +20,7 @@
 -- =========================================================================
 
 
--- [01/25] 20260826143705_001_core_profiles_skills.sql
+-- [01/26] 20260826143705_001_core_profiles_skills.sql
 
 CREATE TABLE IF NOT EXISTS profiles (
   id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -143,7 +143,7 @@ CREATE INDEX IF NOT EXISTS idx_profiles_location ON profiles(location);
 CREATE INDEX IF NOT EXISTS idx_user_skills_user ON user_skills(user_id);
 CREATE INDEX IF NOT EXISTS idx_experiences_user ON experiences(user_id);
 
--- [02/25] 20260826143726_002_jobs_portal.sql
+-- [02/26] 20260826143726_002_jobs_portal.sql
 
 CREATE TABLE IF NOT EXISTS companies (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -257,7 +257,7 @@ CREATE INDEX IF NOT EXISTS idx_jobs_status ON jobs(status);
 CREATE INDEX IF NOT EXISTS idx_applications_job ON job_applications(job_id);
 CREATE INDEX IF NOT EXISTS idx_applications_user ON job_applications(user_id);
 
--- [03/25] 20260826143746_003_projects_portal.sql
+-- [03/26] 20260826143746_003_projects_portal.sql
 
 CREATE TABLE IF NOT EXISTS projects (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -347,7 +347,7 @@ CREATE INDEX IF NOT EXISTS idx_projects_status ON projects(status);
 CREATE INDEX IF NOT EXISTS idx_bids_project ON project_bids(project_id);
 CREATE INDEX IF NOT EXISTS idx_reviews_project ON project_reviews(project_id);
 
--- [04/25] 20260826143810_004_lms.sql
+-- [04/26] 20260826143810_004_lms.sql
 
 CREATE TABLE IF NOT EXISTS courses (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -583,7 +583,7 @@ CREATE INDEX IF NOT EXISTS idx_courses_coach ON courses(coach_id);
 CREATE INDEX IF NOT EXISTS idx_modules_course ON course_modules(course_id);
 CREATE INDEX IF NOT EXISTS idx_enrollments_user ON enrollments(user_id);
 
--- [05/25] 20260826143827_005_events.sql
+-- [05/26] 20260826143827_005_events.sql
 
 CREATE TABLE IF NOT EXISTS regions (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -682,7 +682,7 @@ CREATE POLICY "update_rsvp_admin" ON event_rsvps FOR UPDATE
 CREATE INDEX IF NOT EXISTS idx_events_region ON events(region_id);
 CREATE INDEX IF NOT EXISTS idx_rsvps_event ON event_rsvps(event_id);
 
--- [06/25] 20260826143847_006_talent_agency.sql
+-- [06/26] 20260826143847_006_talent_agency.sql
 
 CREATE TABLE IF NOT EXISTS bookings (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -844,7 +844,7 @@ CREATE INDEX IF NOT EXISTS idx_bookings_talent ON bookings(talent_id);
 CREATE INDEX IF NOT EXISTS idx_bookings_client ON bookings(client_id);
 CREATE INDEX IF NOT EXISTS idx_agency_services_category ON agency_services(category);
 
--- [07/25] 20260828100507_007_messaging_and_skill_enhancements.sql.sql
+-- [07/26] 20260828100507_007_messaging_and_skill_enhancements.sql.sql
 
 CREATE TABLE IF NOT EXISTS messages (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -888,7 +888,7 @@ BEGIN
   END IF;
 END $$;
 
--- [08/25] 20260829112651_008_bookings_external_clients.sql.sql
+-- [08/26] 20260829112651_008_bookings_external_clients.sql.sql
 
 DO $$ BEGIN
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'bookings' AND column_name = 'client_name') THEN
@@ -912,7 +912,7 @@ CREATE POLICY "insert_own_booking" ON bookings FOR INSERT
     (client_id IS NULL AND client_name IS NOT NULL AND client_email IS NOT NULL)
   );
 
--- [09/25] 20260829122417_009_module_completions_quiz_submissions.sql
+-- [09/26] 20260829122417_009_module_completions_quiz_submissions.sql
 
 CREATE TABLE IF NOT EXISTS module_completions (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -972,7 +972,7 @@ CREATE POLICY "delete_own_quiz_submissions" ON quiz_submissions FOR DELETE
 CREATE INDEX IF NOT EXISTS idx_module_completions_enrollment ON module_completions(enrollment_id);
 CREATE INDEX IF NOT EXISTS idx_quiz_submissions_user_quiz ON quiz_submissions(user_id, quiz_id);
 
--- [10/25] 20260831032232_010_payment_redirect_storage.sql
+-- [10/26] 20260831032232_010_payment_redirect_storage.sql
 
 DO $$ BEGIN
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'app_settings' AND column_name = 'lynkid_bookings_url') THEN
@@ -1182,7 +1182,7 @@ DROP POLICY IF EXISTS "certificates_insert_own" ON storage.objects;
 CREATE POLICY "certificates_insert_own" ON storage.objects FOR INSERT
   TO authenticated WITH CHECK (bucket_id = 'certificates' AND (storage.foldername(name))[1] = auth.uid()::text);
 
--- [11/25] 20260831032723_011_notifications_triggers.sql
+-- [11/26] 20260831032723_011_notifications_triggers.sql
 
 CREATE TABLE IF NOT EXISTS notifications (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -1284,7 +1284,7 @@ DROP TRIGGER IF EXISTS on_booking_update ON bookings;
 CREATE TRIGGER on_booking_update AFTER UPDATE ON bookings
   FOR EACH ROW EXECUTE FUNCTION trg_notify_booking();
 
--- [12/25] 20260831044155_012_allow_authenticated_insert_events.sql
+-- [12/26] 20260831044155_012_allow_authenticated_insert_events.sql
 
 DROP POLICY IF EXISTS "insert_events_admin" ON events;
 DROP POLICY IF EXISTS "insert_events_authenticated" ON events;
@@ -1294,7 +1294,7 @@ ON events FOR INSERT
 TO authenticated
 WITH CHECK (true);
 
--- [13/25] 20260906130946_013_seed_lms_dummy_data.sql
+-- [13/26] 20260906130946_013_seed_lms_dummy_data.sql
 
 INSERT INTO course_materials (module_id, title, content_type, text_content, content_url)
 SELECT v.module_id, v.title, v.content_type, v.text_content, v.content_url
@@ -1411,7 +1411,7 @@ WHERE EXISTS (SELECT 1 FROM courses WHERE id = '3a6775db-2d7d-4343-a852-d4f2e084
   AND EXISTS (SELECT 1 FROM auth.users WHERE id = 'c905faf5-b324-4b65-b734-3c11323e0e14')
   AND NOT EXISTS (SELECT 1 FROM enrollments WHERE course_id = '3a6775db-2d7d-4343-a852-d4f2e084f9d9' AND user_id = 'c905faf5-b324-4b65-b734-3c11323e0e14');
 
--- [14/25] 20260909000000_014_platform_hardening.sql
+-- [14/26] 20260909000000_014_platform_hardening.sql
 
 ALTER TABLE user_roles ADD COLUMN IF NOT EXISTS region_id uuid REFERENCES regions(id) ON DELETE SET NULL;
 
@@ -1606,7 +1606,7 @@ DROP POLICY IF EXISTS "insert_audit_logs_admin" ON audit_logs;
 CREATE POLICY "insert_audit_logs_admin" ON audit_logs FOR INSERT
   TO authenticated WITH CHECK (is_admin() AND actor_id = auth.uid());
 
--- [15/25] 20260917000000_015_prd_v4_agencies_community_teams.sql
+-- [15/26] 20260917000000_015_prd_v4_agencies_community_teams.sql
 
 ALTER TABLE user_roles DROP CONSTRAINT IF EXISTS user_roles_role_check;
 ALTER TABLE user_roles ADD CONSTRAINT user_roles_role_check
@@ -2066,7 +2066,7 @@ CREATE INDEX IF NOT EXISTS idx_agency_services_agency ON agency_services(agency_
 CREATE INDEX IF NOT EXISTS idx_team_members_team ON team_members(team_id);
 CREATE INDEX IF NOT EXISTS idx_builds_spotlight ON builds(promoted_to_spotlight, likes_count DESC);
 
--- [16/25] 20260920000000_016_fix_message_notification_trigger.sql
+-- [16/26] 20260920000000_016_fix_message_notification_trigger.sql
 
 CREATE OR REPLACE FUNCTION trg_notify_message()
 RETURNS trigger
@@ -2082,7 +2082,7 @@ BEGIN
 END;
 $$;
 
--- [17/25] 20260920000100_017_seed_demo_content.sql
+-- [17/26] 20260920000100_017_seed_demo_content.sql
 
 DO $$
 DECLARE
@@ -2862,7 +2862,7 @@ INSERT INTO app_settings (id, talent_admin_fee_percentage, agency_admin_fee_perc
 SELECT 'f0000000-0000-4000-a000-000000000001', 15.00, 10.00, 10.00, false, false, true, true
 WHERE NOT EXISTS (SELECT 1 FROM app_settings);
 
--- [18/25] 20260921000000_018_seed_depth.sql
+-- [18/26] 20260921000000_018_seed_depth.sql
 
 INSERT INTO course_materials (id, module_id, title, content_type, content_url, text_content) VALUES
   ('32000000-0000-4000-a000-000000000010', '31000000-0000-4000-a000-000000000003', 'Structured logs that survive a refactor', 'text', NULL,
@@ -3094,7 +3094,7 @@ INSERT INTO notifications (id, user_id, type, title, body, link, is_read, create
   ('b1000000-0000-4000-a000-000000000019', 'd0000000-0000-4000-a000-000000000002', 'build', 'Your build was liked', 'Rupa UI Kit reached its first likes.', '/builds', false, now() - interval '5 days')
 ON CONFLICT DO NOTHING;
 
--- [19/25] 20260921000100_019_app_settings_singleton.sql
+-- [19/26] 20260921000100_019_app_settings_singleton.sql
 
 DELETE FROM app_settings a
 USING app_settings b
@@ -3102,7 +3102,7 @@ WHERE a.ctid > b.ctid;
 
 CREATE UNIQUE INDEX IF NOT EXISTS app_settings_singleton ON app_settings ((true));
 
--- [20/25] 20260921000200_020_seed_more_users.sql
+-- [20/26] 20260921000200_020_seed_more_users.sql
 
 DO $$
 DECLARE
@@ -3406,7 +3406,7 @@ ON CONFLICT DO NOTHING;
 
 DROP VIEW IF EXISTS demo_members;
 
--- [21/25] 20260921000300_021_admin_user_activity.sql
+-- [21/26] 20260921000300_021_admin_user_activity.sql
 
 CREATE OR REPLACE FUNCTION admin_user_activity()
 RETURNS TABLE (
@@ -3518,7 +3518,7 @@ $$;
 REVOKE ALL ON FUNCTION admin_user_activity() FROM public;
 GRANT EXECUTE ON FUNCTION admin_user_activity() TO authenticated;
 
--- [22/25] 20260921000400_022_seed_no_empty.sql
+-- [22/26] 20260921000400_022_seed_no_empty.sql
 
 INSERT INTO courses (id, coach_id, title, description, level, category, price, created_at)
 SELECT md5('demo-course-' || p.id::text)::uuid, p.id,
@@ -3825,7 +3825,7 @@ JOIN LATERAL (
 WHERE NOT EXISTS (SELECT 1 FROM module_completions z WHERE z.enrollment_id = e.id)
 ON CONFLICT DO NOTHING;
 
--- [23/25] 20260921000500_023_profile_foreign_keys.sql
+-- [23/26] 20260921000500_023_profile_foreign_keys.sql
 
 INSERT INTO profiles (id, email, full_name, created_at)
 SELECT u.id,
@@ -3897,7 +3897,7 @@ END $$;
 NOTIFY pgrst, 'reload schema';
 
 
--- [24/25] 20260921000600_024_auto_create_profile.sql
+-- [24/26] 20260921000600_024_auto_create_profile.sql
 
 CREATE OR REPLACE FUNCTION public.handle_new_user_profile()
 RETURNS trigger
@@ -3934,7 +3934,7 @@ ON CONFLICT DO NOTHING;
 
 
 
--- [25/25] 20260924000000_025_member_onboarding.sql
+-- [25/26] 20260924000000_025_member_onboarding.sql
 
 ALTER TABLE profiles
   ADD COLUMN IF NOT EXISTS fields text[] NOT NULL DEFAULT '{}',
@@ -4004,3 +4004,21 @@ $$;
 
 REVOKE ALL ON FUNCTION ensure_skills(text[]) FROM public;
 GRANT EXECUTE ON FUNCTION ensure_skills(text[]) TO authenticated;
+
+
+-- [26/26] 20260924000100_026_referral_threads.sql
+
+ALTER TABLE profiles
+  ADD COLUMN IF NOT EXISTS referral_source text,
+  ADD COLUMN IF NOT EXISTS referral_note text;
+
+ALTER TABLE profiles DROP CONSTRAINT IF EXISTS profiles_referral_source_check;
+ALTER TABLE profiles ADD CONSTRAINT profiles_referral_source_check
+  CHECK (referral_source IS NULL OR referral_source IN
+    ('instagram','threads','tiktok','linkedin','x','youtube','google','friend','community','other'));
+
+ALTER TABLE profiles DROP CONSTRAINT IF EXISTS profiles_referral_note_check;
+ALTER TABLE profiles ADD CONSTRAINT profiles_referral_note_check
+  CHECK (referral_note IS NULL OR length(referral_note) <= 100);
+
+NOTIFY pgrst, 'reload schema';

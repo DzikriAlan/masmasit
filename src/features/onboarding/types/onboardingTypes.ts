@@ -94,6 +94,7 @@ export const ONBOARDING_GOALS: OnboardingOption[] = [
 
 export const ONBOARDING_REFERRALS: OnboardingOption[] = [
   { value: 'instagram', en: 'Instagram', id: 'Instagram' },
+  { value: 'threads', en: 'Threads', id: 'Threads' },
   { value: 'tiktok', en: 'TikTok', id: 'TikTok' },
   { value: 'linkedin', en: 'LinkedIn', id: 'LinkedIn' },
   { value: 'x', en: 'X / Twitter', id: 'X / Twitter' },
