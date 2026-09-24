@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { Upload, Loader2, X, ImageIcon } from 'lucide-react';
 import { useAuth } from '@/components/auth-provider';
 import { useLang } from '@/components/language-provider';
@@ -35,6 +35,12 @@ export function FileUpload({
   const { storeUploads } = useUploadsControllers();
   const [preview, setPreview] = useState<string | null>(existingUrl ?? null);
   const [dragOver, setDragOver] = useState(false);
+
+  // Forms usually pass the saved URL only after their data loads, so the
+  // first render sees null. Follow later changes instead of keeping that.
+  useEffect(() => {
+    setPreview(existingUrl ?? null);
+  }, [existingUrl]);
 
   const saveFile = useCallback(async (file: File) => {
     if (!user) {
