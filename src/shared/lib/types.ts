@@ -39,6 +39,14 @@ export interface UserProfile {
   talent_approved: ApprovalStatus;
   /** Default session amount a talent charges, in rupiah. */
   hourly_rate: number | null;
+  /** Onboarding popup answers (migration 025). */
+  fields: string[];
+  experience_level: string | null;
+  join_goals: string[];
+  referral_source: string | null;
+  referral_note: string | null;
+  onboarding_completed_at: string | null;
+  onboarding_snoozed_until: string | null;
   created_at: string;
 }
 

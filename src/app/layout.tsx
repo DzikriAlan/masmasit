@@ -18,6 +18,7 @@ import { AuthProvider } from '@/components/auth-provider';
 import { LanguageProvider } from '@/components/language-provider';
 import { QueryProvider } from '@/components/query-provider';
 import { Toaster } from '@/components/ui/sonner';
+import OnboardingPopup from '@/features/onboarding/components/OnboardingPopup';
 
 export const dynamic = 'force-dynamic';
 
@@ -50,6 +51,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <LanguageProvider>
             <AuthProvider>
               {children}
+              <OnboardingPopup />
               <Toaster />
             </AuthProvider>
           </LanguageProvider>

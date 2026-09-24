@@ -4,6 +4,8 @@ import { slugify } from '@/shared/lib/utils';
 import type { Skill } from '@/shared/lib/types';
 
 import type {
+  PayloadPatchOnboardingAnswers,
+  PayloadPatchOnboardingSnooze,
   PayloadPostOnboardingAgency,
   PayloadPostOnboardingExperiences,
   PayloadPostOnboardingProfile,
@@ -88,5 +90,38 @@ export const postOnboardingAgency = async (payload: PayloadPostOnboardingAgency)
       .select('id, slug')
       .single(),
     'Agency registered — pending approval'
+  );
+};
+
+// Onboarding popup: saves the answers and marks onboarding done in one write.
+export const patchOnboardingAnswers = async ({ id, ...answers }: PayloadPatchOnboardingAnswers) => {
+  return toApiResponse<null>(
+    supabase
+      .from('profiles')
+      .update({ ...answers, onboarding_completed_at: new Date().toISOString() })
+      .eq('id', id),
+    'Onboarding saved successfully'
+  );
+};
+
+export const patchOnboardingSnooze = async ({ id, until }: PayloadPatchOnboardingSnooze) => {
+  return toApiResponse<null>(
+    supabase.from('profiles').update({ onboarding_snoozed_until: until }).eq('id', id),
+    'Onboarding snoozed'
+  );
+};
+
+// Resolves typed skill names to catalogue rows, creating the missing ones
+// (migration 025). Plain members cannot insert into skills directly.
+export const postOnboardingSkillNames = async (names: string[]) => {
+  return toApiResponse<Skill[]>(supabase.rpc('ensure_skills', { names }), 'Skills resolved successfully');
+};
+
+// The popup only adds skills. Unlike the full onboarding page it must not
+// wipe skills the member already set, so this upserts and skips duplicates.
+export const postOnboardingSkillsMerge = async (payload: PayloadPostOnboardingSkills[]) => {
+  return toApiResponse<null>(
+    supabase.from('user_skills').upsert(payload, { onConflict: 'user_id,skill_id', ignoreDuplicates: true }),
+    'Skills saved successfully'
   );
 };
