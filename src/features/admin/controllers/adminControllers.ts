@@ -13,6 +13,7 @@ import {
   getAdminArticles,
   getAdminAuditLogs,
   getAdminUserActivity,
+  getAdminOnboarding,
   getAdminCaseStudies,
   getAdminTeamCollabs,
   getAdminRoleDistribution,
@@ -286,6 +287,16 @@ export const useAdminUserActivityControllers = (enabled: boolean) => {
   });
 
   return { fetchAdminUserActivity };
+};
+
+export const useAdminOnboardingControllers = (enabled: boolean) => {
+  const fetchAdminOnboarding = useQuery({
+    queryKey: ['adminOnboarding'],
+    queryFn: async () => unwrapApiResponse(await getAdminOnboarding()) ?? [],
+    enabled,
+  });
+
+  return { fetchAdminOnboarding };
 };
 
 /** Catalogue CRUD: agency services and case studies. */

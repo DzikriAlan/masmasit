@@ -179,3 +179,17 @@ export const getAdminUserActivity = async () => {
   return supabase.rpc('admin_user_activity');
 };
 
+/**
+ * Onboarding popup answers per member (migration 025). profiles and
+ * user_skills are readable by any signed-in user, so no RPC is needed.
+ */
+export const getAdminOnboarding = async () => {
+  const supabase = getServerSupabase();
+  return supabase
+    .from('profiles')
+    .select(
+      'id, full_name, email, whatsapp, avatar_url, location, current_job_status, fields, experience_level, join_goals, referral_source, referral_note, onboarding_completed_at, created_at, user_skills(skills(name))'
+    )
+    .order('onboarding_completed_at', { ascending: false, nullsFirst: false });
+};
+

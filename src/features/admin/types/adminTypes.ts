@@ -239,3 +239,21 @@ export interface DataAdminUserActivity {
   features_used: number;
 }
 
+/** One row per member from GET /admin/onboarding. */
+export interface DataAdminOnboarding {
+  id: string;
+  full_name: string | null;
+  email: string;
+  whatsapp: string | null;
+  avatar_url: string | null;
+  location: string | null;
+  current_job_status: string | null;
+  fields: string[];
+  experience_level: string | null;
+  join_goals: string[];
+  referral_source: string | null;
+  referral_note: string | null;
+  onboarding_completed_at: string | null;
+  created_at: string;
+  user_skills: { skills: { name: string } | null }[];
+}

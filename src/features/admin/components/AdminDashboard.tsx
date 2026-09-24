@@ -22,6 +22,8 @@ import AdminRoles from '@/features/admin/components/AdminRoles';
 import AdminAuditLog from '@/features/admin/components/AdminAuditLog';
 import AdminUserActivity from '@/features/admin/components/AdminUserActivity';
 import AdminCatalog from '@/features/admin/components/AdminCatalog';
+import AdminOnboarding from '@/features/admin/components/AdminOnboarding';
+import AdminReferralSources from '@/features/admin/components/AdminReferralSources';
 
 export default function AdminDashboard() {
   const { user, roles, loading } = useAuth();
@@ -258,6 +260,8 @@ export default function AdminDashboard() {
           ))}
         </div>
 
+        <AdminReferralSources enabled={authChecked} />
+
         <Tabs defaultValue="approvals">
           <TabsList className="mb-6 flex-wrap">
             <TabsTrigger value="approvals">{t('Approvals', 'Approval')}</TabsTrigger>
@@ -265,6 +269,7 @@ export default function AdminDashboard() {
             <TabsTrigger value="agency">{t('Agency Projects', 'Proyek Agency')}</TabsTrigger>
             <TabsTrigger value="analytics">{t('Analytics', 'Analitik')}</TabsTrigger>
             <TabsTrigger value="users">{t('User Activity', 'Aktivitas User')}</TabsTrigger>
+            <TabsTrigger value="onboarding">{t('Onboarding', 'Onboarding')}</TabsTrigger>
             <TabsTrigger value="fees">{t('Fee Management', 'Kelola Biaya')}</TabsTrigger>
             <TabsTrigger value="moderation">{t('Moderation', 'Moderasi')}</TabsTrigger>
             <TabsTrigger value="catalog">{t('Catalog', 'Katalog')}</TabsTrigger>
@@ -647,6 +652,10 @@ export default function AdminDashboard() {
 
           <TabsContent value="users">
             <AdminUserActivity enabled={authChecked} />
+          </TabsContent>
+
+          <TabsContent value="onboarding">
+            <AdminOnboarding enabled={authChecked} />
           </TabsContent>
 
           <TabsContent value="audit">

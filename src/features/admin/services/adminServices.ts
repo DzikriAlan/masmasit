@@ -10,6 +10,7 @@ import type {
   DataAdminAuditLog,
   DataAdminCaseStudy,
   DataAdminCoaches,
+  DataAdminOnboarding,
   DataAdminCompanies,
   DataAdminModeration,
   DataAdminPayments,
@@ -316,6 +317,10 @@ export const getAdminAuditLogs = async () => {
 
 export const getAdminUserActivity = async () => {
   return apiGet<DataAdminUserActivity[]>('/admin/user-activity');
+};
+
+export const getAdminOnboarding = async () => {
+  return apiGet<DataAdminOnboarding[]>('/admin/onboarding');
 };
 
 export const getAdminAgencyServices = async () => {
