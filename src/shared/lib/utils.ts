@@ -22,3 +22,13 @@ export function slugify(input: string) {
     .filter(Boolean)
     .join('-');
 }
+
+/**
+ * Phone / WhatsApp number as stored on profiles.whatsapp: digits with an
+ * optional leading +, spaces, dashes, dots and brackets removed. Returns
+ * null when the input is not a plausible number (9-15 digits).
+ */
+export const normalizePhone = (input: string): string | null => {
+  const compact = input.trim().replace(/[\s\-().]/g, '');
+  return /^\+?\d{9,15}$/.test(compact) ? compact : null;
+};
