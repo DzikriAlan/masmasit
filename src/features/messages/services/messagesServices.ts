@@ -120,15 +120,19 @@ export const postMessages = async (payload: PayloadPostMessages) => {
 };
 
 /**
- * Realtime INSERT stream on `messages`. Kept in services because it is the same
+ * Realtime INSERT stream on `messages`, scoped to the user's own messages.
+ * Unfiltered, every open inbox received every message on the platform and
+ * Realtime ran an RLS check per message per subscriber — cost that grows with
+ * the square of active users. A filter takes a single condition, so sent and
+ * received are two bindings. Kept in services because it is the same
  * transport as the rest of this feature's data access; the caller owns teardown.
  */
-export const getMessagesRealtimeChannel = (onInsert: (message: DataMessages) => void) => {
+export const getMessagesRealtimeChannel = (userId: string, onInsert: (message: DataMessages) => void) => {
+  const handle = (payload: { new: unknown }) => onInsert(payload.new as DataMessages);
   return supabase
-    .channel('messages-realtime')
-    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => {
-      onInsert(payload.new as DataMessages);
-    });
+    .channel(`messages:${userId}:${Math.random().toString(36).slice(2)}`)
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `recipient_id=eq.${userId}` }, handle)
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `sender_id=eq.${userId}` }, handle);
 };
 
 export const removeMessagesRealtimeChannel = (channel: ReturnType<typeof getMessagesRealtimeChannel>) => {

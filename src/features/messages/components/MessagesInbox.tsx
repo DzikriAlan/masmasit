@@ -94,10 +94,12 @@ function PesanContent() {
     if (partner) loadMessages(partner);
   }, [user, selectedPartner, fetchMessagesPartner.data, loadMessages]);
 
-  // Real-time subscription
+  // Real-time subscription. Depends on the stable refetch function, not the
+  // query result, so the channel is not torn down on every fetch.
+  const refetchConversations = fetchMessagesConversations.refetch;
   useEffect(() => {
     if (!user) return;
-    const channel = getMessagesRealtimeChannel((msg) => {
+    const channel = getMessagesRealtimeChannel(user.id, (msg) => {
       if (msg.recipient_id !== user.id && msg.sender_id !== user.id) return;
       if (selectedPartner && (msg.sender_id === selectedPartner.id || msg.recipient_id === selectedPartner.id)) {
         setRealtimeMessages((prev) => [...prev, msg]);
@@ -105,10 +107,10 @@ function PesanContent() {
           updateMessagesReadById(msg.id);
         }
       }
-      fetchMessagesConversations.refetch();
+      refetchConversations();
     }).subscribe();
     return () => { removeMessagesRealtimeChannel(channel); };
-  }, [user, selectedPartner, fetchMessagesConversations]);
+  }, [user, selectedPartner, refetchConversations]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
