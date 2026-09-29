@@ -667,7 +667,7 @@ function TestimonialMarquee() {
           >
             <img src={q.photoTall} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover" />
             {/* Light floating caption instead of a dark gradient over the photo. */}
-            <figcaption className="absolute inset-x-3 bottom-3 rounded-2xl bg-white/90 p-4 backdrop-blur-md">
+            <figcaption className="absolute inset-x-3 bottom-3 rounded-2xl bg-white/95 p-4">
               <blockquote className="line-clamp-3 text-sm leading-snug text-neutral-800">
                 “{t(q.textEn, q.textId)}”
               </blockquote>
@@ -818,7 +818,7 @@ export default function HomePage() {
         </div>
 
         {/* 2 ── EXPLORE THE ECOSYSTEM -------------------------------------- */}
-        <section className="relative overflow-hidden bg-background">
+        <section className="render-lazy relative overflow-hidden bg-background">
           <div className="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
             <SectionHead
               eyebrow={t('Ecosystem', 'Ekosistem')}
@@ -856,7 +856,7 @@ export default function HomePage() {
 
         {/* 2b ── AGENCY — sibling of the ecosystem grid: same card chrome,
              two-tone headline and live preview, in a 4+2 / 2+4 bento. ------ */}
-        <section className="relative overflow-hidden bg-background">
+        <section className="render-lazy relative overflow-hidden bg-background">
           <div className="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
             <div className="mb-8 flex items-end justify-between gap-6">
               <div className="max-w-2xl">
@@ -916,7 +916,7 @@ export default function HomePage() {
         </section>
 
         {/* 11b ── TESTIMONIALS ------------------------------------------------ */}
-        <section className="relative overflow-hidden bg-background py-16 sm:py-20">
+        <section className="render-lazy relative overflow-hidden bg-background py-16 sm:py-20">
           <div className="mx-auto max-w-3xl px-4 text-center sm:px-6 lg:px-8">
             <p className="eyebrow text-muted-foreground">{t('Stories', 'Cerita')}</p>
             <h2 className="mx-auto mt-3 font-display text-4xl font-bold sm:text-6xl">
@@ -942,7 +942,7 @@ export default function HomePage() {
 
         {/* 11c ── LIVE ACTIVITY — a moving feed proves the platform is alive;
              real counters join in once they're worth showing. ------------- */}
-        <section className="relative bg-background">
+        <section className="render-lazy relative bg-background">
           <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
             <SectionHead
               eyebrow={t('Live activity', 'Aktivitas terkini')}
@@ -1026,7 +1026,7 @@ export default function HomePage() {
         {/* 12 ── FINAL CTA — full-bleed band that bookends the hero artwork.
              Pitch + one primary action on the left, talk-first channels on
              the right; stacks to a single column on mobile. */}
-        <section className="dark accent-green relative overflow-hidden bg-background">
+        <section className="render-lazy dark accent-green relative overflow-hidden bg-background">
           <img
             src={heroBackground.src}
             alt=""

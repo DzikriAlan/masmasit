@@ -426,6 +426,17 @@
 .stagger-1, .stagger-2, .stagger-3,
 .stagger-4, .stagger-5, .stagger-6 { animation: none; opacity: 1; }
 
+/* Below-the-fold homepage sections. Their infinite marquees each hold a
+   GPU layer (plus a mask-image offscreen pass), and all of them together
+   exceed what iOS in-app browsers (WhatsApp, Instagram) allow — WebKit then
+   stops painting tiles and the page renders half-blank. Skipping render
+   for off-screen sections frees those layers and stops their animations.
+   The intrinsic size keeps the scrollbar from jumping. */
+.render-lazy {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 900px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
