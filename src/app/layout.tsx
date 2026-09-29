@@ -20,7 +20,6 @@ import { QueryProvider } from '@/components/query-provider';
 import { Toaster } from '@/components/ui/sonner';
 import OnboardingPopup from '@/features/onboarding/components/OnboardingPopup';
 
-export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
   title: 'MasmasIT — Hire Experts & Build Digital Solutions',

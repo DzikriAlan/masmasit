@@ -1,5 +1,8 @@
 import { supabase } from '@/shared/lib/supabase';
 
+// Rebuilt hourly so new jobs/projects appear without waiting for a deploy.
+export const revalidate = 3600;
+
 export default async function sitemap() {
   const baseUrl = 'https://masmasit.online';
 
