@@ -14,6 +14,11 @@ const ACTION_VARIANT: Record<string, 'default' | 'secondary' | 'destructive' | '
   reject: 'destructive',
   delete: 'destructive',
   revoke_role: 'destructive',
+  suspend: 'destructive',
+  unsuspend: 'default',
+  take_down: 'destructive',
+  close: 'outline',
+  feature: 'default',
 };
 
 interface Props {
@@ -58,7 +63,7 @@ export default function AdminAuditLog({ enabled }: Props) {
               return (
                 <div key={log.id} className="flex flex-wrap items-center gap-3 rounded-lg border border-border/60 p-3 text-sm">
                   <Badge variant={ACTION_VARIANT[log.action] ?? 'secondary'} className="capitalize">
-                    {log.action.replace('_', ' ')}
+                    {log.action.replace(/_/g, ' ')}
                   </Badge>
                   <span className="font-medium">{log.entity_type}</span>
                   {detail && <span className="text-xs text-muted-foreground">{detail}</span>}

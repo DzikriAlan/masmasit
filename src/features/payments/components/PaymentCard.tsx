@@ -11,7 +11,16 @@ import { useLang } from '@/components/language-provider';
 import { PAYMENT_PROVIDER } from '@/shared/lib/external';
 import { toast } from 'sonner';
 
-import { usePaymentsControllers } from '@/features/payments/controllers/paymentsControllers';
+import { useFeeActive, usePaymentsControllers } from '@/features/payments/controllers/paymentsControllers';
+import type { PaymentsFeeModule } from '@/features/payments/types/paymentsTypes';
+
+// The module whose fee switch governs each payment table. Talent bookings
+// have no switch in Fee Management, so they always charge.
+const MODULE_BY_TABLE: Record<PaymentCardProps['table'], PaymentsFeeModule | undefined> = {
+  enrollments: 'lms',
+  event_rsvps: 'event',
+  bookings: undefined,
+};
 
 interface PaymentCardProps {
   table: 'bookings' | 'enrollments' | 'event_rsvps';
@@ -23,6 +32,8 @@ interface PaymentCardProps {
   paymentNote: string | null;
   fallbackUrl: string | null;
   onStatusChange?: (newStatus: string) => void;
+  /** Fee switch to honour; inferred from `table` when omitted. */
+  module?: PaymentsFeeModule;
 }
 
 export function PaymentCard({
@@ -35,10 +46,12 @@ export function PaymentCard({
   paymentNote,
   fallbackUrl,
   onStatusChange,
+  module,
 }: PaymentCardProps) {
   const { t } = useLang();
   const [note, setNote] = useState(paymentNote ?? '');
   const { changePaymentsConfirmation } = usePaymentsControllers();
+  const { active: feeActive } = useFeeActive(module ?? MODULE_BY_TABLE[table]);
 
   const submitting = changePaymentsConfirmation.isPending;
 
@@ -53,6 +66,10 @@ export function PaymentCard({
 
   const config = statusConfig[paymentStatus] ?? statusConfig.unpaid;
   const StatusIcon = config.icon;
+
+  // Fee switched off in Fee Management: the module is free, nothing to pay.
+  // A row already confirmed as paid still shows its receipt.
+  if (!feeActive && paymentStatus !== 'paid') return null;
 
   const saveNote = async () => {
     try {

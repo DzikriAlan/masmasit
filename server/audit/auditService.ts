@@ -9,7 +9,14 @@ export type AuditAction =
   | 'update_settings'
   | 'confirm_payment'
   | 'reset_payment'
-  | 'update_status';
+  | 'update_status'
+  | 'update'
+  | 'suspend'
+  | 'unsuspend'
+  | 'feature'
+  | 'unfeature'
+  | 'take_down'
+  | 'close';
 
 /**
  * Best-effort audit trail. A failure here must never sink the operation the

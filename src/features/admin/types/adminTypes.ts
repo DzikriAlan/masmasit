@@ -38,21 +38,96 @@ export interface DataAdminSettings {
   project_fee_active: boolean;
   lms_fee_active: boolean;
   event_fee_active: boolean;
-  lynkid_bookings_url: string | null;
-  lynkid_agency_url: string | null;
-  lynkid_courses_url: string | null;
-  lynkid_events_url: string | null;
+  goakal_bookings_url: string | null;
+  goakal_agency_url: string | null;
+  goakal_courses_url: string | null;
+  goakal_events_url: string | null;
 }
 
+export type AdminModerationType =
+  | 'jobs'
+  | 'projects'
+  | 'courses'
+  | 'events'
+  | 'discussions'
+  | 'replies'
+  | 'builds'
+  | 'spotlight';
+
+/** One row from GET /admin/moderation. */
 export interface DataAdminModeration {
-  type: string;
+  type: AdminModerationType;
   id: string;
   title: string;
-  meta: string;
+  /** Parent discussion title for replies, region name for events. */
+  context: string | null;
+  author: string | null;
+  created_at: string;
+  is_featured?: boolean;
+  promoted_to_spotlight?: boolean;
+}
+
+export interface PayloadGetAdminList {
+  search: string;
+  page: number;
+  limit?: number;
+}
+
+export interface PayloadGetAdminModeration extends PayloadGetAdminList {
+  type: AdminModerationType;
+}
+
+export interface PayloadGetAdminMembers extends PayloadGetAdminList {
+  suspendedOnly: boolean;
+}
+
+/** A page of rows plus the envelope's pagination block. */
+export interface DataAdminPage<T> {
+  items: T[];
+  pagination: { page: number; limit: number; total: number; totalPages: number };
+}
+
+/** One row from GET /admin/applications (TC-00-11). */
+export interface DataAdminApplication {
+  id: string;
+  status: string;
+  created_at: string;
+  applicant_id: string;
+  applicant_name: string | null;
+  applicant_email: string | null;
+  job_id: string;
+  job_title: string | null;
+  company_name: string | null;
+}
+
+/** One row from GET /admin/members (TC-09-16). */
+export interface DataAdminMember {
+  id: string;
+  full_name: string | null;
+  email: string;
+  avatar_url: string | null;
+  location: string | null;
+  region_id: string | null;
+  region: { name: string } | null;
+  is_suspended: boolean;
+  suspended_reason: string | null;
+  suspended_at: string | null;
+  created_at: string;
+}
+
+export interface PayloadPatchAdminMemberSuspension {
+  suspended: boolean;
+  reason: string | null;
+}
+
+export interface PayloadPatchAdminAgency {
+  name?: string;
+  description?: string;
+  logo_url?: string | null;
 }
 
 export interface DataAdminPayments {
-  table: string;
+  table: 'bookings' | 'enrollments' | 'event_rsvps' | 'agency_projects';
   id: string;
   subField?: string;
   category: string;
@@ -88,10 +163,10 @@ export interface PayloadPatchAdminSettings {
   project_fee_active: boolean;
   lms_fee_active: boolean;
   event_fee_active: boolean;
-  lynkid_bookings_url: string | null;
-  lynkid_agency_url: string | null;
-  lynkid_courses_url: string | null;
-  lynkid_events_url: string | null;
+  goakal_bookings_url: string | null;
+  goakal_agency_url: string | null;
+  goakal_courses_url: string | null;
+  goakal_events_url: string | null;
 }
 
 export interface Admin {

@@ -1,7 +1,7 @@
 import { supabase } from '@/shared/lib/supabase';
 import { toApiResponse } from '@/shared/lib/apiResponse';
 
-import type { PayloadPatchPaymentsConfirmation } from '../types/paymentsTypes';
+import type { DataPaymentsFeeSettings, PayloadPatchPaymentsConfirmation } from '../types/paymentsTypes';
 
 /**
  * Member-side payment confirmation. The row moves to
@@ -14,5 +14,17 @@ export const updatePaymentsConfirmation = async (payload: PayloadPatchPaymentsCo
       .update({ payment_note: payload.note, payment_status: 'awaiting_confirmation' })
       .eq('id', payload.recordId),
     'Payment confirmation submitted successfully'
+  );
+};
+
+/** Module fee switches from the app_settings singleton (TC-13-03). */
+export const getPaymentsFeeSettings = async () => {
+  return toApiResponse<DataPaymentsFeeSettings | null>(
+    supabase
+      .from('app_settings')
+      .select('job_fee_active, project_fee_active, lms_fee_active, event_fee_active')
+      .limit(1)
+      .maybeSingle(),
+    'Fee settings retrieved successfully'
   );
 };

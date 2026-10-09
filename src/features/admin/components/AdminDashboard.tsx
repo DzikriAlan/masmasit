@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ShieldCheck, Loader2, Check, X, Users, Briefcase, Code2, GraduationCap, Star, TrendingUp, Settings, Calendar, FolderKanban, Flag, Trash2, Ban, CreditCard, BarChart3, ExternalLink, RotateCcw } from 'lucide-react';
+import { ShieldCheck, Loader2, Check, X, Users, Briefcase, Code2, GraduationCap, Star, TrendingUp, Settings, Calendar, FolderKanban, Ban, CreditCard, BarChart3, ExternalLink, RotateCcw } from 'lucide-react';
 import { AppShell } from '@/components/app-shell';
 import { useAuth } from '@/components/auth-provider';
 import { useLang } from '@/components/language-provider';
@@ -24,6 +24,19 @@ import AdminUserActivity from '@/features/admin/components/AdminUserActivity';
 import AdminCatalog from '@/features/admin/components/AdminCatalog';
 import AdminOnboarding from '@/features/admin/components/AdminOnboarding';
 import AdminReferralSources from '@/features/admin/components/AdminReferralSources';
+import AdminModeration from '@/features/admin/components/AdminModeration';
+import AdminApplications from '@/features/admin/components/AdminApplications';
+import AdminMembers from '@/features/admin/components/AdminMembers';
+import AdminAgencies from '@/features/admin/components/AdminAgencies';
+
+const AGENCY_PROJECT_STATUSES = [
+  { value: 'requested', en: 'Requested', id: 'Diajukan' },
+  { value: 'in_review', en: 'In Review', id: 'Perlu Direview' },
+  { value: 'approved', en: 'Approved', id: 'Disetujui' },
+  { value: 'in_progress', en: 'In Progress', id: 'Dikerjakan' },
+  { value: 'completed', en: 'Completed', id: 'Selesai' },
+  { value: 'cancelled', en: 'Cancelled', id: 'Dibatalkan' },
+] as const;
 
 export default function AdminDashboard() {
   const { user, roles, loading } = useAuth();
@@ -44,12 +57,9 @@ export default function AdminDashboard() {
   }, [user, roles, loading, router]);
 
   const {
-    fetchAdminCompanies,
-    fetchAdminCoaches,
     fetchAdminSettings,
     fetchAdminStats,
     fetchAdminAgencyProjects,
-    fetchAdminModeration,
     fetchAdminPayments,
     fetchAdminAnalytics,
     changeAdminCompanyApproval,
@@ -58,13 +68,13 @@ export default function AdminDashboard() {
     changeAdminAgencyStatus,
     changeAdminPaymentPaid,
     changeAdminPaymentReset,
-    removeAdminContent,
     fetchAdminApprovals,
     changeAdminEventApproval,
     changeAdminAgencyApproval,
     fetchAdminTeamCollabs,
     changeAdminTeamCollabsMatch,
-  } = useAdminControllers(user?.id, authChecked);
+    changeAdminTeamCollabsClose,
+  } = useAdminControllers(authChecked, !pendingOnly);
 
   const isSuperAdmin = roles.includes('super_admin');
   const approvals = fetchAdminApprovals.data ?? null;
@@ -75,10 +85,11 @@ export default function AdminDashboard() {
   const [matchDrafts, setMatchDrafts] = useState<Record<string, string>>({});
 
 
-  const companies = fetchAdminCompanies.data ?? [];
-  const coaches = fetchAdminCoaches.data ?? [];
+  // Companies and coach/talent applications come from the region-scoped
+  // approvals endpoint; "Show all" asks it for the full history.
+  const companies = approvals?.companies ?? [];
+  const coaches = approvals?.people ?? [];
   const agencyProjects = fetchAdminAgencyProjects.data ?? [];
-  const moderationItems = fetchAdminModeration.data ?? [];
   const payments = fetchAdminPayments.data ?? [];
   const analyticsData = fetchAdminAnalytics.data ?? null;
   const stats = fetchAdminStats.data ?? { members: 0, jobs: 0, projects: 0, courses: 0, bookings: 0, agencyProjects: 0 };
@@ -155,10 +166,10 @@ export default function AdminDashboard() {
           project_fee_active: settings.project_fee_active,
           lms_fee_active: settings.lms_fee_active,
           event_fee_active: settings.event_fee_active,
-          lynkid_bookings_url: settings.lynkid_bookings_url ?? null,
-          lynkid_agency_url: settings.lynkid_agency_url ?? null,
-          lynkid_courses_url: settings.lynkid_courses_url ?? null,
-          lynkid_events_url: settings.lynkid_events_url ?? null,
+          goakal_bookings_url: settings.goakal_bookings_url ?? null,
+          goakal_agency_url: settings.goakal_agency_url ?? null,
+          goakal_courses_url: settings.goakal_courses_url ?? null,
+          goakal_events_url: settings.goakal_events_url ?? null,
         },
       });
     } catch {
@@ -217,14 +228,15 @@ export default function AdminDashboard() {
     toast.success(t('Marked as matched — both sides now see the WhatsApp hand-off', 'Ditandai matched — kedua pihak kini melihat hand-off WhatsApp'));
   };
 
-  const destroyContent = async (table: string, id: string) => {
+  // TC-14-07: take a listing off the board without matching it.
+  const modifyTeamCollabsClose = async (id: string) => {
     try {
-      await removeAdminContent.mutateAsync({ table, id });
-    } catch {
-      toast.error('Failed to delete');
+      await changeAdminTeamCollabsClose.mutateAsync(id);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : t('Failed to close listing', 'Gagal menutup listing'));
       return;
     }
-    toast.success('Content deleted');
+    toast.success(t('Listing closed', 'Listing ditutup'));
   };
 
   if (loading || !authChecked) return <AppShell><div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div></AppShell>;
@@ -263,9 +275,13 @@ export default function AdminDashboard() {
         <AdminReferralSources enabled={authChecked} />
 
         <Tabs defaultValue="approvals">
-          <TabsList className="mb-6 flex-wrap">
+          {/* 13 tabs never fit at 375px: one scrollable row instead of a
+              wrapped h-10 strip that spills over the content (TC-14-08). */}
+          <TabsList className="mb-6 flex h-auto w-full justify-start overflow-x-auto overflow-y-hidden whitespace-nowrap [scrollbar-width:thin] [&>button]:shrink-0">
             <TabsTrigger value="approvals">{t('Approvals', 'Approval')}</TabsTrigger>
             <TabsTrigger value="payments">{t('Payments', 'Pembayaran')}</TabsTrigger>
+            <TabsTrigger value="applications">{t('Applications', 'Lamaran')}</TabsTrigger>
+            <TabsTrigger value="members">{t('Members', 'Member')}</TabsTrigger>
             <TabsTrigger value="agency">{t('Agency Projects', 'Proyek Agency')}</TabsTrigger>
             <TabsTrigger value="analytics">{t('Analytics', 'Analitik')}</TabsTrigger>
             <TabsTrigger value="users">{t('User Activity', 'Aktivitas User')}</TabsTrigger>
@@ -391,6 +407,9 @@ export default function AdminDashboard() {
                           <Button size="sm" onClick={() => modifyTeamCollabsMatch(c.id)} disabled={changeAdminTeamCollabsMatch.isPending} className="gap-1">
                             <Check className="h-3.5 w-3.5" /> {t('Mark Matched', 'Tandai Matched')}
                           </Button>
+                          <Button size="sm" variant="outline" onClick={() => modifyTeamCollabsClose(c.id)} disabled={changeAdminTeamCollabsClose.isPending} className="gap-1">
+                            <Ban className="h-3.5 w-3.5" /> {t('Close listing', 'Tutup listing')}
+                          </Button>
                         </div>
                       </div>
                     ))}
@@ -507,17 +526,16 @@ export default function AdminDashboard() {
                             <p className="mt-1 text-xs text-muted-foreground">{p.scope?.slice(0, 100) ?? 'No scope'}</p>
                             {p.budget && <p className="mt-1 text-xs text-muted-foreground">{t('Budget', 'Budget')}: Rp {(p.budget / 1000000).toFixed(1)}M</p>}
                           </div>
-                          <Badge variant={p.status === 'completed' ? 'default' : p.status === 'in_review' ? 'secondary' : 'outline'} className="capitalize">{p.status?.replace('_', ' ')}</Badge>
+                          <Badge variant={p.status === 'completed' ? 'default' : p.status === 'cancelled' ? 'destructive' : p.status === 'in_review' ? 'secondary' : 'outline'} className="capitalize">{p.status?.replace('_', ' ')}</Badge>
                         </div>
                         <div className="mt-3 flex flex-wrap gap-2">
                           <Select defaultValue={p.status} onValueChange={(v) => modifyAgencyStatus(p.id, v)}>
                             <SelectTrigger className="h-8 w-40 text-xs"><SelectValue /></SelectTrigger>
+                            {/* Exactly the agency_projects.status CHECK (migration 006). */}
                             <SelectContent>
-                              <SelectItem value="in_review">{t('In Review', 'Perlu Direview')}</SelectItem>
-                              <SelectItem value="team_assigned">{t('Team Assigned', 'Tim Ditugaskan')}</SelectItem>
-                              <SelectItem value="in_progress">{t('In Progress', 'Dikerjakan')}</SelectItem>
-                              <SelectItem value="delivery">{t('Delivery', 'Delivery')}</SelectItem>
-                              <SelectItem value="completed">{t('Completed', 'Selesai')}</SelectItem>
+                              {AGENCY_PROJECT_STATUSES.map((status) => (
+                                <SelectItem key={status.value} value={status.value}>{t(status.en, status.id)}</SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                         </div>
@@ -565,19 +583,19 @@ export default function AdminDashboard() {
                       <div className="grid gap-4 sm:grid-cols-2">
                         <div className="space-y-2">
                           <Label htmlFor="lb">{t('Bookings GoAkal URL', 'URL GoAkal Booking')}</Label>
-                          <Input id="lb" value={settings.lynkid_bookings_url ?? ''} onChange={(e) => setSettings({ ...settings, lynkid_bookings_url: e.target.value })} placeholder="https://checkout.example/your-booking-product" />
+                          <Input id="lb" value={settings.goakal_bookings_url ?? ''} onChange={(e) => setSettings({ ...settings, goakal_bookings_url: e.target.value })} placeholder="https://checkout.example/your-booking-product" />
                         </div>
                         <div className="space-y-2">
                           <Label htmlFor="la">{t('Agency GoAkal URL', 'URL GoAkal Agency')}</Label>
-                          <Input id="la" value={settings.lynkid_agency_url ?? ''} onChange={(e) => setSettings({ ...settings, lynkid_agency_url: e.target.value })} placeholder="https://checkout.example/your-agency-product" />
+                          <Input id="la" value={settings.goakal_agency_url ?? ''} onChange={(e) => setSettings({ ...settings, goakal_agency_url: e.target.value })} placeholder="https://checkout.example/your-agency-product" />
                         </div>
                         <div className="space-y-2">
                           <Label htmlFor="lc">{t('Courses GoAkal URL', 'URL GoAkal Kursus')}</Label>
-                          <Input id="lc" value={settings.lynkid_courses_url ?? ''} onChange={(e) => setSettings({ ...settings, lynkid_courses_url: e.target.value })} placeholder="https://checkout.example/your-course-product" />
+                          <Input id="lc" value={settings.goakal_courses_url ?? ''} onChange={(e) => setSettings({ ...settings, goakal_courses_url: e.target.value })} placeholder="https://checkout.example/your-course-product" />
                         </div>
                         <div className="space-y-2">
                           <Label htmlFor="le">{t('Events GoAkal URL', 'URL GoAkal Event')}</Label>
-                          <Input id="le" value={settings.lynkid_events_url ?? ''} onChange={(e) => setSettings({ ...settings, lynkid_events_url: e.target.value })} placeholder="https://checkout.example/your-event-product" />
+                          <Input id="le" value={settings.goakal_events_url ?? ''} onChange={(e) => setSettings({ ...settings, goakal_events_url: e.target.value })} placeholder="https://checkout.example/your-event-product" />
                         </div>
                       </div>
                     </div>
@@ -613,36 +631,21 @@ export default function AdminDashboard() {
             </Card>
           </TabsContent>
 
-          {/* Moderation */}
-          <TabsContent value="moderation">
-            <Card className="glass">
-              <CardHeader><CardTitle className="flex items-center gap-2"><Flag className="h-5 w-5" /> {t('Content Moderation', 'Moderasi Konten')}</CardTitle></CardHeader>
-              <CardContent>
-                <p className="mb-4 text-sm text-muted-foreground">{t('Review and remove listings that violate community guidelines.', 'Tinjau dan hapus listing yang melanggar pedoman komunitas.')}</p>
-                {moderationItems.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">{t('No content to moderate.', 'Tidak ada konten untuk dimoderasi.')}</p>
-                ) : (
-                  <div className="space-y-2">
-                    {moderationItems.map((item) => (
-                      <div key={`${item.type}-${item.id}`} className="flex items-center justify-between rounded-lg border border-border/60 p-3">
-                        <div className="flex items-center gap-3">
-                          <Badge variant="outline" className="text-xs">{item.meta}</Badge>
-                          <span className="text-sm font-medium">{item.title}</span>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button size="sm" variant="ghost" className="gap-1 text-destructive hover:text-destructive" onClick={() => destroyContent(item.type, item.id)}>
-                            <Trash2 className="h-3.5 w-3.5" /> {t('Delete', 'Hapus')}
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+          <TabsContent value="applications">
+            <AdminApplications enabled={authChecked} />
           </TabsContent>
 
-          <TabsContent value="catalog">
+          <TabsContent value="members">
+            <AdminMembers enabled={authChecked} currentUserId={user?.id} />
+          </TabsContent>
+
+          {/* Moderation */}
+          <TabsContent value="moderation">
+            <AdminModeration enabled={authChecked} />
+          </TabsContent>
+
+          <TabsContent value="catalog" className="space-y-6">
+            <AdminAgencies enabled={authChecked} />
             <AdminCatalog enabled={authChecked} />
           </TabsContent>
 

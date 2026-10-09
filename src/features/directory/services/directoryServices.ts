@@ -19,7 +19,11 @@ export const DIRECTORY_PAGE_SIZE = 24;
  */
 export const getDirectory = async (payload: PayloadGetDirectory) => {
   const skillJoin = payload.skillFilter !== 'all' ? '!inner' : '';
-  let query = supabase.from('profiles').select(`*, user_skills${skillJoin}(level, skill_id, skills(name))`);
+  // Suspended members (migration 030) are hidden from the directory.
+  let query = supabase
+    .from('profiles')
+    .select(`*, user_skills${skillJoin}(level, skill_id, skills(name))`)
+    .eq('is_suspended', false);
 
   if (payload.search) {
     query = query.or(`full_name.ilike.%${payload.search}%,bio.ilike.%${payload.search}%`);
@@ -48,6 +52,7 @@ export const getDirectoryDetail = async (id: string) => {
       .from('profiles')
       .select('*, user_skills(level, skills(name, category)), experiences(*)')
       .eq('id', id)
+      .eq('is_suspended', false)
       .maybeSingle(),
     'Member retrieved successfully'
   );

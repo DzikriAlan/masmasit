@@ -3,11 +3,22 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { unwrapApiResponse } from '@/shared/lib/apiResponse';
 
 import {
+  deleteAdminAgency,
   deleteAdminAgencyService,
   deleteAdminArticle,
   deleteAdminCaseStudy,
-  deleteAdminContent,
+  deleteAdminModeration,
   deleteAdminUserRole,
+  getAdminAgencies,
+  getAdminApplications,
+  getAdminMembers,
+  patchAdminAgency,
+  patchAdminCompanyApproval,
+  patchAdminMemberSuspension,
+  patchAdminModeration,
+  patchAdminPayment,
+  patchAdminPersonApproval,
+  patchAdminTeamCollabsClose,
   getAdminAgencyServices,
   getAdminApprovals,
   getAdminArticles,
@@ -31,39 +42,42 @@ import {
   updateAdminTeamCollabsMatch,
   getAdminAgencyProjects,
   getAdminAnalytics,
-  getAdminCoaches,
-  getAdminCompanies,
   getAdminModeration,
   getAdminPayments,
   getAdminSettings,
   getAdminStats,
   updateAdminAgencyStatus,
-  updateAdminCompanyApproval,
-  updateAdminPaymentPaid,
-  updateAdminPaymentReset,
   updateAdminSettings,
-  updateAdminUserApproval,
 } from '../services/adminServices';
-import type { PayloadPatchAdminSettings, PayloadPostAdminRole } from '../types/adminTypes';
+import type {
+  AdminModerationType,
+  DataAdminPage,
+  DataAdminPayments,
+  PayloadGetAdminList,
+  PayloadGetAdminMembers,
+  PayloadGetAdminModeration,
+  PayloadPatchAdminAgency,
+  PayloadPatchAdminMemberSuspension,
+  PayloadPatchAdminSettings,
+  PayloadPostAdminRole,
+} from '../types/adminTypes';
+import type { ApiResponse } from '@/shared/lib/apiResponse';
 
-export const useAdminControllers = (userId: string | undefined, enabled: boolean) => {
+/** Keeps the envelope's pagination next to the rows for paged admin lists. */
+const unwrapAdminPage = <T>(response: ApiResponse<T[]>, fallbackLimit: number): DataAdminPage<T> => {
+  const items = unwrapApiResponse(response) ?? [];
+  return {
+    items,
+    pagination: response.pagination ?? { page: 1, limit: fallbackLimit, total: items.length, totalPages: 1 },
+  };
+};
+
+export const useAdminControllers = (enabled: boolean, includeAllApprovals = false) => {
   const queryClient = useQueryClient();
 
   const invalidatePayments = () => {
     queryClient.invalidateQueries({ queryKey: ['adminPayments'] });
   };
-
-  const fetchAdminCompanies = useQuery({
-    queryKey: ['adminCompanies'],
-    queryFn: async () => unwrapApiResponse(await getAdminCompanies()) ?? [],
-    enabled,
-  });
-
-  const fetchAdminCoaches = useQuery({
-    queryKey: ['adminCoaches'],
-    queryFn: async () => unwrapApiResponse(await getAdminCoaches()) ?? [],
-    enabled,
-  });
 
   const fetchAdminSettings = useQuery({
     queryKey: ['adminSettings'],
@@ -83,12 +97,6 @@ export const useAdminControllers = (userId: string | undefined, enabled: boolean
     enabled,
   });
 
-  const fetchAdminModeration = useQuery({
-    queryKey: ['adminModeration'],
-    queryFn: async () => unwrapApiResponse(await getAdminModeration()) ?? [],
-    enabled,
-  });
-
   const fetchAdminPayments = useQuery({
     queryKey: ['adminPayments'],
     queryFn: async () => unwrapApiResponse(await getAdminPayments()) ?? [],
@@ -101,12 +109,15 @@ export const useAdminControllers = (userId: string | undefined, enabled: boolean
     enabled,
   });
 
+  const invalidateApprovals = () => {
+    queryClient.invalidateQueries({ queryKey: ['adminApprovals'] });
+    queryClient.invalidateQueries({ queryKey: ['adminAuditLogs'] });
+  };
+
   const changeAdminCompanyApproval = useMutation({
     mutationFn: async (payload: { id: string; status: string }) =>
-      unwrapApiResponse(await updateAdminCompanyApproval(payload.id, payload.status)),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['adminCompanies'] });
-    },
+      unwrapApiResponse(await patchAdminCompanyApproval(payload.id, payload.status)),
+    onSuccess: invalidateApprovals,
   });
 
   const changeAdminUserApproval = useMutation({
@@ -114,10 +125,8 @@ export const useAdminControllers = (userId: string | undefined, enabled: boolean
       id: string;
       field: 'coach_approved' | 'talent_approved';
       status: string;
-    }) => unwrapApiResponse(await updateAdminUserApproval(payload.id, payload.field, payload.status)),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['adminCoaches'] });
-    },
+    }) => unwrapApiResponse(await patchAdminPersonApproval(payload.id, payload.field, payload.status)),
+    onSuccess: invalidateApprovals,
   });
 
   const changeAdminSettings = useMutation({
@@ -137,28 +146,20 @@ export const useAdminControllers = (userId: string | undefined, enabled: boolean
   });
 
   const changeAdminPaymentPaid = useMutation({
-    mutationFn: async (payload: { table: string; id: string; subField?: string }) =>
-      unwrapApiResponse(await updateAdminPaymentPaid(payload.table, payload.id, userId, payload.subField)),
+    mutationFn: async (payload: { table: DataAdminPayments['table']; id: string; subField?: string }) =>
+      unwrapApiResponse(await patchAdminPayment(payload.table, payload.id, 'paid', payload.subField)),
     onSuccess: invalidatePayments,
   });
 
   const changeAdminPaymentReset = useMutation({
-    mutationFn: async (payload: { table: string; id: string; subField?: string }) =>
-      unwrapApiResponse(await updateAdminPaymentReset(payload.table, payload.id, payload.subField)),
+    mutationFn: async (payload: { table: DataAdminPayments['table']; id: string; subField?: string }) =>
+      unwrapApiResponse(await patchAdminPayment(payload.table, payload.id, 'reset', payload.subField)),
     onSuccess: invalidatePayments,
   });
 
-  const removeAdminContent = useMutation({
-    mutationFn: async (payload: { table: string; id: string }) =>
-      unwrapApiResponse(await deleteAdminContent(payload.table, payload.id)),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['adminModeration'] });
-    },
-  });
-
   const fetchAdminApprovals = useQuery({
-    queryKey: ['adminApprovals'],
-    queryFn: async () => unwrapApiResponse(await getAdminApprovals()),
+    queryKey: ['adminApprovals', includeAllApprovals],
+    queryFn: async () => unwrapApiResponse(await getAdminApprovals(includeAllApprovals)),
     enabled,
   });
 
@@ -205,19 +206,26 @@ export const useAdminControllers = (userId: string | undefined, enabled: boolean
     },
   });
 
+  // TC-14-07: take a Team Collabs listing off the board.
+  const changeAdminTeamCollabsClose = useMutation({
+    mutationFn: async (id: string) => unwrapApiResponse(await patchAdminTeamCollabsClose(id)),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['adminTeamCollabs'] });
+      queryClient.invalidateQueries({ queryKey: ['teamCollabs'] });
+    },
+  });
+
   return {
+    changeAdminTeamCollabsClose,
     fetchAdminApprovals,
     fetchAdminRoleDistribution,
     changeAdminEventApproval,
     changeAdminAgencyApproval,
     fetchAdminTeamCollabs,
     changeAdminTeamCollabsMatch,
-    fetchAdminCompanies,
-    fetchAdminCoaches,
     fetchAdminSettings,
     fetchAdminStats,
     fetchAdminAgencyProjects,
-    fetchAdminModeration,
     fetchAdminPayments,
     fetchAdminAnalytics,
     changeAdminCompanyApproval,
@@ -226,7 +234,6 @@ export const useAdminControllers = (userId: string | undefined, enabled: boolean
     changeAdminAgencyStatus,
     changeAdminPaymentPaid,
     changeAdminPaymentReset,
-    removeAdminContent,
   };
 };
 
@@ -401,4 +408,111 @@ export const useAdminCatalogControllers = (enabled: boolean) => {
     changeAdminArticle,
     removeAdminArticle,
   };
+};
+
+/** Moderation tab (TC-14-06): one content type at a time, searched + paged on the server. */
+export const useAdminModerationControllers = (payload: PayloadGetAdminModeration, enabled: boolean) => {
+  const queryClient = useQueryClient();
+  const limit = payload.limit ?? 20;
+
+  const invalidateModeration = (type: AdminModerationType) => {
+    queryClient.invalidateQueries({ queryKey: ['adminModeration'] });
+    queryClient.invalidateQueries({ queryKey: ['adminAuditLogs'] });
+    if (type === 'discussions' || type === 'replies') queryClient.invalidateQueries({ queryKey: ['discussions'] });
+    if (type === 'builds' || type === 'spotlight') {
+      queryClient.invalidateQueries({ queryKey: ['builds'] });
+      queryClient.invalidateQueries({ queryKey: ['spotlight'] });
+    }
+  };
+
+  const fetchAdminModeration = useQuery({
+    queryKey: ['adminModeration', payload],
+    queryFn: async () => unwrapAdminPage(await getAdminModeration({ ...payload, limit }), limit),
+    enabled,
+  });
+
+  const removeAdminModeration = useMutation({
+    mutationFn: async (target: { type: AdminModerationType; id: string }) =>
+      unwrapApiResponse(await deleteAdminModeration(target.type, target.id)),
+    onSuccess: (_data, target) => invalidateModeration(target.type),
+  });
+
+  const changeAdminModeration = useMutation({
+    mutationFn: async (target: {
+      type: AdminModerationType;
+      id: string;
+      data: { is_featured?: boolean; promoted_to_spotlight?: boolean };
+    }) => unwrapApiResponse(await patchAdminModeration(target.type, target.id, target.data)),
+    onSuccess: (_data, target) => invalidateModeration(target.type),
+  });
+
+  return { fetchAdminModeration, removeAdminModeration, changeAdminModeration };
+};
+
+/** Applications tab (TC-00-11). */
+export const useAdminApplicationsControllers = (payload: PayloadGetAdminList, enabled: boolean) => {
+  const limit = payload.limit ?? 20;
+
+  const fetchAdminApplications = useQuery({
+    queryKey: ['adminApplications', payload],
+    queryFn: async () => unwrapAdminPage(await getAdminApplications({ ...payload, limit }), limit),
+    enabled,
+  });
+
+  return { fetchAdminApplications };
+};
+
+/** Members tab: list + suspend / restore (TC-09-16). */
+export const useAdminMembersControllers = (payload: PayloadGetAdminMembers, enabled: boolean) => {
+  const queryClient = useQueryClient();
+  const limit = payload.limit ?? 20;
+
+  const fetchAdminMembers = useQuery({
+    queryKey: ['adminMembers', payload],
+    queryFn: async () => unwrapAdminPage(await getAdminMembers({ ...payload, limit }), limit),
+    enabled,
+  });
+
+  const changeAdminMemberSuspension = useMutation({
+    mutationFn: async (target: { id: string; data: PayloadPatchAdminMemberSuspension }) =>
+      unwrapApiResponse(await patchAdminMemberSuspension(target.id, target.data)),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['adminMembers'] });
+      queryClient.invalidateQueries({ queryKey: ['adminAuditLogs'] });
+      queryClient.invalidateQueries({ queryKey: ['directory'] });
+    },
+  });
+
+  return { fetchAdminMembers, changeAdminMemberSuspension };
+};
+
+/** Agencies: edit / delete (TC-14-07). */
+export const useAdminAgenciesControllers = (enabled: boolean) => {
+  const queryClient = useQueryClient();
+
+  const invalidateAgencies = () => {
+    queryClient.invalidateQueries({ queryKey: ['adminAgencies'] });
+    queryClient.invalidateQueries({ queryKey: ['adminApprovals'] });
+    queryClient.invalidateQueries({ queryKey: ['adminAuditLogs'] });
+    queryClient.invalidateQueries({ queryKey: ['agency'] });
+  };
+
+  const fetchAdminAgencies = useQuery({
+    queryKey: ['adminAgencies'],
+    queryFn: async () => unwrapApiResponse(await getAdminAgencies()) ?? [],
+    enabled,
+  });
+
+  const changeAdminAgency = useMutation({
+    mutationFn: async (target: { id: string; data: PayloadPatchAdminAgency }) =>
+      unwrapApiResponse(await patchAdminAgency(target.id, target.data)),
+    onSuccess: invalidateAgencies,
+  });
+
+  const removeAdminAgency = useMutation({
+    mutationFn: async (id: string) => unwrapApiResponse(await deleteAdminAgency(id)),
+    onSuccess: invalidateAgencies,
+  });
+
+  return { fetchAdminAgencies, changeAdminAgency, removeAdminAgency };
 };

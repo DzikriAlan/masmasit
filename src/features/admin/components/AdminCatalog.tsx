@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Loader2, Plus, Trash2, Package, TrendingUp, Power, Newspaper } from 'lucide-react';
+import { Loader2, Plus, Trash2, Package, TrendingUp, Power, Newspaper, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { useLang } from '@/components/language-provider';
@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
+import type { DataAdminCaseStudy } from '@/features/admin/types/adminTypes';
 import { useAdminCatalogControllers } from '@/features/admin/controllers/adminControllers';
 
 const CATEGORIES = ['SaaS', 'AI Solutions', 'Creative Services', 'HR Solutions'];
@@ -31,6 +32,8 @@ export default function AdminCatalog({ enabled }: Props) {
   const [serviceForm, setServiceForm] = useState(EMPTY_SERVICE);
   const [showCaseForm, setShowCaseForm] = useState(false);
   const [caseForm, setCaseForm] = useState(EMPTY_CASE);
+  // Set while the case-study form edits an existing row instead of adding one.
+  const [editingCaseId, setEditingCaseId] = useState<string | null>(null);
   const [showArticleForm, setShowArticleForm] = useState(false);
   const [articleForm, setArticleForm] = useState(EMPTY_ARTICLE);
 
@@ -41,6 +44,7 @@ export default function AdminCatalog({ enabled }: Props) {
     removeAdminAgencyService,
     fetchAdminCaseStudies,
     storeAdminCaseStudy,
+    changeAdminCaseStudy,
     removeAdminCaseStudy,
     fetchAdminArticles,
     storeAdminArticle,
@@ -52,7 +56,7 @@ export default function AdminCatalog({ enabled }: Props) {
   const caseStudies = fetchAdminCaseStudies.data ?? [];
   const articles = fetchAdminArticles.data ?? [];
   const savingService = storeAdminAgencyService.isPending || changeAdminAgencyService.isPending;
-  const savingCase = storeAdminCaseStudy.isPending;
+  const savingCase = storeAdminCaseStudy.isPending || changeAdminCaseStudy.isPending;
   const savingArticle = storeAdminArticle.isPending;
 
   const saveService = async () => {
@@ -100,18 +104,42 @@ export default function AdminCatalog({ enabled }: Props) {
       toast.error(t('Please fill all required fields', 'Mohon isi semua field wajib'));
       return;
     }
+    const data = {
+      ...caseForm,
+      category: caseForm.category || null,
+      image_url: caseForm.image_url || null,
+    };
     try {
-      await storeAdminCaseStudy.mutateAsync({
-        ...caseForm,
-        category: caseForm.category || null,
-        image_url: caseForm.image_url || null,
-      });
+      if (editingCaseId) {
+        await changeAdminCaseStudy.mutateAsync({ id: editingCaseId, data });
+      } else {
+        await storeAdminCaseStudy.mutateAsync(data);
+      }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : t('Failed to save case study', 'Gagal menyimpan studi kasus'));
       return;
     }
-    toast.success(t('Case study created', 'Studi kasus dibuat'));
+    toast.success(editingCaseId ? t('Case study updated', 'Studi kasus diperbarui') : t('Case study created', 'Studi kasus dibuat'));
+    clearCaseForm();
+  };
+
+  const editCaseStudy = (cs: DataAdminCaseStudy) => {
+    setEditingCaseId(cs.id);
+    setCaseForm({
+      title: cs.title,
+      client_name: cs.client_name,
+      challenge: cs.challenge,
+      solution: cs.solution,
+      result: cs.result,
+      category: cs.category ?? '',
+      image_url: cs.image_url ?? '',
+    });
+    setShowCaseForm(true);
+  };
+
+  const clearCaseForm = () => {
     setShowCaseForm(false);
+    setEditingCaseId(null);
     setCaseForm(EMPTY_CASE);
   };
 
@@ -243,7 +271,11 @@ export default function AdminCatalog({ enabled }: Props) {
               {t('Published on the public /case-studies page.', 'Dipublikasikan di halaman publik /case-studies.')}
             </CardDescription>
           </div>
-          <Button size="sm" onClick={() => setShowCaseForm(!showCaseForm)} className="gap-1">
+          <Button
+            size="sm"
+            onClick={() => (showCaseForm ? clearCaseForm() : setShowCaseForm(true))}
+            className="gap-1"
+          >
             <Plus className="h-3.5 w-3.5" /> {t('Add', 'Tambah')}
           </Button>
         </CardHeader>
@@ -274,10 +306,18 @@ export default function AdminCatalog({ enabled }: Props) {
                 <Label>{t('Category', 'Kategori')}</Label>
                 <Input value={caseForm.category} onChange={(e) => setCaseForm({ ...caseForm, category: e.target.value })} />
               </div>
-              <div className="flex items-end">
-                <Button onClick={saveCaseStudy} disabled={savingCase} className="w-full gap-2">
-                  {savingCase && <Loader2 className="h-4 w-4 animate-spin" />} {t('Save', 'Simpan')}
+              <div className="space-y-2">
+                <Label>{t('Image URL (optional)', 'URL Gambar (opsional)')}</Label>
+                <Input value={caseForm.image_url} onChange={(e) => setCaseForm({ ...caseForm, image_url: e.target.value })} />
+              </div>
+              <div className="flex items-end gap-2 sm:col-span-2">
+                <Button onClick={saveCaseStudy} disabled={savingCase} className="flex-1 gap-2">
+                  {savingCase && <Loader2 className="h-4 w-4 animate-spin" />}{' '}
+                  {editingCaseId ? t('Save changes', 'Simpan perubahan') : t('Save', 'Simpan')}
                 </Button>
+                {editingCaseId && (
+                  <Button variant="outline" onClick={clearCaseForm}>{t('Cancel', 'Batal')}</Button>
+                )}
               </div>
             </div>
           )}
@@ -294,6 +334,9 @@ export default function AdminCatalog({ enabled }: Props) {
                   <p className="truncate font-medium">{cs.title}</p>
                   <p className="text-xs text-muted-foreground">{cs.client_name}</p>
                 </div>
+                <Button size="sm" variant="outline" onClick={() => editCaseStudy(cs)} className="gap-1">
+                  <Pencil className="h-3.5 w-3.5" /> {t('Edit', 'Ubah')}
+                </Button>
                 <Button size="sm" variant="outline" onClick={() => destroyCaseStudy(cs.id)} className="gap-1">
                   <Trash2 className="h-3.5 w-3.5" />
                 </Button>

@@ -3,15 +3,22 @@ import { API_ERROR_CODE, errorResponse, successResponse, toApiResponse } from '@
 import { apiGet, apiPost, apiPatch, apiDelete } from '@/shared/lib/api';
 
 import type {
+  AdminModerationType,
+  DataAdminAgencies,
   DataAdminAgencyService,
+  DataAdminApplication,
+  DataAdminMember,
+  PayloadGetAdminList,
+  PayloadGetAdminMembers,
+  PayloadGetAdminModeration,
+  PayloadPatchAdminAgency,
+  PayloadPatchAdminMemberSuspension,
   DataAdminAnalytics,
   DataAdminApprovals,
   DataAdminArticle,
   DataAdminAuditLog,
   DataAdminCaseStudy,
-  DataAdminCoaches,
   DataAdminOnboarding,
-  DataAdminCompanies,
   DataAdminModeration,
   DataAdminPayments,
   DataAdminSettings,
@@ -26,24 +33,6 @@ import type {
 const getMonthStart = () => {
   const now = new Date();
   return new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-};
-
-export const getAdminCompanies = async () => {
-  return toApiResponse<DataAdminCompanies[]>(
-    supabase.from('companies').select('*, profiles(full_name)').order('created_at', { ascending: false }),
-    'Companies retrieved successfully'
-  );
-};
-
-export const getAdminCoaches = async () => {
-  return toApiResponse<DataAdminCoaches[]>(
-    supabase
-      .from('profiles')
-      .select('id, full_name, bio, is_coach, coach_approved, is_talent, talent_approved')
-      .or('is_coach.eq.true,is_talent.eq.true')
-      .order('created_at', { ascending: false }),
-    'Coach and talent applications retrieved successfully'
-  );
 };
 
 export const getAdminSettings = async () => {
@@ -92,82 +81,6 @@ export const getAdminAgencyProjects = async () => {
   );
 };
 
-export const getAdminModeration = async () => {
-  try {
-    const [jobs, projects, courses, events] = await Promise.all([
-      supabase.from('jobs').select('id, title, created_at').order('created_at', { ascending: false }).limit(10),
-      supabase.from('projects').select('id, title, created_at').order('created_at', { ascending: false }).limit(10),
-      supabase.from('courses').select('id, title, created_at').order('created_at', { ascending: false }).limit(10),
-      supabase.from('events').select('id, title, created_at').order('created_at', { ascending: false }).limit(10),
-    ]);
-
-    const items: DataAdminModeration[] = [];
-    (jobs.data ?? []).forEach((j) => items.push({ type: 'jobs', id: j.id, title: j.title, meta: 'Job' }));
-    (projects.data ?? []).forEach((p) => items.push({ type: 'projects', id: p.id, title: p.title, meta: 'Project' }));
-    (courses.data ?? []).forEach((c) => items.push({ type: 'courses', id: c.id, title: c.title, meta: 'Course' }));
-    (events.data ?? []).forEach((e) => items.push({ type: 'events', id: e.id, title: e.title, meta: 'Event' }));
-
-    return successResponse(items, 'Moderation queue retrieved successfully');
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'An unexpected error occurred';
-    return errorResponse(API_ERROR_CODE.INTERNAL_SERVER_ERROR, message);
-  }
-};
-
-export const getAdminPayments = async () => {
-  try {
-    const pending = ['unpaid', 'awaiting_confirmation'];
-    const [bookings, enrollments, rsvps, agency] = await Promise.all([
-      supabase
-        .from('bookings')
-        .select('id, payment_status, payment_note, amount, created_at, client_name, client_email, client_id, profiles:talent_id(full_name)')
-        .in('payment_status', pending)
-        .order('created_at', { ascending: false }),
-      supabase
-        .from('enrollments')
-        // enrollments timestamps its rows as enrolled_at; aliasing keeps the
-        // shared DataAdminPayments shape while querying the real column.
-        .select('id, payment_status, payment_note, created_at:enrolled_at, user_id, courses(title, price)')
-        .in('payment_status', pending)
-        .order('enrolled_at', { ascending: false }),
-      supabase
-        .from('event_rsvps')
-        .select('id, payment_status, payment_note, created_at, user_id, events(title, price)')
-        .in('payment_status', pending)
-        .order('created_at', { ascending: false }),
-      supabase
-        .from('agency_projects')
-        .select('id, dp_payment_status, dp_payment_note, final_payment_status, final_payment_note, budget, dp_amount, created_at, client_name, client_company, agency_services(title)')
-        .order('created_at', { ascending: false }),
-    ]);
-
-    const rows: DataAdminPayments[] = [];
-    (bookings.data ?? []).forEach((r: any) =>
-      rows.push({ table: 'bookings', id: r.id, category: 'Booking', item: r.profiles?.full_name ?? 'Talent', amount: r.amount, status: r.payment_status, note: r.payment_note, user: r.client_name ?? r.client_id, created_at: r.created_at })
-    );
-    (enrollments.data ?? []).forEach((r: any) =>
-      rows.push({ table: 'enrollments', id: r.id, category: 'Course', item: r.courses?.title ?? 'Course', amount: r.courses?.price ?? 0, status: r.payment_status, note: r.payment_note, user: r.user_id, created_at: r.created_at })
-    );
-    (rsvps.data ?? []).forEach((r: any) =>
-      rows.push({ table: 'event_rsvps', id: r.id, category: 'Event', item: r.events?.title ?? 'Event', amount: r.events?.price ?? 0, status: r.payment_status, note: r.payment_note, user: r.user_id, created_at: r.created_at })
-    );
-    (agency.data ?? []).forEach((r: any) => {
-      if (pending.includes(r.dp_payment_status)) {
-        rows.push({ table: 'agency_projects', id: r.id, subField: 'dp', category: 'Agency DP', item: r.agency_services?.title ?? 'Project', amount: r.dp_amount ?? r.budget ?? 0, status: r.dp_payment_status, note: r.dp_payment_note, user: r.client_name, created_at: r.created_at });
-      }
-      if (pending.includes(r.final_payment_status)) {
-        rows.push({ table: 'agency_projects', id: r.id, subField: 'final', category: 'Agency Final', item: r.agency_services?.title ?? 'Project', amount: r.budget ?? 0, status: r.final_payment_status, note: r.final_payment_note, user: r.client_name, created_at: r.created_at });
-      }
-    });
-
-    rows.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-    return successResponse(rows, 'Pending payments retrieved successfully');
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'An unexpected error occurred';
-    return errorResponse(API_ERROR_CODE.INTERNAL_SERVER_ERROR, message);
-  }
-};
-
 export const getAdminAnalytics = async () => {
   try {
     const [profiles, roleData, jobsData, appsData, bookingsData, agencyData] = await Promise.all([
@@ -196,24 +109,6 @@ export const getAdminAnalytics = async () => {
   }
 };
 
-export const updateAdminCompanyApproval = async (id: string, status: string) => {
-  return toApiResponse<null>(
-    supabase.from('companies').update({ approval_status: status }).eq('id', id),
-    'Company approval updated successfully'
-  );
-};
-
-export const updateAdminUserApproval = async (
-  id: string,
-  field: 'coach_approved' | 'talent_approved',
-  status: string
-) => {
-  return toApiResponse<null>(
-    supabase.from('profiles').update({ [field]: status }).eq('id', id),
-    'User approval updated successfully'
-  );
-};
-
 export const updateAdminSettings = async (id: string, payload: PayloadPatchAdminSettings) => {
   return toApiResponse<null>(
     supabase.from('app_settings').update(payload).eq('id', id),
@@ -225,61 +120,6 @@ export const updateAdminAgencyStatus = async (id: string, status: string) => {
   return toApiResponse<null>(
     supabase.from('agency_projects').update({ status }).eq('id', id),
     'Agency project status updated successfully'
-  );
-};
-
-export const updateAdminPaymentPaid = async (
-  table: string,
-  id: string,
-  userId: string | undefined,
-  subField?: string
-) => {
-  if (table === 'agency_projects') {
-    const statusField = subField === 'dp' ? 'dp_payment_status' : 'final_payment_status';
-    const confirmedAtField = subField === 'dp' ? 'dp_payment_confirmed_at' : 'final_payment_confirmed_at';
-    const confirmedByField = subField === 'dp' ? 'dp_payment_confirmed_by' : 'final_payment_confirmed_by';
-    return toApiResponse<null>(
-      supabase
-        .from('agency_projects')
-        .update({
-          [statusField]: 'paid',
-          [confirmedAtField]: new Date().toISOString(),
-          [confirmedByField]: userId,
-        })
-        .eq('id', id),
-      'Payment marked as paid successfully'
-    );
-  }
-
-  return toApiResponse<null>(
-    supabase
-      .from(table)
-      .update({ payment_status: 'paid', payment_confirmed_at: new Date().toISOString(), payment_confirmed_by: userId })
-      .eq('id', id),
-    'Payment marked as paid successfully'
-  );
-};
-
-export const updateAdminPaymentReset = async (table: string, id: string, subField?: string) => {
-  if (table === 'agency_projects') {
-    const statusField = subField === 'dp' ? 'dp_payment_status' : 'final_payment_status';
-    const noteField = subField === 'dp' ? 'dp_payment_note' : 'final_payment_note';
-    return toApiResponse<null>(
-      supabase.from('agency_projects').update({ [statusField]: 'unpaid', [noteField]: null }).eq('id', id),
-      'Payment reset successfully'
-    );
-  }
-
-  return toApiResponse<null>(
-    supabase.from(table).update({ payment_status: 'unpaid', payment_note: null }).eq('id', id),
-    'Payment reset successfully'
-  );
-};
-
-export const deleteAdminContent = async (table: string, id: string) => {
-  return toApiResponse<null>(
-    supabase.from(table).delete().eq('id', id),
-    'Content deleted successfully'
   );
 };
 
@@ -299,8 +139,93 @@ export const deleteAdminUserRole = async (userId: string, role: string) => {
   return apiDelete<null>('/admin/roles', { userId, role });
 };
 
-export const getAdminApprovals = async () => {
-  return apiGet<DataAdminApprovals>('/admin/approvals');
+export const getAdminApprovals = async (includeAll = false) => {
+  return apiGet<DataAdminApprovals>('/admin/approvals', { all: includeAll });
+};
+
+// Company / coach-talent approvals go through the server so the caller's
+// region is checked and the decision lands in the audit log (TC-14-05).
+export const patchAdminCompanyApproval = async (id: string, status: string) => {
+  return apiPatch<null>(`/admin/companies/${id}`, { status });
+};
+
+export const patchAdminPersonApproval = async (
+  id: string,
+  field: 'coach_approved' | 'talent_approved',
+  status: string
+) => {
+  return apiPatch<null>(`/admin/people/${id}`, { field, status });
+};
+
+export const getAdminPayments = async () => {
+  return apiGet<DataAdminPayments[]>('/admin/payments');
+};
+
+export const patchAdminPayment = async (
+  table: DataAdminPayments['table'],
+  id: string,
+  action: 'paid' | 'reset',
+  subField?: string
+) => {
+  return apiPatch<null>(`/admin/payments/${table}/${id}`, { action, subField });
+};
+
+export const getAdminModeration = async (payload: PayloadGetAdminModeration) => {
+  return apiGet<DataAdminModeration[]>('/admin/moderation', {
+    type: payload.type,
+    search: payload.search,
+    page: payload.page,
+    limit: payload.limit,
+  });
+};
+
+export const patchAdminModeration = async (
+  type: AdminModerationType,
+  id: string,
+  payload: { is_featured?: boolean; promoted_to_spotlight?: boolean }
+) => {
+  return apiPatch<null>(`/admin/moderation/${type}/${id}`, payload);
+};
+
+export const deleteAdminModeration = async (type: AdminModerationType, id: string) => {
+  return apiDelete<null>(`/admin/moderation/${type}/${id}`);
+};
+
+export const getAdminApplications = async (payload: PayloadGetAdminList) => {
+  return apiGet<DataAdminApplication[]>('/admin/applications', {
+    search: payload.search,
+    page: payload.page,
+    limit: payload.limit,
+  });
+};
+
+export const getAdminMembers = async (payload: PayloadGetAdminMembers) => {
+  return apiGet<DataAdminMember[]>('/admin/members', {
+    search: payload.search,
+    page: payload.page,
+    limit: payload.limit,
+    suspended: payload.suspendedOnly || undefined,
+  });
+};
+
+export const patchAdminMemberSuspension = async (id: string, payload: PayloadPatchAdminMemberSuspension) => {
+  return apiPatch<null>(`/admin/members/${id}/suspension`, payload);
+};
+
+export const getAdminAgencies = async () => {
+  return apiGet<DataAdminAgencies[]>('/admin/agencies');
+};
+
+export const patchAdminAgency = async (id: string, payload: PayloadPatchAdminAgency) => {
+  return apiPatch<null>(`/admin/agencies/${id}`, payload);
+};
+
+export const deleteAdminAgency = async (id: string) => {
+  return apiDelete<null>(`/admin/agencies/${id}`);
+};
+
+export const patchAdminTeamCollabsClose = async (id: string) => {
+  return apiPatch<null>(`/admin/team-collabs/${id}`, { status: 'closed' });
 };
 
 export const updateAdminEventApproval = async (id: string, status: string) => {
