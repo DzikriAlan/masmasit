@@ -3,12 +3,17 @@ import { API_ERROR_CODE, errorResponse, successResponse, toApiResponse } from '@
 
 import type {
   DataMessages,
+  DataMessagesAttachment,
   DataMessagesConversation,
   DataMessagesPartner,
   PayloadPostMessages,
+  PayloadPostMessagesAttachment,
 } from '../types/messagesTypes';
 
 const PARTNER_FIELDS = 'id, full_name, avatar_url, location';
+
+const ATTACHMENT_BUCKET = 'message-attachments';
+export const MESSAGES_ATTACHMENT_MAX_BYTES = 10 * 1024 * 1024;
 
 export const getMessagesConversations = async (userId: string) => {
   try {
@@ -119,6 +124,67 @@ export const postMessages = async (payload: PayloadPostMessages) => {
   return toApiResponse<null>(supabase.from('messages').insert(payload), 'Message sent successfully');
 };
 
+/** Total unread messages addressed to the user, for the navbar badge. */
+export const getMessagesUnreadCount = async (userId: string) => {
+  try {
+    const { count, error } = await supabase
+      .from('messages')
+      .select('id', { count: 'exact', head: true })
+      .eq('recipient_id', userId)
+      .eq('read', false);
+    if (error) return errorResponse(API_ERROR_CODE.INTERNAL_SERVER_ERROR, error.message);
+    return successResponse(count ?? 0, 'Unread count retrieved successfully');
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'An unexpected error occurred';
+    return errorResponse(API_ERROR_CODE.INTERNAL_SERVER_ERROR, message);
+  }
+};
+
+/**
+ * Uploads a chat attachment to the private bucket under
+ * `{sender}/{recipient}/…` — the storage policies (029b) let the sender write
+ * there and both participants read it. Returns the object path, not a URL:
+ * the bucket is private, so readers resolve it with a signed URL.
+ */
+export const postMessagesAttachment = async (payload: PayloadPostMessagesAttachment) => {
+  try {
+    if (payload.file.size > MESSAGES_ATTACHMENT_MAX_BYTES) {
+      return errorResponse(API_ERROR_CODE.VALIDATION_ERROR, 'File exceeds 10 MB');
+    }
+    const safeName = payload.file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const path = `${payload.sender_id}/${payload.recipient_id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safeName}`;
+    const { error } = await supabase.storage
+      .from(ATTACHMENT_BUCKET)
+      .upload(path, payload.file, { cacheControl: '3600', upsert: false, contentType: payload.file.type || undefined });
+    if (error) return errorResponse(API_ERROR_CODE.VALIDATION_ERROR, error.message);
+
+    return successResponse<DataMessagesAttachment>(
+      {
+        attachment_url: path,
+        attachment_name: payload.file.name,
+        attachment_type: payload.file.type || 'application/octet-stream',
+        attachment_size: payload.file.size,
+      },
+      'Attachment uploaded successfully'
+    );
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'An unexpected error occurred';
+    return errorResponse(API_ERROR_CODE.INTERNAL_SERVER_ERROR, message);
+  }
+};
+
+/** Short-lived signed URL for a private attachment path. */
+export const getMessagesAttachmentUrl = async (path: string) => {
+  try {
+    const { data, error } = await supabase.storage.from(ATTACHMENT_BUCKET).createSignedUrl(path, 60 * 60);
+    if (error) return errorResponse(API_ERROR_CODE.NOT_FOUND, error.message);
+    return successResponse(data.signedUrl, 'Attachment URL created successfully');
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'An unexpected error occurred';
+    return errorResponse(API_ERROR_CODE.INTERNAL_SERVER_ERROR, message);
+  }
+};
+
 /**
  * Realtime INSERT stream on `messages`, scoped to the user's own messages.
  * Unfiltered, every open inbox received every message on the platform and
@@ -136,5 +202,22 @@ export const getMessagesRealtimeChannel = (userId: string, onInsert: (message: D
 };
 
 export const removeMessagesRealtimeChannel = (channel: ReturnType<typeof getMessagesRealtimeChannel>) => {
+  supabase.removeChannel(channel);
+};
+
+/**
+ * Realtime stream for the navbar unread badge: new messages to the user and
+ * read-flag updates on them (opening a conversation marks it read).
+ */
+export const getMessagesUnreadRealtimeChannel = (userId: string, onChange: () => void) => {
+  return supabase
+    .channel(`messages-unread:${userId}:${Math.random().toString(36).slice(2)}`)
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `recipient_id=eq.${userId}` }, onChange)
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'messages', filter: `recipient_id=eq.${userId}` }, onChange);
+};
+
+export const removeMessagesUnreadRealtimeChannel = (
+  channel: ReturnType<typeof getMessagesUnreadRealtimeChannel>
+) => {
   supabase.removeChannel(channel);
 };

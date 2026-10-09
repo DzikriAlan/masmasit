@@ -3,14 +3,17 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { unwrapApiResponse } from '@/shared/lib/apiResponse';
 
 import {
+  getMessagesAttachmentUrl,
   getMessagesConversations,
   getMessagesMemberSearch,
   getMessagesPartner,
   getMessagesThread,
+  getMessagesUnreadCount,
   postMessages,
+  postMessagesAttachment,
   updateMessagesRead,
 } from '../services/messagesServices';
-import type { PayloadPostMessages } from '../types/messagesTypes';
+import type { PayloadPostMessages, PayloadPostMessagesAttachment } from '../types/messagesTypes';
 
 export const useMessagesControllers = (
   userId: string | undefined,
@@ -50,7 +53,13 @@ export const useMessagesControllers = (
       unwrapApiResponse(await updateMessagesRead(payload.senderId, payload.recipientId)),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['messagesConversations', userId] });
+      queryClient.invalidateQueries({ queryKey: ['messagesUnreadCount', userId] });
     },
+  });
+
+  const storeMessagesAttachment = useMutation({
+    mutationFn: async (payload: PayloadPostMessagesAttachment) =>
+      unwrapApiResponse(await postMessagesAttachment(payload)),
   });
 
   return {
@@ -58,6 +67,7 @@ export const useMessagesControllers = (
     fetchMessagesThread,
     fetchMessagesMemberSearch,
     storeMessages,
+    storeMessagesAttachment,
     changeMessagesRead,
   };
 };
@@ -70,4 +80,27 @@ export const useMessagesPartnerControllers = (partnerId: string | null) => {
   });
 
   return { fetchMessagesPartner };
+};
+
+/** Navbar badge: total unread messages for the signed-in user. */
+export const useMessagesUnreadControllers = (userId: string | undefined) => {
+  const fetchMessagesUnreadCount = useQuery({
+    queryKey: ['messagesUnreadCount', userId],
+    queryFn: async () => unwrapApiResponse(await getMessagesUnreadCount(userId as string)) ?? 0,
+    enabled: Boolean(userId),
+  });
+
+  return { fetchMessagesUnreadCount };
+};
+
+/** Signed URL for one private attachment; cached just under its 1 h expiry. */
+export const useMessagesAttachmentControllers = (path: string | null) => {
+  const fetchMessagesAttachmentUrl = useQuery({
+    queryKey: ['messagesAttachmentUrl', path],
+    queryFn: async () => unwrapApiResponse(await getMessagesAttachmentUrl(path as string)) ?? null,
+    enabled: Boolean(path),
+    staleTime: 50 * 60 * 1000,
+  });
+
+  return { fetchMessagesAttachmentUrl };
 };

@@ -5,6 +5,11 @@ export interface DataMessages {
   body: string;
   read: boolean;
   created_at: string;
+  /** Object path in the private `message-attachments` bucket (migration 029b). */
+  attachment_url: string | null;
+  attachment_name: string | null;
+  attachment_type: string | null;
+  attachment_size: number | null;
 }
 
 export interface DataMessagesPartner {
@@ -24,6 +29,23 @@ export interface PayloadPostMessages {
   sender_id: string;
   recipient_id: string;
   body: string;
+  attachment_url?: string | null;
+  attachment_name?: string | null;
+  attachment_type?: string | null;
+  attachment_size?: number | null;
+}
+
+export interface PayloadPostMessagesAttachment {
+  sender_id: string;
+  recipient_id: string;
+  file: File;
+}
+
+export interface DataMessagesAttachment {
+  attachment_url: string;
+  attachment_name: string;
+  attachment_type: string;
+  attachment_size: number;
 }
 
 export interface Messages {

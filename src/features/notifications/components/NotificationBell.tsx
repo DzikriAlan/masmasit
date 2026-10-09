@@ -32,7 +32,7 @@ function timeAgo(date: string): string {
 
 export function NotificationBell() {
   const { user } = useAuth();
-  const { t } = useLang();
+  const { lang, t } = useLang();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -42,14 +42,22 @@ export function NotificationBell() {
   const notifications: Notification[] = fetchNotifications.data ?? [];
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
+  // Indonesian copy when the UI is in 'id' and the row carries it; rows from
+  // before migration 029 only have English.
+  const localTitle = (n: Notification) => (lang === 'id' && n.title_id ? n.title_id : n.title);
+  const localBody = (n: Notification) => (lang === 'id' && n.body_id ? n.body_id : n.body);
+
+  // Depends on the stable refetch function, not the query result, so the
+  // channel is not torn down and re-created on every render.
+  const refetchNotifications = fetchNotifications.refetch;
   useEffect(() => {
     if (!user) return;
     const channel = getNotificationsRealtimeChannel(user.id, () => {
-      fetchNotifications.refetch();
+      refetchNotifications();
     }).subscribe();
 
     return () => { removeNotificationsRealtimeChannel(channel); };
-  }, [user, fetchNotifications]);
+  }, [user, refetchNotifications]);
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
@@ -119,10 +127,10 @@ export function NotificationBell() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
-                      <p className="text-sm font-medium truncate">{n.title}</p>
+                      <p className="text-sm font-medium truncate">{localTitle(n)}</p>
                       <span className="text-xs text-muted-foreground shrink-0">{timeAgo(n.created_at)}</span>
                     </div>
-                    {n.body && <p className="mt-0.5 text-xs text-muted-foreground line-clamp-2">{n.body}</p>}
+                    {localBody(n) && <p className="mt-0.5 text-xs text-muted-foreground line-clamp-2">{localBody(n)}</p>}
                     <div className="mt-1.5 flex items-center gap-2">
                       {n.link && (
                         <Link href={n.link} onClick={() => { modifyOneRead(n.id); setOpen(false); }}>

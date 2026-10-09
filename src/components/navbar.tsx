@@ -17,6 +17,7 @@ import {
 import { useAuth } from '@/components/auth-provider';
 import { useLang } from '@/components/language-provider';
 import { NotificationBell } from '@/features/notifications/components/NotificationBell';
+import { MessagesUnreadBadge } from '@/features/messages/components/MessagesUnreadBadge';
 import { GlobalSearch } from '@/features/search/components/GlobalSearch';
 import { StableLabel } from '@/components/stable-label';
 import { cn } from '@/shared/lib/utils';
@@ -313,9 +314,10 @@ export function Navbar() {
               <Link
                 href="/pesan"
                 aria-label={t('Messages', 'Pesan')}
-                className="flex h-10 w-10 items-center justify-center rounded-md text-foreground/70 transition-colors hover:bg-muted hover:text-foreground"
+                className="relative flex h-10 w-10 items-center justify-center rounded-md text-foreground/70 transition-colors hover:bg-muted hover:text-foreground"
               >
                 <MessageCircle className="h-5 w-5" />
+                <MessagesUnreadBadge className="absolute right-1 top-1" />
               </Link>
             )}
             {user && <NotificationBell />}
@@ -450,11 +452,12 @@ export function Navbar() {
                     href="/pesan"
                     onClick={() => setOpen(false)}
                     className={cn(
-                      'rounded-md px-3 py-2.5 text-base font-medium transition-colors hover:bg-muted',
+                      'flex items-center justify-between rounded-md px-3 py-2.5 text-base font-medium transition-colors hover:bg-muted',
                       pathname === '/pesan' ? 'bg-primary/5 text-primary' : 'text-muted-foreground'
                     )}
                   >
                     {t('Messages', 'Pesan')}
+                    <MessagesUnreadBadge />
                   </Link>
                 )}
                 {user && (

@@ -30,17 +30,24 @@ export const updateNotificationsRead = async (id: string) => {
 };
 
 /**
- * Realtime INSERT stream, scoped to one user. The topic carries a random
+ * Realtime change stream (INSERT and UPDATE), scoped to one user. UPDATE is
+ * included because grouped notifications (daily build likes, migration 029)
+ * bump an existing row instead of inserting a new one. The topic carries a random
  * suffix because reusing a cached channel name and calling .on() after
  * .subscribe() throws under StrictMode re-renders.
  */
-export const getNotificationsRealtimeChannel = (userId: string, onInsert: () => void) => {
+export const getNotificationsRealtimeChannel = (userId: string, onChange: () => void) => {
   return supabase
     .channel(`notifications:${userId}:${Math.random().toString(36).slice(2)}`)
     .on(
       'postgres_changes',
       { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${userId}` },
-      onInsert
+      onChange
+    )
+    .on(
+      'postgres_changes',
+      { event: 'UPDATE', schema: 'public', table: 'notifications', filter: `user_id=eq.${userId}` },
+      onChange
     );
 };
 

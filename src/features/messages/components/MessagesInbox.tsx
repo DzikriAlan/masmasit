@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Loader2, Send, MessageCircle, ArrowLeft, Search } from 'lucide-react';
+import { Loader2, Send, MessageCircle, ArrowLeft, Search, Paperclip, X } from 'lucide-react';
 import { AppShell } from '@/components/app-shell';
 import { useAuth } from '@/components/auth-provider';
 import { useLang } from '@/components/language-provider';
@@ -17,10 +17,12 @@ import type {
   DataMessagesPartner as ConversationPartner,
 } from '@/features/messages/types/messagesTypes';
 import {
+  MESSAGES_ATTACHMENT_MAX_BYTES,
   getMessagesRealtimeChannel,
   removeMessagesRealtimeChannel,
   updateMessagesReadById,
 } from '@/features/messages/services/messagesServices';
+import { MessagesAttachment } from '@/features/messages/components/MessagesAttachment';
 import {
   useMessagesControllers,
   useMessagesPartnerControllers,
@@ -45,7 +47,9 @@ function PesanContent() {
   const [newMessage, setNewMessage] = useState('');
   const [searchMembers, setSearchMembers] = useState('');
   const [showSearch, setShowSearch] = useState(false);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const autoOpenId = searchParams.get('to');
 
@@ -54,6 +58,7 @@ function PesanContent() {
     fetchMessagesThread,
     fetchMessagesMemberSearch,
     storeMessages,
+    storeMessagesAttachment,
     changeMessagesRead,
   } = useMessagesControllers(user?.id, selectedPartner?.id ?? null, searchMembers);
   const { fetchMessagesPartner } = useMessagesPartnerControllers(
@@ -63,7 +68,7 @@ function PesanContent() {
   const conversations = fetchMessagesConversations.data ?? [];
   const searchResults = fetchMessagesMemberSearch.data ?? [];
   const loadingMsgs = Boolean(selectedPartner) && fetchMessagesThread.isPending;
-  const sending = storeMessages.isPending;
+  const sending = storeMessages.isPending || storeMessagesAttachment.isPending;
 
   // Realtime inserts arrive between refetches, so they are merged on top of the
   // fetched thread and de-duplicated by id.
@@ -82,6 +87,7 @@ function PesanContent() {
   const loadMessages = useCallback((partner: ConversationPartner) => {
     setSelectedPartner(partner);
     setRealtimeMessages([]);
+    setPendingFile(null);
     if (user) {
       changeMessagesRead.mutate({ senderId: partner.id, recipientId: user.id });
     }
@@ -116,19 +122,49 @@ function PesanContent() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages.length]);
 
+  const clearAttachment = () => {
+    setPendingFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const editAttachment = (file: File | undefined) => {
+    if (!file) return;
+    if (file.size > MESSAGES_ATTACHMENT_MAX_BYTES) {
+      toast.error(t('File is too large. Maximum size is 10 MB.', 'File terlalu besar. Ukuran maksimal 10 MB.'));
+      clearAttachment();
+      return;
+    }
+    setPendingFile(file);
+  };
+
   const saveMessage = async () => {
-    if (!user || !selectedPartner || !newMessage.trim()) return;
+    if (!user || !selectedPartner || (!newMessage.trim() && !pendingFile)) return;
+    let attachment = null;
+    if (pendingFile) {
+      try {
+        attachment = await storeMessagesAttachment.mutateAsync({
+          sender_id: user.id,
+          recipient_id: selectedPartner.id,
+          file: pendingFile,
+        });
+      } catch {
+        toast.error(t('Failed to upload attachment', 'Gagal mengunggah lampiran'));
+        return;
+      }
+    }
     try {
       await storeMessages.mutateAsync({
         sender_id: user.id,
         recipient_id: selectedPartner.id,
         body: newMessage.trim(),
+        ...(attachment ?? {}),
       });
     } catch {
       toast.error(t('Failed to send message', 'Gagal mengirim pesan'));
       return;
     }
     setNewMessage('');
+    clearAttachment();
   };
 
   const modifySearch = (query: string) => {
@@ -216,7 +252,12 @@ function PesanContent() {
                       {c.unreadCount > 0 && <Badge className="ml-1 shrink-0 text-xs">{c.unreadCount}</Badge>}
                     </div>
                     {c.lastMessage && (
-                      <p className="truncate text-xs text-muted-foreground">{c.lastMessage.body}</p>
+                      <p className="truncate text-xs text-muted-foreground">
+                        {c.lastMessage.body ||
+                          (c.lastMessage.attachment_url
+                            ? `${t('Attachment', 'Lampiran')}: ${c.lastMessage.attachment_name ?? ''}`
+                            : '')}
+                      </p>
                     )}
                   </div>
                 </button>
@@ -261,7 +302,8 @@ function PesanContent() {
                                 : 'bg-muted rounded-bl-sm'
                             }`}
                           >
-                            <p>{m.body}</p>
+                            {m.attachment_url && <MessagesAttachment message={m} isMine={isMine} />}
+                            {m.body && <p className="whitespace-pre-wrap break-words">{m.body}</p>}
                             <p className={`mt-1 text-xs ${isMine ? 'text-primary-foreground/60' : 'text-muted-foreground'}`}>
                               {new Date(m.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
                             </p>
@@ -273,7 +315,38 @@ function PesanContent() {
                   <div ref={messagesEndRef} />
                 </div>
 
+                {pendingFile && (
+                  <div className="flex items-center gap-2 border-t border-border/40 px-3 pt-2 text-xs text-muted-foreground">
+                    <Paperclip className="h-3.5 w-3.5 shrink-0" />
+                    <span className="truncate">{pendingFile.name}</span>
+                    <span className="shrink-0">({(pendingFile.size / (1024 * 1024)).toFixed(1)} MB)</span>
+                    <button
+                      onClick={clearAttachment}
+                      aria-label={t('Remove attachment', 'Hapus lampiran')}
+                      className="ml-auto rounded p-0.5 hover:bg-muted hover:text-foreground"
+                      disabled={sending}
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                )}
                 <div className="border-t border-border/40 p-3 flex gap-2">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    className="hidden"
+                    onChange={(e) => editAttachment(e.target.files?.[0])}
+                  />
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={sending}
+                    aria-label={t('Attach file (max 10 MB)', 'Lampirkan file (maks 10 MB)')}
+                    title={t('Attach file (max 10 MB)', 'Lampirkan file (maks 10 MB)')}
+                  >
+                    <Paperclip className="h-4 w-4" />
+                  </Button>
                   <Input
                     placeholder={t('Type a message...', 'Ketik pesan...')}
                     value={newMessage}
@@ -281,7 +354,7 @@ function PesanContent() {
                     onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); saveMessage(); } }}
                     disabled={sending}
                   />
-                  <Button size="icon" onClick={saveMessage} disabled={sending || !newMessage.trim()}>
+                  <Button size="icon" onClick={saveMessage} disabled={sending || (!newMessage.trim() && !pendingFile)}>
                     {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                   </Button>
                 </div>
