@@ -36,6 +36,27 @@ if [[ -z "${DB_URL:-}" ]]; then
     SUPABASE_CONNECTION_STRING="$(grep -E '^SUPABASE_CONNECTION_STRING=' "$REPO_DIR/.env" | head -1 | cut -d= -f2- | sed -e 's/^"//' -e 's/"$//')"
   fi
   DB_URL="${SUPABASE_CONNECTION_STRING:-}"
+  # Template dashboard Supabase: "...:[YOUR-PASSWORD]@...". Kurung siku yang
+  # tertinggal di sekitar password ikut terkirim dan login ditolak, jadi
+  # dibuang di sini; placeholder yang belum diganti diisi SUPABASE_PROJECT_PASSWORD.
+  if [[ -z "${SUPABASE_PROJECT_PASSWORD:-}" && -f "$REPO_DIR/.env" ]]; then
+    SUPABASE_PROJECT_PASSWORD="$(grep -E '^SUPABASE_PROJECT_PASSWORD=' "$REPO_DIR/.env" | head -1 | cut -d= -f2- | sed -e 's/^"//' -e 's/"$//')"
+  fi
+  DB_URL="$(PROJECT_PW="${SUPABASE_PROJECT_PASSWORD:-}" python3 -c '
+import os, re, sys, urllib.parse
+url, fallback = sys.argv[1], os.environ.get("PROJECT_PW", "")
+m = re.match(r"^(postgres(?:ql)?://[^:/@]+:)(.*)(@[^@]+)$", url)
+if m:
+    pw = m.group(2)
+    if pw.startswith("[") and pw.endswith("]"):
+        pw = pw[1:-1]
+    if pw == "YOUR-PASSWORD" and fallback:
+        pw = fallback
+    if pw and "%" not in pw:
+        pw = urllib.parse.quote(pw, safe="")
+    url = m.group(1) + pw + m.group(3)
+print(url)
+' "$DB_URL")"
 fi
 if [[ -z "$DB_URL" ]]; then
   echo "GAGAL: isi SUPABASE_CONNECTION_STRING di .env atau jalankan dengan DB_URL=..." >&2
