@@ -32,11 +32,42 @@ const SNOOZE_DAYS = 3;
 // Admins fill these in from their profile page if they want to; no popup.
 const ADMIN_ROLES = ['super_admin', 'regional_admin'];
 
+// Per-device memory of "done" / "dismissed", so a database write that did not
+// land (or a stale profile) never makes the popup nag again on this device.
+const doneKey = (uid: string) => `mm:onboarding-done:${uid}`;
+const dismissedKey = (uid: string) => `mm:onboarding-dismissed:${uid}`;
+const readFlag = (store: 'local' | 'session', key: string) => {
+  try {
+    return (store === 'local' ? window.localStorage : window.sessionStorage).getItem(key) === '1';
+  } catch {
+    return false;
+  }
+};
+const writeFlag = (store: 'local' | 'session', key: string) => {
+  try {
+    (store === 'local' ? window.localStorage : window.sessionStorage).setItem(key, '1');
+  } catch {
+    // Storage blocked: the database flag still applies.
+  }
+};
+
+// Members who already answered the same questions on /onboarding or /profile
+// should not be asked twice.
+const hasAnswers = (profile: UserProfile) =>
+  (profile.fields ?? []).length > 0 &&
+  !!profile.experience_level &&
+  !!profile.location &&
+  !!profile.current_job_status &&
+  (profile.join_goals ?? []).length > 0;
+
 const needsOnboarding = (profile: UserProfile | null) => {
   // undefined (not null) means migration 025 is not applied yet: stay hidden
   // rather than show a form whose save would fail.
   if (!profile || profile.onboarding_completed_at === undefined) return false;
-  if (profile.onboarding_completed_at) return false;
+  if (profile.onboarding_completed_at || hasAnswers(profile)) return false;
+  if (typeof window !== 'undefined' && (readFlag('local', doneKey(profile.id)) || readFlag('session', dismissedKey(profile.id)))) {
+    return false;
+  }
   const snoozed = profile.onboarding_snoozed_until;
   return !snoozed || new Date(snoozed).getTime() < Date.now();
 };
@@ -92,6 +123,8 @@ function OnboardingPopupForm({ userId, profile }: { userId: string; profile: Use
 
   const snooze = async () => {
     setOpen(false);
+    // Closing always holds for the rest of this visit, even if the save below fails.
+    writeFlag('session', dismissedKey(userId));
     try {
       await modifyOnboardingSnooze.mutateAsync({
         id: userId,
@@ -125,11 +158,13 @@ function OnboardingPopupForm({ userId, profile }: { userId: string; profile: Use
         ...(phone.trim() ? { whatsapp: normalizePhone(phone)! } : {}),
         skills: skillTags,
       });
-    } catch {
-      toast.error(t('Failed to save, please try again', 'Gagal menyimpan, coba lagi'));
+    } catch (error) {
+      const reason = error instanceof Error && error.message ? ` (${error.message})` : '';
+      toast.error(t('Failed to save, please try again', 'Gagal menyimpan, coba lagi') + reason);
       return;
     }
     toast.success(t('Thanks! Your profile is set up.', 'Makasih! Profil kamu sudah siap.'));
+    writeFlag('local', doneKey(userId));
     setOpen(false);
     refreshProfile();
   };

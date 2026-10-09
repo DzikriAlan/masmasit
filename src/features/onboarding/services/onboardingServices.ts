@@ -93,20 +93,33 @@ export const postOnboardingAgency = async (payload: PayloadPostOnboardingAgency)
   );
 };
 
+// An update RLS filters out matches zero rows without an error. Returning the
+// id turns that into a visible failure instead of a popup that keeps coming back.
+const requireUpdatedRow = async (query: PromiseLike<{ data: { id: string }[] | null; error: { code?: string; message?: string } | null }>) => {
+  const { data, error } = await query;
+  if (!error && (data ?? []).length === 0) {
+    return { data: null, error: { code: 'PGRST116', message: 'Profile not found or not editable' } };
+  }
+  return { data: null, error };
+};
+
 // Onboarding popup: saves the answers and marks onboarding done in one write.
 export const patchOnboardingAnswers = async ({ id, ...answers }: PayloadPatchOnboardingAnswers) => {
   return toApiResponse<null>(
-    supabase
-      .from('profiles')
-      .update({ ...answers, onboarding_completed_at: new Date().toISOString() })
-      .eq('id', id),
+    requireUpdatedRow(
+      supabase
+        .from('profiles')
+        .update({ ...answers, onboarding_completed_at: new Date().toISOString() })
+        .eq('id', id)
+        .select('id')
+    ),
     'Onboarding saved successfully'
   );
 };
 
 export const patchOnboardingSnooze = async ({ id, until }: PayloadPatchOnboardingSnooze) => {
   return toApiResponse<null>(
-    supabase.from('profiles').update({ onboarding_snoozed_until: until }).eq('id', id),
+    requireUpdatedRow(supabase.from('profiles').update({ onboarding_snoozed_until: until }).eq('id', id).select('id')),
     'Onboarding snoozed'
   );
 };
