@@ -10,6 +10,7 @@ import { useEventsControllers } from '@/features/events/controllers/eventsContro
 import { EventsCard } from '@/features/events/components/EventsCard';
 import { EventsCreateForm, type EventsFormValues } from '@/features/events/components/EventsCreateForm';
 import { PaymentCard } from '@/features/payments/components/PaymentCard';
+import { useFeeActive } from '@/features/payments/controllers/paymentsControllers';
 
 import { AppShell } from '@/components/app-shell';
 import { PageHeader } from '@/components/page-header';
@@ -35,6 +36,8 @@ export default function EventsList() {
   const { user, loading: authLoading } = useAuth();
   const { t } = useLang();
   const { fetchEvents, fetchEventsRegions, fetchEventsSettings, storeEvents, storeEventsRsvp } = useEventsControllers();
+  // With the event fee switched off, paid events RSVP as free ones.
+  const { active: eventFeeActive } = useFeeActive('event');
 
   const [filters, setFilters] = useState({
     search: '',
@@ -69,13 +72,14 @@ export default function EventsList() {
         regionName: event.regions?.name ?? null,
         location: event.location,
         schedule: new Date(event.event_date).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }),
-        isPaid: event.is_paid,
-        priceLabel: event.is_paid && event.price ? `Rp ${(event.price / 1000).toFixed(0)}K` : null,
+        isPaid: event.is_paid && eventFeeActive,
+        priceLabel: event.is_paid && eventFeeActive && event.price ? `Rp ${(event.price / 1000).toFixed(0)}K` : null,
         attending,
         capacity: event.max_capacity,
         spotsLeft: Math.max(event.max_capacity - attending, 0),
         fillPercent: event.max_capacity ? Math.round((attending / event.max_capacity) * 100) : 0,
         isRegistered: rsvpIds.has(event.id),
+        isCancelled: event.status === 'cancelled',
       };
     };
 
@@ -92,11 +96,13 @@ export default function EventsList() {
     const upcoming = matched.filter((event) => new Date(event.event_date).getTime() > now).map(getMappedEvent);
     const past = matched.filter((event) => new Date(event.event_date).getTime() <= now).map(getMappedEvent);
     const isFiltered = Boolean(filters.search) || filters.filter.type !== 'all' || filters.filter.region !== 'all';
+    // A cancelled event never takes the "Next up" slot; it stays in the grid with its badge.
+    const featured = upcoming.find((event) => !event.isCancelled) ?? null;
 
     return {
       data: upcoming,
-      featured: upcoming[0] ?? null,
-      rest: upcoming.slice(1),
+      featured,
+      rest: upcoming.filter((event) => event.id !== featured?.id),
       past: past.slice(0, 6),
       isLoading: fetchEvents.isPending,
       isError: fetchEvents.isError,
@@ -111,7 +117,7 @@ export default function EventsList() {
         ? t('Try another region or type.', 'Coba wilayah atau tipe lain.')
         : t('Host the first meetup in your city.', 'Adakan meetup pertama di kotamu.'),
     };
-  }, [fetchEvents.data, fetchEvents.isPending, fetchEvents.isError, filters.search, filters.filter, user, t, user, authLoading]);
+  }, [fetchEvents.data, fetchEvents.isPending, fetchEvents.isError, filters.search, filters.filter, user, t, user, authLoading, eventFeeActive]);
 
   const toolbarFilters = useMemo(
     () => [
@@ -217,6 +223,7 @@ export default function EventsList() {
       const code = error instanceof Error ? error.name : '';
       const message = error instanceof Error ? error.message : '';
       if (code === API_ERROR_CODE.CONFLICT) toast.error(t('Already registered', 'Sudah terdaftar'));
+      else if (message.includes('cancelled')) toast.error(t('This event has been cancelled', 'Event ini dibatalkan'));
       else if (message.includes('full')) toast.error(t('This event is full', 'Event ini sudah penuh'));
       else toast.error(t('Failed to RSVP', 'Gagal RSVP'));
       return;
@@ -229,7 +236,7 @@ export default function EventsList() {
       ...prev,
       rsvpLoadingId: null,
       paidRsvp:
-        event?.is_paid && event.price && rsvpId
+        eventFeeActive && event?.is_paid && event.price && rsvpId
           ? { rsvpId, eventId, amount: event.price, paymentStatus: 'unpaid' }
           : null,
     }));
@@ -294,7 +301,7 @@ export default function EventsList() {
                   </div>
 
                   <h2 className="mt-3 font-display text-2xl font-semibold text-balance sm:text-3xl">
-                    {data.featured.title}
+                    <Link href={`/events/${data.featured.id}`} className="hover:underline">{data.featured.title}</Link>
                   </h2>
                   <p className="mt-2 max-w-2xl leading-relaxed text-muted-foreground text-pretty">
                     {data.featured.description}
@@ -353,7 +360,9 @@ export default function EventsList() {
                     {data.past.map((event) => (
                       <div key={event.id} className="rounded-xl border border-border/70 bg-card/50 p-5">
                         <Badge variant="outline" className="text-[11px]">{t('Ended', 'Selesai')}</Badge>
-                        <h3 className="mt-2.5 line-clamp-2 font-medium leading-snug">{event.title}</h3>
+                        <h3 className="mt-2.5 line-clamp-2 font-medium leading-snug">
+                          <Link href={`/events/${event.id}`} className="hover:underline">{event.title}</Link>
+                        </h3>
                         <p className="mt-1 truncate text-sm text-muted-foreground">{event.location}</p>
                         <p className="mt-0.5 text-xs text-muted-foreground">
                           {event.attending} {t('attended', 'hadir')}

@@ -34,7 +34,8 @@ export function calcMatchScore(
     }
   }
 
-  return Math.round(totalPoints / maxPoints);
+  // totalPoints / maxPoints is a 0-1 ratio; without the * 100 every score rounded to 0 or 1.
+  return Math.round((totalPoints / maxPoints) * 100);
 }
 
 export function matchScoreColor(score: number): string {

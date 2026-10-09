@@ -3,7 +3,10 @@ import { toApiResponse } from '@/shared/lib/apiResponse';
 
 import type {
   DataCoachCourses,
+  DataCoachCoursesCertificate,
+  DataCoachCoursesParticipant,
   PayloadPostCoachCourses,
+  PayloadUpdateCoachCourses,
   PayloadPostCoachMaterials,
   PayloadPostCoachModules,
   PayloadPostCoachQuizQuestions,
@@ -30,6 +33,42 @@ export const updateCoachApplication = async (userId: string) => {
 
 export const postCoachCourses = async (payload: PayloadPostCoachCourses) => {
   return toApiResponse<null>(supabase.from('courses').insert(payload), 'Course created successfully');
+};
+
+/** `.select('id')` so an update RLS silently filtered out reads as an error, not success. */
+export const updateCoachCourses = async (courseId: string, payload: PayloadUpdateCoachCourses) => {
+  return toApiResponse<{ id: string }>(
+    supabase.from('courses').update(payload).eq('id', courseId).select('id').single(),
+    'Course updated successfully'
+  );
+};
+
+/** The guard_course_delete trigger rejects a course that has paid participants. */
+export const deleteCoachCourses = async (courseId: string) => {
+  return toApiResponse<{ id: string }>(
+    supabase.from('courses').delete().eq('id', courseId).select('id').single(),
+    'Course deleted successfully'
+  );
+};
+
+export const getCoachCoursesParticipants = async (courseId: string) => {
+  const query = supabase
+    .from('enrollments')
+    .select('id, user_id, enrolled_at, payment_status, progress, profiles(full_name, email)')
+    .eq('course_id', courseId)
+    .order('enrolled_at', { ascending: false });
+
+  return toApiResponse<DataCoachCoursesParticipant[]>(
+    query as unknown as PromiseLike<{ data: DataCoachCoursesParticipant[] | null; error: null }>,
+    'Participants retrieved successfully'
+  );
+};
+
+export const getCoachCoursesCertificates = async (courseId: string) => {
+  return toApiResponse<DataCoachCoursesCertificate[]>(
+    supabase.from('certificates').select('user_id, issued_at').eq('course_id', courseId),
+    'Certificates retrieved successfully'
+  );
 };
 
 export const postCoachModules = async (payload: PayloadPostCoachModules) => {

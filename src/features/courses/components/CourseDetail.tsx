@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
   ArrowLeft, Loader2, GraduationCap, Lock, Play, CheckCircle2,
@@ -27,6 +27,7 @@ import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import { PaymentCard } from '@/features/payments/components/PaymentCard';
+import { useFeeActive } from '@/features/payments/controllers/paymentsControllers';
 import { loginHref } from '@/shared/lib/utils';
 
 const courseCoverImages: Record<string, string> = {
@@ -66,6 +67,8 @@ export default function CourseDetail() {
     storeCoursesModuleCompletion,
     storeCoursesQuizSubmission,
   } = useCoursesDetailControllers(params.id as string, user?.id);
+  // With the LMS fee switched off, paid courses are free to everyone enrolled.
+  const { active: lmsFeeActive } = useFeeActive('lms');
 
   const course = fetchCoursesDetail.data ?? null;
   const modules: Module[] = fetchCoursesModules.data ?? [];
@@ -76,8 +79,9 @@ export default function CourseDetail() {
   const enrollmentId = enrollment?.id ?? storeCoursesEnrollment.data?.id ?? null;
   const progress = enrollment?.progress ?? 0;
   const paymentStatus = enrollment?.payment_status ?? 'unpaid';
-  const hasCertificate = Boolean(fetchCoursesCertificate.data) || storeCoursesCertificate.isSuccess;
-  const lynkidCoursesUrl = fetchCoursesSettings.data ?? null;
+  // Only a certificate row in the database counts as issued.
+  const hasCertificate = Boolean(fetchCoursesCertificate.data);
+  const goakalCoursesUrl = fetchCoursesSettings.data ?? null;
   const submittingQuiz = storeCoursesQuizSubmission.isPending;
 
   // Completions and quiz scores are persisted, so a refresh keeps them.
@@ -100,10 +104,6 @@ export default function CourseDetail() {
   const quizResults = Object.fromEntries(
     Object.entries(storedQuizResults).filter(([quizId]) => !retakingQuizIds.has(quizId))
   );
-
-  // A certificate is only earned once every quiz in the course has been passed.
-  const allQuizIds = modules.flatMap((m) => (m.quizzes ?? []).map((q) => q.id));
-  const hasPassedEveryQuiz = allQuizIds.every((id) => quizResults[id]?.passed);
 
   const modifyPaymentStatus = () => {
     fetchCoursesEnrollment.refetch();
@@ -132,33 +132,52 @@ export default function CourseDetail() {
     toast.success(t('Enrolled! Start learning.', 'Terdaftar! Mulai belajar.'));
   };
 
-  const saveModuleComplete = async (moduleId: string) => {
-    if (!user || !enrollmentId || !course) return;
-    if (completedModules.has(moduleId)) return;
-
+  /**
+   * The server re-checks completions and quiz answers and only then issues the
+   * certificate, so this is safe to call after every completion or quiz.
+   */
+  const submitCoursesCertificate = async () => {
+    if (!user || !course || hasCertificate) return;
+    let certificateId: string | null = null;
     try {
-      await storeCoursesModuleCompletion.mutateAsync({
-        enrollment_id: enrollmentId,
-        module_id: moduleId,
-        user_id: user.id,
-      });
-    } catch (error) {
-      // A repeat completion is harmless; anything else is worth surfacing.
-      const code = error instanceof Error ? error.name : '';
-      if (code !== API_ERROR_CODE.CONFLICT) {
-        toast.error(t('Failed to save progress', 'Gagal menyimpan progres'));
-        return;
-      }
+      certificateId = await storeCoursesCertificate.mutateAsync({ course_id: course.id });
+    } catch {
+      return;
     }
-
-    const totalModules = modules.length || 1;
-    const newProgress = Math.round(((completedModules.size + 1) / totalModules) * 100);
-    await changeCoursesEnrollmentProgress.mutateAsync({ enrollmentId, progress: newProgress });
-
-    if (newProgress >= 100 && hasPassedEveryQuiz && !hasCertificate) {
-      await storeCoursesCertificate.mutateAsync({ course_id: course.id, user_id: user.id });
+    if (certificateId) {
       toast.success(t('Course completed! Certificate issued.', 'Kursus selesai! Sertifikat diterbitkan.'));
     }
+  };
+
+  const saveModuleComplete = async (moduleId: string) => {
+    if (!user || !enrollmentId || !course) return;
+
+    if (!completedModules.has(moduleId)) {
+      try {
+        await storeCoursesModuleCompletion.mutateAsync({
+          enrollment_id: enrollmentId,
+          module_id: moduleId,
+          user_id: user.id,
+        });
+      } catch (error) {
+        // A repeat completion is harmless; anything else is worth surfacing.
+        const code = error instanceof Error ? error.name : '';
+        if (code !== API_ERROR_CODE.CONFLICT) {
+          toast.error(t('Failed to save progress', 'Gagal menyimpan progres'));
+          return;
+        }
+      }
+
+      // Progress comes from the completions as stored now, not the render-time set.
+      const fresh = await fetchCoursesModuleCompletions.refetch();
+      const freshDone = new Set((fresh.data ?? []).map((c) => c.module_id));
+      freshDone.add(moduleId);
+      const totalModules = modules.length || 1;
+      const newProgress = Math.min(100, Math.round((freshDone.size / totalModules) * 100));
+      await changeCoursesEnrollmentProgress.mutateAsync({ enrollmentId, progress: newProgress });
+    }
+
+    await submitCoursesCertificate();
   };
 
   const modifyQuizRetake = (quiz: Quiz) => {
@@ -201,7 +220,8 @@ export default function CourseDetail() {
       return;
     }
 
-    setLocalQuizResults({ ...localQuizResults, [quiz.id]: { score, passed } });
+    setLocalQuizResults((prev) => ({ ...prev, [quiz.id]: { score, passed } }));
+    await fetchCoursesQuizSubmissions.refetch();
     setRetakingQuizIds((prev) => {
       const next = new Set(prev);
       next.delete(quiz.id);
@@ -216,6 +236,14 @@ export default function CourseDetail() {
       toast.error(t('Quiz not passed.', 'Kuis tidak lulus.') + ` ${score}% (need ${quiz.passing_grade}%)`);
     }
   };
+
+  // A member who finished before this check existed gets the certificate on the next visit.
+  const isCertificateCheckDue =
+    enrolled && progress >= 100 && fetchCoursesCertificate.isSuccess && !hasCertificate && storeCoursesCertificate.isIdle;
+  useEffect(() => {
+    if (isCertificateCheckDue) submitCoursesCertificate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isCertificateCheckDue]);
 
   if (loading || !course) {
     return (
@@ -233,7 +261,9 @@ export default function CourseDetail() {
   }
 
   const isCoach = user?.id === course.coach_id;
-  const canAccess = (enrolled && (course.price === 0 || paymentStatus === 'paid')) || isCoach;
+  const isFreeCourse = course.price === 0 || !lmsFeeActive;
+  const needsPayment = !isFreeCourse && paymentStatus !== 'paid';
+  const canAccess = (enrolled && !needsPayment) || isCoach;
 
   return (
     <AppShell>
@@ -251,7 +281,7 @@ export default function CourseDetail() {
             <div className="flex items-center gap-2">
               <Badge variant="secondary" className="capitalize">{course.level}</Badge>
               {course.category && <Badge variant="outline">{course.category}</Badge>}
-              {course.price === 0 ? <Badge variant="default" className="gap-1"><GraduationCap className="h-3 w-3" /> {t('Free', 'Gratis')}</Badge> : <Badge variant="outline">Rp {(course.price / 1000).toFixed(0)}K</Badge>}
+              {isFreeCourse ? <Badge variant="default" className="gap-1"><GraduationCap className="h-3 w-3" /> {t('Free', 'Gratis')}</Badge> : <Badge variant="outline">Rp {(course.price / 1000).toFixed(0)}K</Badge>}
             </div>
             <h1 className="mt-3 font-display text-2xl font-semibold">{course.title}</h1>
             <p className="mt-1 text-sm text-muted-foreground">{t('by', 'oleh')} {course.profiles?.full_name ?? t('Coach', 'Pelatih')}</p>
@@ -269,7 +299,7 @@ export default function CourseDetail() {
 
             {!isCoach && (
               enrolled ? (
-                course.price > 0 && paymentStatus !== 'paid' ? (
+                needsPayment ? (
                   <div className="mt-4">
                     <PaymentCard
                       table="enrollments"
@@ -279,7 +309,7 @@ export default function CourseDetail() {
                       paymentStatus={paymentStatus}
                       paymentLinkUrl={null}
                       paymentNote={null}
-                      fallbackUrl={lynkidCoursesUrl}
+                      fallbackUrl={goakalCoursesUrl}
                       onStatusChange={modifyPaymentStatus}
                     />
                   </div>
@@ -291,7 +321,7 @@ export default function CourseDetail() {
               ) : (
                 <Button onClick={saveEnrollment} disabled={enrolling} className="mt-4 gap-2">
                   {enrolling && <Loader2 className="h-4 w-4 animate-spin" />}
-                  {course.price === 0 ? t('Enroll for Free', 'Daftar Gratis') : `${t('Enroll', 'Daftar')} — Rp ${(course.price / 1000).toFixed(0)}K`}
+                  {isFreeCourse ? t('Enroll for Free', 'Daftar Gratis') : `${t('Enroll', 'Daftar')} — Rp ${(course.price / 1000).toFixed(0)}K`}
                 </Button>
               )
             )}
@@ -490,12 +520,21 @@ export default function CourseDetail() {
           </div>
         )}
 
-        {enrolled && progress >= 100 && (
+        {enrolled && hasCertificate && (
           <Card className="glass mt-6">
             <CardContent className="p-6 text-center">
               <Award className="mx-auto mb-3 h-10 w-10 text-amber-400" />
               <h3 className="font-display text-lg font-semibold">{t('Course Completed!', 'Kursus Selesai!')}</h3>
               <p className="mt-1 text-sm text-muted-foreground">{t('Your certificate has been issued automatically.', 'Sertifikat Anda telah diterbitkan otomatis.')}</p>
+            </CardContent>
+          </Card>
+        )}
+
+        {enrolled && !hasCertificate && progress >= 100 && (
+          <Card className="glass mt-6">
+            <CardContent className="p-6 text-center">
+              <Award className="mx-auto mb-3 h-8 w-8 text-amber-400" />
+              <p className="text-sm text-muted-foreground">{t('All modules done. Pass every quiz to earn your certificate.', 'Semua modul selesai. Luluskan semua kuis untuk mendapatkan sertifikat.')}</p>
             </CardContent>
           </Card>
         )}

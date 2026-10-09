@@ -3,17 +3,21 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { unwrapApiResponse } from '@/shared/lib/apiResponse';
 
 import {
+  deleteCoachCourses,
   deleteCoachMaterials,
   deleteCoachModules,
   deleteCoachQuizQuestions,
   deleteCoachQuizzes,
   getCoachCourses,
+  getCoachCoursesCertificates,
+  getCoachCoursesParticipants,
   postCoachCourses,
   postCoachMaterials,
   postCoachModules,
   postCoachQuizQuestions,
   postCoachQuizzes,
   updateCoachApplication,
+  updateCoachCourses,
 } from '../services/coachServices';
 import type {
   PayloadPostCoachCourses,
@@ -21,6 +25,7 @@ import type {
   PayloadPostCoachModules,
   PayloadPostCoachQuizQuestions,
   PayloadPostCoachQuizzes,
+  PayloadUpdateCoachCourses,
 } from '../types/coachTypes';
 
 export const useCoachControllers = (userId: string | undefined) => {
@@ -47,6 +52,20 @@ export const useCoachControllers = (userId: string | undefined) => {
     mutationFn: async (payload: PayloadPostCoachCourses) =>
       unwrapApiResponse(await postCoachCourses(payload)),
     onSuccess: invalidateCoachCourses,
+  });
+
+  const modifyCoachCourses = useMutation({
+    mutationFn: async (payload: { courseId: string; data: PayloadUpdateCoachCourses }) =>
+      unwrapApiResponse(await updateCoachCourses(payload.courseId, payload.data)),
+    onSuccess: invalidateCoachCourses,
+  });
+
+  const removeCoachCourses = useMutation({
+    mutationFn: async (courseId: string) => unwrapApiResponse(await deleteCoachCourses(courseId)),
+    onSuccess: () => {
+      invalidateCoachCourses();
+      queryClient.invalidateQueries({ queryKey: ['courses'] });
+    },
   });
 
   const storeCoachModules = useMutation({
@@ -98,6 +117,8 @@ export const useCoachControllers = (userId: string | undefined) => {
     fetchCoachCourses,
     changeCoachApplication,
     storeCoachCourses,
+    modifyCoachCourses,
+    removeCoachCourses,
     storeCoachModules,
     removeCoachModules,
     storeCoachMaterials,
@@ -107,4 +128,21 @@ export const useCoachControllers = (userId: string | undefined) => {
     storeCoachQuizQuestions,
     removeCoachQuizQuestions,
   };
+};
+
+/** Participants of one course: enrollment, payment, progress and certificate. */
+export const useCoachParticipantsControllers = (courseId: string | null) => {
+  const fetchCoachCoursesParticipants = useQuery({
+    queryKey: ['coachCoursesParticipants', courseId],
+    queryFn: async () => unwrapApiResponse(await getCoachCoursesParticipants(courseId as string)) ?? [],
+    enabled: Boolean(courseId),
+  });
+
+  const fetchCoachCoursesCertificates = useQuery({
+    queryKey: ['coachCoursesCertificates', courseId],
+    queryFn: async () => unwrapApiResponse(await getCoachCoursesCertificates(courseId as string)) ?? [],
+    enabled: Boolean(courseId),
+  });
+
+  return { fetchCoachCoursesParticipants, fetchCoachCoursesCertificates };
 };

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Loader2, Users, Briefcase, Check, X, Eye, MapPin, ArrowLeft } from 'lucide-react';
+import { Loader2, Users, Briefcase, Check, X, Eye, MapPin, ArrowLeft, CalendarDays } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
 import { usePostJobControllers, useJobsEmployerControllers } from '@/features/jobs/controllers/jobsControllers';
+import { JobsEditDialog } from '@/features/jobs/components/JobsEditDialog';
 
 const STATUS_VARIANT: Record<string, 'default' | 'secondary' | 'outline' | 'destructive'> = {
   pending: 'outline',
@@ -24,10 +25,11 @@ const STATUS_VARIANT: Record<string, 'default' | 'secondary' | 'outline' | 'dest
 
 export default function JobApplicants() {
   const { user } = useAuth();
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const router = useRouter();
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
   const [openLetterId, setOpenLetterId] = useState<string | null>(null);
+  const [editJobId, setEditJobId] = useState<string | null>(null);
 
   const { fetchJobsCompany } = usePostJobControllers(user?.id);
   const company = fetchJobsCompany.data ?? null;
@@ -39,6 +41,8 @@ export default function JobApplicants() {
   const applicants = fetchJobsApplicants.data ?? [];
   const loading = fetchJobsCompany.isPending || fetchJobsOwned.isPending;
   const selectedJob = jobs.find((j) => j.id === selectedJobId) ?? null;
+  const getAppliedDate = (iso: string) =>
+    new Date(iso).toLocaleDateString(lang === 'id' ? 'id-ID' : 'en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 
   const modifyApplicationStatus = async (applicationId: string, status: string) => {
     try {
@@ -140,6 +144,10 @@ export default function JobApplicants() {
                       <CardTitle>{selectedJob.title}</CardTitle>
                       <CardDescription>{applicants.length} {t('applicants', 'pelamar')}</CardDescription>
                     </div>
+                    <div className="flex flex-wrap justify-end gap-2">
+                    <Button size="sm" variant="outline" onClick={() => setEditJobId(selectedJob.id)}>
+                      {t('Edit', 'Ubah')}
+                    </Button>
                     <Button
                       size="sm"
                       variant="outline"
@@ -147,6 +155,7 @@ export default function JobApplicants() {
                     >
                       {selectedJob.status === 'open' ? t('Close job', 'Tutup lowongan') : t('Reopen job', 'Buka lagi')}
                     </Button>
+                    </div>
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <LoadData
@@ -166,6 +175,9 @@ export default function JobApplicants() {
                                   <MapPin className="h-3 w-3" /> {app.profiles.location}
                                 </p>
                               )}
+                              <p className="flex items-center gap-1 text-xs text-muted-foreground">
+                                <CalendarDays className="h-3 w-3" /> {t('Applied', 'Melamar')} {getAppliedDate(app.created_at)}
+                              </p>
                             </div>
                             <Badge variant={STATUS_VARIANT[app.status] ?? 'outline'} className="capitalize">
                               {app.status}
@@ -211,6 +223,7 @@ export default function JobApplicants() {
           </div>
         )}
       </div>
+      <JobsEditDialog jobId={editJobId} onClearJobsEdit={() => setEditJobId(null)} />
     </AppShell>
   );
 }

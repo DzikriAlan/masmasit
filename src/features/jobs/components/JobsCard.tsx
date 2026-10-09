@@ -3,6 +3,7 @@ import { MapPin } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { TONE_CHIP, toneOf } from '@/shared/lib/tones';
+import { matchScoreColor } from '@/shared/lib/match-score';
 
 export interface JobsCardItem {
   id: string;
@@ -13,6 +14,9 @@ export interface JobsCardItem {
   location: string | null;
   salary: string | null;
   deadline: string | null;
+  /** Null when the member has no skills on file or the job lists none. */
+  matchScore?: number | null;
+  matchLabel?: string;
 }
 
 /**
@@ -42,6 +46,11 @@ export function JobsCard({ job }: Readonly<{ job: JobsCardItem }>) {
 
       <div className="mt-4 flex flex-wrap items-center gap-2">
         <Badge variant="secondary" className="text-xs capitalize">{job.jobType}</Badge>
+        {job.matchScore != null && (
+          <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${matchScoreColor(job.matchScore)}`}>
+            {job.matchScore}% {job.matchLabel ?? 'match'}
+          </span>
+        )}
         {job.location && (
           <span className="flex min-w-0 items-center gap-1 text-xs text-muted-foreground">
             <MapPin className="h-3 w-3 shrink-0" />

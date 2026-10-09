@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Building2, MapPin, Clock, Wallet, Loader2, ArrowLeft, Send, CheckCircle2 } from 'lucide-react';
 import { AppShell } from '@/components/app-shell';
 import { LoadData } from '@/components/load-data';
@@ -16,6 +17,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { loginHref } from '@/shared/lib/utils';
+import { ShareButton } from '@/components/share-button';
 
 export default function JobDetail() {
   const params = useParams();
@@ -52,7 +54,14 @@ export default function JobDetail() {
       );
       return;
     }
-    toast.success(t('Application submitted!', 'Lamaran terkirim!'));
+    toast.success(t('Application submitted!', 'Lamaran terkirim!'), {
+      description: t('Track its status in My Activity.', 'Pantau statusnya di Aktivitas Saya.'),
+      action: {
+        label: t('View applications', 'Lihat lamaran'),
+        onClick: () => router.push('/activity?tab=applications'),
+      },
+      duration: 8000,
+    });
     setShowApply(false);
   };
 
@@ -81,7 +90,14 @@ export default function JobDetail() {
   return (
     <AppShell>
       <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
-        <Button variant="ghost" onClick={() => router.back()} className="mb-4 gap-2"><ArrowLeft className="h-4 w-4" /> {t('Back', 'Kembali')}</Button>
+        <div className="mb-4 flex items-center justify-between gap-2">
+          <Button variant="ghost" onClick={() => router.back()} className="gap-2"><ArrowLeft className="h-4 w-4" /> {t('Back', 'Kembali')}</Button>
+          <ShareButton
+            url={`/jobs/${job.id}`}
+            title={job.companies?.name ? `${job.title} — ${job.companies.name}` : job.title}
+            text={t('Job opening on MasmasIT', 'Lowongan di MasmasIT')}
+          />
+        </div>
 
         <Card className="glass mb-6">
           <CardContent className="p-6 sm:p-8">
@@ -130,6 +146,9 @@ export default function JobDetail() {
                 <div>
                   <p className="font-medium">{t('Application submitted', 'Lamaran terkirim')}</p>
                   <p className="text-sm text-muted-foreground">{t("You'll be notified when the company responds.", 'Anda akan diberi tahu ketika perusahaan merespons.')}</p>
+                  <Link href="/activity?tab=applications" className="text-sm font-medium text-primary hover:underline">
+                    {t('View my applications', 'Lihat lamaran saya')}
+                  </Link>
                 </div>
               </div>
             ) : showApply ? (
@@ -148,7 +167,8 @@ export default function JobDetail() {
               </div>
             ) : (
               <Button onClick={() => user ? setShowApply(true) : router.push(loginHref())} className="w-full gap-2">
-                <Send className="h-4 w-4" /> {t('Apply with One Click', 'Lamar Sekali Klik')}
+                <Send className="h-4 w-4" />
+                {user ? t('Apply with One Click', 'Lamar Sekali Klik') : t('Sign in to Apply', 'Masuk untuk Melamar')}
               </Button>
             )}
           </CardContent>

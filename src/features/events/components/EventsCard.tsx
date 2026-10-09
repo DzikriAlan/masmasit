@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { CalendarDays, CheckCircle2, Loader2, MapPin, Users } from 'lucide-react';
 
 import { useLang } from '@/components/language-provider';
@@ -24,6 +25,7 @@ export interface EventsCardItem {
   spotsLeft: number;
   fillPercent: number;
   isRegistered: boolean;
+  isCancelled?: boolean;
 }
 
 /**
@@ -41,6 +43,9 @@ export function EventsCard({
   return (
     <article className="flex h-full min-w-0 flex-col rounded-xl border border-border bg-card p-5">
       <div className="flex flex-wrap items-center gap-2">
+        {event.isCancelled && (
+          <Badge variant="destructive" className="text-[11px]">{t('Cancelled', 'Dibatalkan')}</Badge>
+        )}
         <Badge variant="outline" className={cn('text-[11px] capitalize', TONE_CHIP[toneOf('events')])}>
           {event.type}
         </Badge>
@@ -50,7 +55,9 @@ export function EventsCard({
         )}
       </div>
 
-      <h3 className="mt-3 line-clamp-2 font-semibold leading-snug">{event.title}</h3>
+      <h3 className="mt-3 line-clamp-2 font-semibold leading-snug">
+        <Link href={`/events/${event.id}`} className="hover:underline">{event.title}</Link>
+      </h3>
       <p className="mt-1.5 line-clamp-2 text-sm leading-relaxed text-muted-foreground text-pretty">{event.description}</p>
 
       <dl className="mt-4 space-y-1.5 text-sm text-muted-foreground">
@@ -91,11 +98,11 @@ export function EventsCard({
           <Button
             size="sm"
             className="w-full gap-2"
-            disabled={isSubmitting || event.spotsLeft <= 0}
+            disabled={isSubmitting || event.spotsLeft <= 0 || event.isCancelled}
             onClick={() => onSubmitRsvp(event.id)}
           >
             {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
-            {event.spotsLeft > 0 ? t('RSVP', 'RSVP') : t('Sold out', 'Penuh')}
+            {event.isCancelled ? t('Cancelled', 'Dibatalkan') : event.spotsLeft > 0 ? t('RSVP', 'RSVP') : t('Sold out', 'Penuh')}
           </Button>
         )}
       </div>

@@ -69,7 +69,7 @@ export const useCoursesDetailControllers = (courseId: string, userId: string | u
 
   const fetchCoursesSettings = useQuery({
     queryKey: ['coursesSettings'],
-    queryFn: async () => unwrapApiResponse(await getCoursesSettings())?.lynkid_courses_url ?? null,
+    queryFn: async () => unwrapApiResponse(await getCoursesSettings())?.goakal_courses_url ?? null,
   });
 
   const storeCoursesEnrollment = useMutation({
@@ -124,6 +124,8 @@ export const useCoursesDetailControllers = (courseId: string, userId: string | u
       unwrapApiResponse(await postCoursesCertificate(payload)),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['coursesCertificate', courseId] });
+      queryClient.invalidateQueries({ queryKey: ['coursesEnrollment', courseId] });
+      queryClient.invalidateQueries({ queryKey: ['coursesMine'] });
     },
   });
 

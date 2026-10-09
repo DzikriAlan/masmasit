@@ -33,6 +33,7 @@ export interface PayloadPostJobsPosting {
   salary_min: number | null;
   salary_max: number | null;
   deadline: string | null;
+  skills?: string[];
 }
 
 export interface DataJobs {
@@ -45,6 +46,7 @@ export interface DataJobs {
   salary_max: number | null;
   deadline: string | null;
   created_at: string;
+  skills?: string[] | null;
   companies: { name: string; logo_url: string | null; id: string } | null;
 }
 

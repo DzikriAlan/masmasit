@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import {
   GraduationCap, Loader2, Plus, BookOpen, Users, Award, Send,
   ChevronDown, ChevronRight, Trash2, Video, FileText, Type,
-  HelpCircle, Check, X, ArrowLeft, Layers
+  HelpCircle, Check, X, ArrowLeft, Layers, Pencil
 } from 'lucide-react';
 import { AppShell } from '@/components/app-shell';
 import { useAuth } from '@/components/auth-provider';
@@ -21,6 +21,10 @@ import { Switch } from '@/components/ui/switch';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter
 } from '@/components/ui/dialog';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
+  AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 
 import type {
@@ -31,7 +35,9 @@ import type {
   DataCoachCourses as CourseWithDetails,
   PayloadPostCoachQuizQuestions,
 } from '@/features/coach/types/coachTypes';
-import { useCoachControllers } from '@/features/coach/controllers/coachControllers';
+import { useCoachControllers, useCoachParticipantsControllers } from '@/features/coach/controllers/coachControllers';
+import { CoachParticipants } from '@/features/coach/components/CoachParticipants';
+import { CoachCourseEditDialog, type CoachCourseFormValues } from '@/features/coach/components/CoachCourseEditDialog';
 import { loginHref } from '@/shared/lib/utils';
 
 export default function CoachDashboard() {
@@ -42,6 +48,11 @@ export default function CoachDashboard() {
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
   const [expandedModules, setExpandedModules] = useState<Set<string>>(new Set());
   const [form, setForm] = useState({ title: '', description: '', level: 'beginner', category: '', price: '0' });
+  const [courseEdit, setCourseEdit] = useState({
+    isOpen: false,
+    isDeleteOpen: false,
+    values: { title: '', description: '', level: 'beginner', category: '', price: '0' } as CoachCourseFormValues,
+  });
 
   // Module form
   const [showModuleDialog, setShowModuleDialog] = useState(false);
@@ -70,6 +81,8 @@ export default function CoachDashboard() {
     fetchCoachCourses,
     changeCoachApplication,
     storeCoachCourses,
+    modifyCoachCourses,
+    removeCoachCourses,
     storeCoachModules,
     removeCoachModules,
     storeCoachMaterials,
@@ -79,6 +92,8 @@ export default function CoachDashboard() {
     storeCoachQuizQuestions,
     removeCoachQuizQuestions,
   } = useCoachControllers(user?.id);
+  const { fetchCoachCoursesParticipants, fetchCoachCoursesCertificates } =
+    useCoachParticipantsControllers(selectedCourseId);
 
   const sortCourseModules = (list: CourseWithDetails[]) =>
     list.map((c) => ({
@@ -95,6 +110,26 @@ export default function CoachDashboard() {
   const savingMaterial = storeCoachMaterials.isPending;
   const savingQuiz = storeCoachQuizzes.isPending;
   const savingQuestion = storeCoachQuizQuestions.isPending;
+
+  const participants = (() => {
+    const getDate = (iso: string) => new Date(iso).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+    const certificates = new Map((fetchCoachCoursesCertificates.data ?? []).map((c) => [c.user_id, c.issued_at]));
+    const rows = (fetchCoachCoursesParticipants.data ?? []).map((e) => ({
+      id: e.id,
+      name: e.profiles?.full_name ?? t('Anonymous', 'Anonim'),
+      email: e.profiles?.email ?? null,
+      enrolledAt: getDate(e.enrolled_at),
+      paymentStatus: e.payment_status,
+      progress: e.progress,
+      certificateIssuedAt: certificates.has(e.user_id) ? getDate(certificates.get(e.user_id) as string) : null,
+    }));
+    return {
+      data: rows,
+      hasPaid: rows.some((r) => r.paymentStatus === 'paid'),
+      isLoading: fetchCoachCoursesParticipants.isPending || fetchCoachCoursesCertificates.isPending,
+      isError: fetchCoachCoursesParticipants.isError || fetchCoachCoursesCertificates.isError,
+    };
+  })();
 
   const saveCoachApplication = async () => {
     if (!user) return;
@@ -121,6 +156,79 @@ export default function CoachDashboard() {
     toast.success(t('Course created!', 'Kursus dibuat!'));
     setShowCreate(false);
     setForm({ title: '', description: '', level: 'beginner', category: '', price: '0' });
+  };
+
+  const editCourseDialog = () => {
+    if (!selectedCourse) return;
+    setCourseEdit((prev) => ({
+      ...prev,
+      isOpen: true,
+      values: {
+        title: selectedCourse.title,
+        description: selectedCourse.description,
+        level: selectedCourse.level,
+        category: selectedCourse.category ?? '',
+        price: String(selectedCourse.price ?? 0),
+      },
+    }));
+  };
+
+  const editCourseForm = (patch: Partial<CoachCourseFormValues>) => {
+    setCourseEdit((prev) => ({ ...prev, values: { ...prev.values, ...patch } }));
+  };
+
+  const clearCourseDialog = () => {
+    setCourseEdit((prev) => ({ ...prev, isOpen: false }));
+  };
+
+  const submitCourseEdit = async () => {
+    if (!selectedCourse) return;
+    const { values } = courseEdit;
+    try {
+      await modifyCoachCourses.mutateAsync({
+        courseId: selectedCourse.id,
+        data: {
+          title: values.title.trim(),
+          description: values.description.trim(),
+          level: values.level,
+          category: values.category.trim() || null,
+          price: parseInt(values.price) || 0,
+        },
+      });
+    } catch {
+      toast.error(t('Failed to update course', 'Gagal memperbarui kursus'));
+      return;
+    }
+    toast.success(t('Course updated', 'Kursus diperbarui'));
+    clearCourseDialog();
+  };
+
+  const editCourseDeleteDialog = (isDeleteOpen: boolean) => {
+    setCourseEdit((prev) => ({ ...prev, isDeleteOpen }));
+  };
+
+  const clearCourse = async () => {
+    if (!selectedCourse) return;
+    const paidMessage = t(
+      'This course has paid participants and cannot be deleted.',
+      'Kursus ini memiliki peserta yang sudah membayar dan tidak dapat dihapus.'
+    );
+    if (participants.hasPaid) {
+      toast.error(paidMessage);
+      editCourseDeleteDialog(false);
+      return;
+    }
+    try {
+      await removeCoachCourses.mutateAsync(selectedCourse.id);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '';
+      toast.error(message.includes('paid participants') ? paidMessage : t('Failed to delete course', 'Gagal menghapus kursus'));
+      editCourseDeleteDialog(false);
+      return;
+    }
+    toast.success(t('Course deleted', 'Kursus dihapus'));
+    editCourseDeleteDialog(false);
+    setSelectedCourseId(null);
   };
 
   const toggleModule = (id: string) => {
@@ -269,8 +377,28 @@ export default function CoachDashboard() {
               </div>
               <h1 className="mt-3 font-display text-2xl font-semibold">{selectedCourse.title}</h1>
               <p className="mt-1 text-sm text-muted-foreground">{selectedCourse.enrollments?.length ?? 0} {t('enrolled', 'terdaftar')}</p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <Button size="sm" variant="outline" onClick={editCourseDialog} className="gap-2">
+                  <Pencil className="h-3.5 w-3.5" /> {t('Edit course', 'Ubah kursus')}
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => editCourseDeleteDialog(true)} className="gap-2 text-destructive hover:text-destructive">
+                  <Trash2 className="h-3.5 w-3.5" /> {t('Delete course', 'Hapus kursus')}
+                </Button>
+              </div>
+              {participants.hasPaid && (
+                <p className="mt-2 text-xs text-muted-foreground">
+                  {t('Courses with paid participants cannot be deleted.', 'Kursus dengan peserta yang sudah membayar tidak dapat dihapus.')}
+                </p>
+              )}
             </CardContent>
           </Card>
+
+          <CoachParticipants
+            participants={participants.data}
+            isLoading={participants.isLoading}
+            isError={participants.isError}
+            isFree={selectedCourse.price === 0}
+          />
 
           <div className="mb-4 flex items-center justify-between">
             <h2 className="font-display text-xl font-semibold flex items-center gap-2">
@@ -389,6 +517,39 @@ export default function CoachDashboard() {
             </div>
           )}
         </div>
+
+        <CoachCourseEditDialog
+          open={courseEdit.isOpen}
+          values={courseEdit.values}
+          saving={modifyCoachCourses.isPending}
+          onEditCourseForm={editCourseForm}
+          onSubmitCourse={submitCourseEdit}
+          onClearCourse={clearCourseDialog}
+        />
+
+        <AlertDialog open={courseEdit.isDeleteOpen} onOpenChange={editCourseDeleteDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{t('Delete this course?', 'Hapus kursus ini?')}</AlertDialogTitle>
+              <AlertDialogDescription>
+                {participants.hasPaid
+                  ? t('This course has paid participants and cannot be deleted.', 'Kursus ini memiliki peserta yang sudah membayar dan tidak dapat dihapus.')
+                  : t('Modules, quizzes and enrollments are removed with it. This cannot be undone.', 'Modul, kuis, dan pendaftaran ikut terhapus. Tindakan ini tidak dapat dibatalkan.')}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>{t('Cancel', 'Batal')}</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={(e) => { e.preventDefault(); clearCourse(); }}
+                disabled={removeCoachCourses.isPending || participants.hasPaid}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {removeCoachCourses.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {t('Delete', 'Hapus')}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
         {/* Module Dialog */}
         <Dialog open={showModuleDialog} onOpenChange={setShowModuleDialog}>

@@ -68,8 +68,8 @@ export const getCoursesCertificate = async (courseId: string, userId: string) =>
 };
 
 export const getCoursesSettings = async () => {
-  return toApiResponse<{ lynkid_courses_url: string | null }>(
-    supabase.from('app_settings').select('lynkid_courses_url').maybeSingle(),
+  return toApiResponse<{ goakal_courses_url: string | null }>(
+    supabase.from('app_settings').select('goakal_courses_url').maybeSingle(),
     'Course settings retrieved successfully'
   );
 };
@@ -88,10 +88,15 @@ export const updateCoursesEnrollmentProgress = async (enrollmentId: string, prog
   );
 };
 
+/**
+ * The server decides: `issue_certificate` re-checks module completions and
+ * re-grades quiz answers, then inserts. Resolves to the certificate id, or
+ * null while the course is not finished yet.
+ */
 export const postCoursesCertificate = async (payload: PayloadPostCoursesCertificate) => {
-  return toApiResponse<null>(
-    supabase.from('certificates').insert(payload),
-    'Certificate issued successfully'
+  return toApiResponse<string | null>(
+    supabase.rpc('issue_certificate', { p_course_id: payload.course_id }),
+    'Certificate checked successfully'
   );
 };
 

@@ -70,7 +70,6 @@ export interface PayloadPostCoursesEnrollment {
 
 export interface PayloadPostCoursesCertificate {
   course_id: string;
-  user_id: string;
 }
 
 export interface Courses {

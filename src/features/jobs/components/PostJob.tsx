@@ -7,12 +7,13 @@ import { AppShell } from '@/components/app-shell';
 import { useAuth } from '@/components/auth-provider';
 import { useLang } from '@/components/language-provider';
 import { usePostJobControllers } from '@/features/jobs/controllers/jobsControllers';
+import { useJobsReferenceControllers } from '@/features/jobs/controllers/jobsEditControllers';
+import { JobsPostingFields, type JobsPostingValues } from '@/features/jobs/components/JobsPostingFields';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { loginHref } from '@/shared/lib/utils';
@@ -22,11 +23,12 @@ export default function PostJob() {
   const { t } = useLang();
   const router = useRouter();
   const [companyForm, setCompanyForm] = useState({ name: '', description: '', website: '', location: '', industry: '' });
-  const [jobForm, setJobForm] = useState({ title: '', description: '', location: '', job_type: 'full-time', salary_min: '', salary_max: '', deadline: '' });
+  const [jobForm, setJobForm] = useState<JobsPostingValues>({ title: '', description: '', location: '', job_type: 'full-time', salary_min: '', salary_max: '', deadline: '', skills: [] });
   const [mode, setMode] = useState<'company' | 'job'>('company');
 
   const { fetchJobsCompany, storeJobsCompany, storeJobsUserRole, storeJobsPosting } =
     usePostJobControllers(user?.id);
+  const { fetchJobsTypes, fetchJobsLocations, fetchJobsSkillsCatalog } = useJobsReferenceControllers(true);
 
   const company = fetchJobsCompany.data ?? null;
   const saving = storeJobsCompany.isPending || storeJobsPosting.isPending;
@@ -67,6 +69,7 @@ export default function PostJob() {
         salary_min: jobForm.salary_min ? parseInt(jobForm.salary_min) : null,
         salary_max: jobForm.salary_max ? parseInt(jobForm.salary_max) : null,
         deadline: jobForm.deadline || null,
+        skills: jobForm.skills,
       });
     } catch {
       toast.error(t('Failed to post job', 'Gagal memposting lowongan'));
@@ -122,29 +125,13 @@ export default function PostJob() {
               <CardDescription>{t('Posting as', 'Posting sebagai')} {company.name}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2"><Label htmlFor="jtitle">{t('Job Title', 'Judul Lowongan')}</Label><Input id="jtitle" value={jobForm.title} onChange={(e) => setJobForm({ ...jobForm, title: e.target.value })} placeholder={t('Senior Frontend Developer', 'Senior Frontend Developer')} /></div>
-              <div className="space-y-2"><Label htmlFor="jdesc">{t('Description', 'Deskripsi')}</Label><Textarea id="jdesc" value={jobForm.description} onChange={(e) => setJobForm({ ...jobForm, description: e.target.value })} placeholder={t('Detailed job description...', 'Deskripsi pekerjaan detail...')} className="min-h-[120px]" /></div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2"><Label htmlFor="jloc">{t('Location', 'Lokasi')}</Label><Input id="jloc" value={jobForm.location} onChange={(e) => setJobForm({ ...jobForm, location: e.target.value })} placeholder={t('Jakarta or Remote', 'Jakarta atau Remote')} /></div>
-                <div className="space-y-2">
-                  <Label>{t('Job Type', 'Tipe Pekerjaan')}</Label>
-                  <Select value={jobForm.job_type} onValueChange={(v) => setJobForm({ ...jobForm, job_type: v })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="full-time">{t('Full-time', 'Penuh Waktu')}</SelectItem>
-                      <SelectItem value="part-time">{t('Part-time', 'Paruh Waktu')}</SelectItem>
-                      <SelectItem value="contract">{t('Contract', 'Kontrak')}</SelectItem>
-                      <SelectItem value="internship">{t('Internship', 'Magang')}</SelectItem>
-                      <SelectItem value="remote">{t('Remote', 'Remote')}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2"><Label htmlFor="jsmin">{t('Salary Min (IDR)', 'Gaji Min (IDR)')}</Label><Input id="jsmin" type="number" value={jobForm.salary_min} onChange={(e) => setJobForm({ ...jobForm, salary_min: e.target.value })} placeholder="5000000" /></div>
-                <div className="space-y-2"><Label htmlFor="jsmax">{t('Salary Max (IDR)', 'Gaji Max (IDR)')}</Label><Input id="jsmax" type="number" value={jobForm.salary_max} onChange={(e) => setJobForm({ ...jobForm, salary_max: e.target.value })} placeholder="10000000" /></div>
-              </div>
-              <div className="space-y-2"><Label htmlFor="jdead">{t('Deadline', 'Tenggat')}</Label><Input id="jdead" type="date" value={jobForm.deadline} onChange={(e) => setJobForm({ ...jobForm, deadline: e.target.value })} /></div>
+              <JobsPostingFields
+                values={jobForm}
+                jobTypes={fetchJobsTypes.data ?? []}
+                locations={fetchJobsLocations.data ?? []}
+                skillsCatalog={fetchJobsSkillsCatalog.data ?? []}
+                onEditJobsPosting={(patch) => setJobForm((prev) => ({ ...prev, ...patch }))}
+              />
               <Button onClick={savePosting} disabled={saving || !jobForm.title || !jobForm.description} className="w-full gap-2">
                 {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />} {t('Post Job', 'Posting Lowongan')}
               </Button>

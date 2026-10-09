@@ -53,6 +53,28 @@ export interface PayloadPostCoachCourses {
   price: number;
 }
 
+export interface PayloadUpdateCoachCourses {
+  title: string;
+  description: string;
+  level: string;
+  category: string | null;
+  price: number;
+}
+
+export interface DataCoachCoursesParticipant {
+  id: string;
+  user_id: string;
+  enrolled_at: string;
+  payment_status: string;
+  progress: number;
+  profiles: { full_name: string | null; email: string | null } | null;
+}
+
+export interface DataCoachCoursesCertificate {
+  user_id: string;
+  issued_at: string;
+}
+
 export interface PayloadPostCoachModules {
   course_id: string;
   title: string;

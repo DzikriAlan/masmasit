@@ -5,6 +5,8 @@ import Link from 'next/link';
 
 import type { DataJobs } from '@/features/jobs/types/jobsTypes';
 import { useJobsControllers } from '@/features/jobs/controllers/jobsControllers';
+import { useJobsMatchControllers, useJobsReferenceControllers } from '@/features/jobs/controllers/jobsEditControllers';
+import { calcMatchScore } from '@/shared/lib/match-score';
 import { JobsCard } from '@/features/jobs/components/JobsCard';
 import ExternalJobsList from '@/features/external-jobs/components/ExternalJobsList';
 
@@ -15,18 +17,16 @@ import { BrowseToolbar } from '@/components/browse-toolbar';
 import { CardGridSkeleton } from '@/components/card-skeleton';
 import { useAuth } from '@/components/auth-provider';
 import { useLang } from '@/components/language-provider';
-import { signedOutState } from '@/shared/lib/browse-gate';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toneOf } from '@/shared/lib/tones';
-
-const JOB_TYPES = ['full-time', 'part-time', 'contract', 'internship', 'remote'];
-const LOCATIONS = ['Jakarta', 'Bandung', 'Surabaya', 'Yogyakarta', 'Medan', 'Makassar', 'Bali', 'Remote'];
 
 export default function JobsList() {
   const { t } = useLang();
   const { user, loading: authLoading } = useAuth();
   const { fetchJobs, setGetJobs } = useJobsControllers(user?.id);
+  const { fetchJobsTypes, fetchJobsLocations } = useJobsReferenceControllers();
+  const { fetchJobsMatchUserSkills } = useJobsMatchControllers(user?.id);
 
   const [filters, setFilters] = useState({
     search: '',
@@ -44,6 +44,17 @@ export default function JobsList() {
     const getDeadline = (deadline: string | null) =>
       deadline ? `${t('Closes', 'Tutup')} ${new Date(deadline).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}` : null;
 
+    // Required skills count as "intermediate"; a member's own level scales the score.
+    const userSkills = (fetchJobsMatchUserSkills.data ?? [])
+      .filter((us) => us.skills?.name)
+      .map((us) => ({ skill_id: (us.skills?.name ?? '').toLowerCase(), level: us.level }));
+
+    const getMatchScore = (job: DataJobs) => {
+      const required = (job.skills ?? []).map((name) => ({ skill_id: name.toLowerCase(), level: 'intermediate' }));
+      if (!user || !userSkills.length || !required.length) return null;
+      return calcMatchScore(userSkills, required);
+    };
+
     const getMappedJob = (job: DataJobs) => ({
       id: job.id,
       title: job.title,
@@ -53,6 +64,8 @@ export default function JobsList() {
       location: job.location,
       salary: getSalary(job.salary_min, job.salary_max),
       deadline: getDeadline(job.deadline),
+      matchScore: getMatchScore(job),
+      matchLabel: t('match', 'cocok'),
     });
 
     const list = (fetchJobs.data ?? []).map(getMappedJob);
@@ -62,7 +75,6 @@ export default function JobsList() {
       data: list,
       isLoading: fetchJobs.isPending,
       isError: fetchJobs.isError,
-      ...signedOutState(!authLoading && !user, t, t('roles', 'lowongan')),
       isEmpty: !fetchJobs.isPending && !fetchJobs.isError && list.length === 0,
       errorTitle: t('Could not load jobs.', 'Gagal memuat lowongan.'),
       errorSubtitle: t('Check your connection and try again.', 'Periksa koneksi lalu coba lagi.'),
@@ -74,7 +86,7 @@ export default function JobsList() {
         : t('Companies post here first — check back soon.', 'Perusahaan memasang di sini lebih dulu — cek lagi nanti.'),
       isFiltered,
     };
-  }, [fetchJobs.data, fetchJobs.isPending, fetchJobs.isError, filters, t, user, authLoading]);
+  }, [fetchJobs.data, fetchJobs.isPending, fetchJobs.isError, fetchJobsMatchUserSkills.data, filters, t, user, authLoading]);
 
   const toolbarFilters = useMemo(
     () => [
@@ -84,7 +96,7 @@ export default function JobsList() {
         value: filters.filter.jobType,
         options: [
           { value: 'all', label: t('All types', 'Semua tipe') },
-          ...JOB_TYPES.map((type) => ({ value: type, label: type.replace('-', ' ') })),
+          ...(fetchJobsTypes.data ?? []).map((type) => ({ value: type.slug, label: t(type.label_en, type.label_id) })),
         ],
       },
       {
@@ -93,11 +105,11 @@ export default function JobsList() {
         value: filters.filter.location,
         options: [
           { value: 'all', label: t('All locations', 'Semua lokasi') },
-          ...LOCATIONS.map((location) => ({ value: location, label: location })),
+          ...(fetchJobsLocations.data ?? []).map((location) => ({ value: location.name, label: location.name })),
         ],
       },
     ],
-    [filters.filter, t]
+    [filters.filter, fetchJobsTypes.data, fetchJobsLocations.data, t]
   );
 
   const editJobsSearch = (value: string) => {

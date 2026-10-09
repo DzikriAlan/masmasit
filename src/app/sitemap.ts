@@ -26,7 +26,13 @@ export default async function sitemap() {
     supabase.from('jobs').select('id, created_at').eq('status', 'open'),
     supabase.from('projects').select('id, created_at').eq('status', 'open'),
     supabase.from('courses').select('id, created_at'),
-    supabase.from('events').select('id, event_date').gte('event_date', new Date().toISOString()),
+    // /events/[id] exists now; only approved, non-cancelled upcoming events are listed.
+    supabase
+      .from('events')
+      .select('id, event_date')
+      .eq('approval_status', 'approved')
+      .neq('status', 'cancelled')
+      .gte('event_date', new Date().toISOString()),
     supabase.from('profiles').select('id, created_at'),
   ]);
 

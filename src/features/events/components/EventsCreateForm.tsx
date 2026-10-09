@@ -37,7 +37,9 @@ export function EventsCreateForm({
   onEditEvents,
   onSubmitEvents,
   onClearEvents,
+  mode = 'create',
 }: Readonly<{
+  mode?: 'create' | 'edit';
   values: EventsFormValues;
   regions: { id: string; name: string }[];
   saving: boolean;
@@ -57,9 +59,13 @@ export function EventsCreateForm({
   return (
     <Card className="mb-8 border-dashed">
       <CardHeader>
-        <CardTitle className="font-display text-xl">{t('Host an event', 'Adakan event')}</CardTitle>
+        <CardTitle className="font-display text-xl">
+          {mode === 'edit' ? t('Edit event', 'Ubah event') : t('Host an event', 'Adakan event')}
+        </CardTitle>
         <CardDescription>
-          {t('A meetup, workshop or hackathon — an admin reviews it before it goes live.', 'Meetup, workshop, atau hackathon — admin meninjau sebelum tayang.')}
+          {mode === 'edit'
+            ? t('Attendees see the changes on the event page.', 'Peserta melihat perubahan di halaman event.')
+            : t('A meetup, workshop or hackathon — an admin reviews it before it goes live.', 'Meetup, workshop, atau hackathon — admin meninjau sebelum tayang.')}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">
@@ -178,7 +184,7 @@ export function EventsCreateForm({
         <div className="flex flex-wrap items-center gap-3 border-t border-border pt-4">
           <Button onClick={onSubmitEvents} disabled={saving || isIncomplete} className="gap-2">
             {saving && <Loader2 className="h-4 w-4 animate-spin" />}
-            {t('Create event', 'Buat event')}
+            {mode === 'edit' ? t('Save changes', 'Simpan perubahan') : t('Create event', 'Buat event')}
           </Button>
           <Button variant="ghost" onClick={onClearEvents}>{t('Cancel', 'Batal')}</Button>
           {isIncomplete && (
