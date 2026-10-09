@@ -3,18 +3,22 @@
 -- =========================================================================
 -- Jalankan di Supabase > SQL Editor SETELAH 00_BACKUP.sh sukses.
 --
--- WAJIB isi satu baris di bawah: email akun ASLI yang akan jadi super_admin.
--- Satu-satunya admin sekarang adalah admin@demo.masmasit.online (akun dummy);
--- tanpa pengganti, tidak ada yang bisa masuk Panel Admin setelah dihapus.
--- Akun itu harus sudah pernah daftar/login di masmasit (ada di auth.users).
+-- Langsung jalankan apa adanya. Tidak ada yang wajib diisi.
+--
+-- AKUN ADMIN DIPERTAHANKAN: setiap akun yang punya role super_admin /
+-- regional_admin (termasuk admin@demo.masmasit.online) TIDAK dihapus, beserta
+-- profil, role, skill, pengalaman, notifikasi, audit log, dan semua yang dibuat
+-- lewat aplikasi (mis. perusahaan "MAS-MAS IT" + lowongan "Golang Developer").
+-- Konten seed yang kebetulan atas nama admin tetap dihapus.
+--
+-- Opsional: isi email_admin_baru untuk sekalian menjadikan akun ASLI super_admin.
 --
 -- Yang dilakukan, dalam SATU transaksi (error = tidak ada yang berubah):
---   1. Akun email di atas dijadikan super_admin.
---   2. Perusahaan milik akun demo yang punya lowongan ASLI (dibuat lewat
---      aplikasi, bukan seed - mis. "MAS-MAS IT" / "Golang Developer")
---      dipindahkan ke akun admin baru, jadi perusahaan + lowongan itu TETAP ADA.
---   3. Semua data dummy dihapus: 30 akun @demo.masmasit.online dan semua
---      konten seed (jobs, projects, courses, events, builds, diskusi, ...).
+--   1. (Opsional) akun email_admin_baru dijadikan super_admin.
+--   2. Perusahaan milik akun demo NON-admin yang punya lowongan asli
+--      dipindahkan ke admin, jadi perusahaan + lowongan itu tetap ada.
+--   3. Semua data dummy dihapus: akun @demo.masmasit.online selain admin, dan
+--      semua konten seed (jobs, projects, courses, events, builds, diskusi, ...).
 --   4. Aktivitas akun asli pada konten dummy ikut terhapus karena kontennya
 --      hilang (lamaran ke lowongan dummy, enrollment ke kursus dummy, bid ke
 --      project dummy, reply di diskusi dummy, pesan ke akun demo).
@@ -26,10 +30,10 @@
 
 BEGIN;
 
-DROP TABLE IF EXISTS _cfg, _demo_users, _dummy, _kolateral, _admin_baru, _company_diselamatkan;
+DROP TABLE IF EXISTS _cfg, _demo_users, _dummy, _kolateral, _admin_baru, _company_diselamatkan, _keep_users, _kept_rows;
 
 CREATE TEMP TABLE _cfg AS SELECT
-  ''::text AS email_admin_baru,  -- <<< ISI: email akun ASLI calon super_admin, mis. 'nama@gmail.com'
+  ''::text AS email_admin_baru,  -- opsional: email akun ASLI yang ikut dijadikan super_admin
   true AS hapus,
   true AS izinkan_kolateral;
 
@@ -42,6 +46,12 @@ FROM auth.users
 WHERE email ILIKE '%@demo.masmasit.online'
    OR id::text ~ '^[0-9a-f]{8}-0000-4000-a000-[0-9a-f]{12}$';
 
+-- Akun admin TIDAK dihapus, walaupun email-nya @demo / ID-nya pola seed.
+CREATE TEMP TABLE _keep_users AS
+SELECT d.id, d.email FROM _demo_users d
+WHERE EXISTS (SELECT 1 FROM user_roles r WHERE r.user_id = d.id AND r.role IN ('super_admin', 'regional_admin'));
+DELETE FROM _demo_users WHERE id IN (SELECT id FROM _keep_users);
+
 -- -------------------------------------------------------------------------
 -- 1b. ADMIN PENGGANTI + SELAMATKAN PERUSAHAAN DENGAN LOWONGAN ASLI
 -- -------------------------------------------------------------------------
@@ -53,26 +63,28 @@ DECLARE
   v_email text := btrim((SELECT email_admin_baru FROM _cfg));
   v_admin uuid;
 BEGIN
-  IF v_email = '' THEN
-    RAISE EXCEPTION 'Dibatalkan: isi email_admin_baru di bagian _cfg dengan email akun ASLI calon super_admin.';
+  IF v_email <> '' THEN
+    SELECT id INTO v_admin FROM auth.users WHERE lower(email) = lower(v_email);
+    IF v_admin IS NULL THEN
+      RAISE EXCEPTION 'Dibatalkan: akun % belum terdaftar. Daftar/login dulu di masmasit dengan email itu.', v_email;
+    END IF;
+    IF v_admin IN (SELECT id FROM _demo_users) THEN
+      RAISE EXCEPTION 'Dibatalkan: % adalah akun demo; pakai akun asli.', v_email;
+    END IF;
+
+    INSERT INTO _admin_baru VALUES (v_admin, v_email);
+
+    INSERT INTO profiles (id, email, full_name)
+    SELECT v_admin, v_email, split_part(v_email, '@', 1)
+    WHERE NOT EXISTS (SELECT 1 FROM profiles WHERE id = v_admin);
+
+    INSERT INTO user_roles (user_id, role) VALUES (v_admin, 'super_admin')
+    ON CONFLICT (user_id, role) DO NOTHING;
   END IF;
 
-  SELECT id INTO v_admin FROM auth.users WHERE lower(email) = lower(v_email);
-  IF v_admin IS NULL THEN
-    RAISE EXCEPTION 'Dibatalkan: akun % belum terdaftar. Daftar/login dulu di masmasit dengan email itu.', v_email;
-  END IF;
-  IF v_admin IN (SELECT id FROM _demo_users) THEN
-    RAISE EXCEPTION 'Dibatalkan: % adalah akun demo; pakai akun asli.', v_email;
-  END IF;
-
-  INSERT INTO _admin_baru VALUES (v_admin, v_email);
-
-  INSERT INTO profiles (id, email, full_name)
-  SELECT v_admin, v_email, split_part(v_email, '@', 1)
-  WHERE NOT EXISTS (SELECT 1 FROM profiles WHERE id = v_admin);
-
-  INSERT INTO user_roles (user_id, role) VALUES (v_admin, 'super_admin')
-  ON CONFLICT (user_id, role) DO NOTHING;
+  -- Pemilik baru untuk perusahaan yang diselamatkan: admin baru, kalau tidak
+  -- ada pakai admin yang dipertahankan.
+  v_admin := COALESCE(v_admin, (SELECT id FROM _keep_users ORDER BY email LIMIT 1));
 
   -- Perusahaan akun demo yang punya lowongan bukan seed -> pindah ke admin baru.
   INSERT INTO _company_diselamatkan
@@ -84,7 +96,7 @@ BEGIN
         AND j.id::text !~ '^[0-9a-f]{8}-0000-4000-a000-[0-9a-f]{12}$'
     );
 
-  IF EXISTS (SELECT 1 FROM _company_diselamatkan) THEN
+  IF EXISTS (SELECT 1 FROM _company_diselamatkan) AND v_admin IS NOT NULL THEN
     UPDATE companies SET user_id = v_admin WHERE id IN (SELECT id FROM _company_diselamatkan);
     INSERT INTO user_roles (user_id, role) VALUES (v_admin, 'company')
     ON CONFLICT (user_id, role) DO NOTHING;
@@ -223,6 +235,17 @@ ON CONFLICT DO NOTHING;
 -- Perusahaan yang diselamatkan bukan dummy lagi (lowongan seed di dalamnya
 -- tetap terhapus karena ID-nya pola seed).
 DELETE FROM _dummy WHERE tbl = 'companies' AND id IN (SELECT id FROM _company_diselamatkan);
+
+-- Data identitas akun admin yang dipertahankan bukan dummy, walaupun ID-nya
+-- pola seed: profil, role, skill, pengalaman, notifikasi, audit log.
+CREATE TEMP TABLE _kept_rows (tbl text, id uuid, PRIMARY KEY (tbl, id));
+INSERT INTO _kept_rows SELECT 'profiles', id FROM profiles WHERE id IN (SELECT id FROM _keep_users);
+INSERT INTO _kept_rows SELECT 'user_roles', id FROM user_roles WHERE user_id IN (SELECT id FROM _keep_users);
+INSERT INTO _kept_rows SELECT 'user_skills', id FROM user_skills WHERE user_id IN (SELECT id FROM _keep_users);
+INSERT INTO _kept_rows SELECT 'experiences', id FROM experiences WHERE user_id IN (SELECT id FROM _keep_users);
+INSERT INTO _kept_rows SELECT 'notifications', id FROM notifications WHERE user_id IN (SELECT id FROM _keep_users);
+INSERT INTO _kept_rows SELECT 'audit_logs', id FROM audit_logs WHERE actor_id IN (SELECT id FROM _keep_users);
+DELETE FROM _dummy d USING _kept_rows k WHERE d.tbl = k.tbl AND d.id = k.id;
 
 -- -------------------------------------------------------------------------
 -- 3. KOLATERAL: baris ASLI yang merujuk ke baris dummy / akun demo
@@ -364,11 +387,13 @@ BEGIN
     WHERE n.nspname = 'public' AND c.relkind = 'r'
       AND c.relname NOT IN ('skills', 'regions', 'app_settings', 'job_types', 'job_locations')
   LOOP
-    EXECUTE format('SELECT %s + count(*) FROM public.%I
-                    WHERE id::text ~ ''^[0-9a-f]{8}-0000-4000-a000-[0-9a-f]{12}$''',
-                   sisa, t.relname) INTO sisa;
+    EXECUTE format('SELECT %s + count(*) FROM public.%I x
+                    WHERE x.id::text ~ ''^[0-9a-f]{8}-0000-4000-a000-[0-9a-f]{12}$''
+                      AND NOT EXISTS (SELECT 1 FROM _kept_rows k WHERE k.tbl = %L AND k.id = x.id)',
+                   sisa, t.relname, t.relname) INTO sisa;
   END LOOP;
-  sisa := sisa + (SELECT count(*) FROM auth.users WHERE email ILIKE '%@demo.masmasit.online');
+  sisa := sisa + (SELECT count(*) FROM auth.users WHERE email ILIKE '%@demo.masmasit.online'
+                    AND id NOT IN (SELECT id FROM _keep_users));
   IF sisa > 0 THEN
     RAISE EXCEPTION 'Dibatalkan: verifikasi gagal, masih ada % baris dummy.', sisa;
   END IF;
@@ -386,11 +411,13 @@ SELECT bagian, tabel, keterangan, jumlah FROM (
          CASE WHEN (SELECT hapus FROM _cfg) THEN 'SUDAH DIHAPUS' ELSE 'PRATINJAU - belum ada yang dihapus' END AS keterangan,
          NULL::bigint AS jumlah
   UNION ALL
+  SELECT 1, 'admin DIPERTAHANKAN', 'auth.users', email, NULL FROM _keep_users
+  UNION ALL
   SELECT 1, 'admin baru (super_admin)', 'user_roles', email, NULL FROM _admin_baru
   UNION ALL
   SELECT 1, 'perusahaan diselamatkan', 'companies', name || ' -> milik admin baru', NULL FROM _company_diselamatkan
   UNION ALL
-  SELECT 1, 'akun demo', 'auth.users', '@demo.masmasit.online', count(*) FROM _demo_users
+  SELECT 1, 'akun demo dihapus', 'auth.users', '@demo.masmasit.online (selain admin)', count(*) FROM _demo_users
   UNION ALL
   SELECT 2, 'PERINGATAN: akun demo pernah dipakai login', 'auth.users',
          email || ' (terakhir ' || to_char(last_sign_in_at, 'YYYY-MM-DD') || ')', NULL
