@@ -204,6 +204,8 @@ export default function ProfileForm() {
           <CardContent className="space-y-4">
             <FileUpload
               bucket="avatars"
+              fileName="avatar"
+              maxDimension={512}
               existingUrl={avatarUrl}
               onUpload={(url) => setAvatarUrl(url)}
               label={t('Avatar', 'Avatar')}

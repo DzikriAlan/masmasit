@@ -1,7 +1,8 @@
 export interface PayloadPostUploads {
   bucket: string;
   path: string;
-  file: File;
+  file: Blob;
+  contentType: string;
 }
 
 export interface DataUploads {
