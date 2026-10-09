@@ -12,10 +12,9 @@ import { PageHeader } from '@/components/page-header';
 import { LoadData } from '@/components/load-data';
 import { BrowseToolbar } from '@/components/browse-toolbar';
 import { CardGridSkeleton } from '@/components/card-skeleton';
-import { useAuth } from '@/components/auth-provider';
 import { useLang } from '@/components/language-provider';
-import { signedOutState } from '@/shared/lib/browse-gate';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { TONE_CHIP, toneOf } from '@/shared/lib/tones';
 
@@ -29,7 +28,6 @@ const dummyTalents: Talent[] = [
 
 export default function TalentsList() {
   const { t } = useLang();
-  const { user, loading: authLoading } = useAuth();
   const { fetchTalents } = useTalentsControllers();
 
   const [filters, setFilters] = useState({
@@ -38,9 +36,11 @@ export default function TalentsList() {
   });
 
   const data = useMemo(() => {
+    // Demo profiles only fill an otherwise empty page; once one real talent is
+    // approved they disappear. They have no detail page, so they never link.
     const getMergedTalents = (dbTalents: Talent[]) => {
-      const realNames = new Set(dbTalents.map((talent) => talent.full_name?.toLowerCase()));
-      return [...dbTalents, ...dummyTalents.filter((dummy) => !realNames.has(dummy.full_name?.toLowerCase()))];
+      const isLoaded = fetchTalents.isSuccess;
+      return isLoaded && dbTalents.length === 0 ? dummyTalents : dbTalents;
     };
 
     const getMappedTalent = (talent: Talent) => ({
@@ -51,6 +51,7 @@ export default function TalentsList() {
       location: talent.location,
       initial: (talent.full_name ?? '?').charAt(0).toUpperCase(),
       linkedinUrl: talent.linkedin_url,
+      isDummy: Boolean(talent._isDummy),
     });
 
     const getMatchesFilters = (talent: ReturnType<typeof getMappedTalent>) => {
@@ -69,7 +70,6 @@ export default function TalentsList() {
       locations: Array.from(new Set(all.map((talent) => talent.location).filter(Boolean) as string[])).sort((a, b) => a.localeCompare(b)),
       isLoading: fetchTalents.isPending,
       isError: fetchTalents.isError,
-      ...signedOutState(!authLoading && !user, t, t('talent', 'talent')),
       isEmpty: !fetchTalents.isPending && !fetchTalents.isError && list.length === 0,
       errorTitle: t('Could not load talent.', 'Gagal memuat talent.'),
       errorSubtitle: t('Check your connection and try again.', 'Periksa koneksi lalu coba lagi.'),
@@ -80,7 +80,7 @@ export default function TalentsList() {
         ? t('Try another city, or a broader search.', 'Coba kota lain, atau kata kunci yang lebih umum.')
         : t('Practitioners open to bookings will appear here.', 'Praktisi yang menerima booking akan muncul di sini.'),
     };
-  }, [fetchTalents.data, fetchTalents.isPending, fetchTalents.isError, filters, t, user, authLoading]);
+  }, [fetchTalents.data, fetchTalents.isPending, fetchTalents.isError, fetchTalents.isSuccess, filters, t]);
 
   const toolbarFilters = useMemo(
     () => [
@@ -145,7 +145,14 @@ export default function TalentsList() {
                       <AvatarFallback className={TONE_CHIP[toneOf('talents')]}>{talent.initial}</AvatarFallback>
                     </Avatar>
                     <div className="min-w-0 flex-1">
-                      <h3 className="truncate font-semibold">{talent.name}</h3>
+                      <div className="flex items-center gap-2">
+                        <h3 className="truncate font-semibold">{talent.name}</h3>
+                        {talent.isDummy && (
+                          <Badge variant="outline" className="shrink-0 text-[10px] uppercase tracking-wide">
+                            {t('Demo', 'Demo')}
+                          </Badge>
+                        )}
+                      </div>
                       {talent.location && (
                         <p className="mt-0.5 flex items-center gap-1 truncate text-sm text-muted-foreground">
                           <MapPin className="h-3 w-3 shrink-0" />
@@ -158,9 +165,15 @@ export default function TalentsList() {
                   <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-muted-foreground text-pretty">{talent.bio}</p>
 
                   <div className="mt-auto flex gap-2 pt-4">
-                    <Link href={`/talents/${talent.id}`} className="flex-1">
-                      <Button size="sm" className="w-full">{t('Book a session', 'Pesan sesi')}</Button>
-                    </Link>
+                    {talent.isDummy ? (
+                      <Button size="sm" className="flex-1" disabled>
+                        {t('Demo profile', 'Profil demo')}
+                      </Button>
+                    ) : (
+                      <Link href={`/talents/${talent.id}`} className="flex-1">
+                        <Button size="sm" className="w-full">{t('Book a session', 'Pesan sesi')}</Button>
+                      </Link>
+                    )}
                     {talent.linkedinUrl && (
                       <a href={talent.linkedinUrl} target="_blank" rel="noreferrer">
                         <Button variant="outline" size="sm">LinkedIn</Button>

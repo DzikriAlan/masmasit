@@ -6,7 +6,7 @@ export interface Talent {
   location: string | null;
   linkedin_url: string | null;
   calendly_url: string | null;
-  whatsapp: string | null;
+  whatsapp?: string | null;
   _isDummy?: boolean;
 }
 
@@ -17,14 +17,15 @@ export interface TalentProfile {
   avatar_url: string | null;
   location: string | null;
   linkedin_url: string | null;
-  whatsapp: string | null;
+  /** Only selected for signed-in members. */
+  whatsapp?: string | null;
   calendly_url: string | null;
   hourly_rate: number | null;
 }
 
 export interface BookingSettings {
   talent_admin_fee_percentage: number | string;
-  lynkid_bookings_url: string | null;
+  goakal_bookings_url: string | null;
 }
 
 export interface PayloadPostTalentsBooking {

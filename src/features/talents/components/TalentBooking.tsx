@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Loader2, Star, MapPin, CalendarClock, Link as LinkIcon, MessageCircle, CreditCard, CheckCircle2, Send } from 'lucide-react';
+import { ArrowLeft, Loader2, Star, MapPin, CalendarClock, Link as LinkIcon, MessageCircle, CreditCard, CheckCircle2, Send, ExternalLink, LogIn } from 'lucide-react';
 import { toast } from 'sonner';
 
 import type { PayloadPostTalentsBooking } from '@/features/talents/types/talentsTypes';
@@ -20,41 +20,54 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ShareButton } from '@/components/share-button';
+import { MemberReviews } from '@/features/reviews/components/MemberReviews';
+import { loginHref } from '@/shared/lib/utils';
 
 export default function TalentBooking() {
   const params = useParams();
   const router = useRouter();
   const { user } = useAuth();
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const [booking, setBooking] = useState({ booking_type: 'consultation', scheduled_at: '', notes: '', amount: '', external_name: '', external_email: '' });
   const [booked, setBooked] = useState(false);
   const [bookingId, setBookingId] = useState<string | null>(null);
   const [paymentStatus, setPaymentStatus] = useState('unpaid');
 
-  const { fetchTalentProfile, fetchBookingSettings, storeTalentsBooking } =
-    useTalentsBookingControllers(params.id as string);
+  const { fetchTalentProfile, fetchBookingSettings, fetchTalentsBookedSlots, storeTalentsBooking } =
+    useTalentsBookingControllers(params.id as string, Boolean(user));
 
   const talent = fetchTalentProfile.data ?? null;
   const loading = fetchTalentProfile.isPending;
   const saving = storeTalentsBooking.isPending;
   const settings = fetchBookingSettings.data ?? null;
   const adminFee = settings ? Number(settings.talent_admin_fee_percentage) : 15;
-  const lynkidUrl = settings?.lynkid_bookings_url ?? null;
+  const goakalUrl = settings?.goakal_bookings_url ?? null;
 
   // The talent's own rate seeds the amount; 500k stays the fallback when unset.
   const defaultAmount = String(talent?.hourly_rate ?? 500000);
   const bookingAmount = booking.amount || defaultAmount;
+  // One number drives the fee summary, the Confirm button and the payload, so
+  // the prefilled session rate counts without being retyped.
+  const amountValue = Number.parseInt(bookingAmount, 10) || 0;
+  const netAmount = amountValue * (1 - adminFee / 100);
+  const adminFeeAmount = amountValue - Math.round(netAmount);
+  const isGuestInfoMissing = !user && (!booking.external_name.trim() || !booking.external_email.trim());
+  const isConfirmDisabled = saving || !booking.scheduled_at || amountValue <= 0 || isGuestInfoMissing;
+  const getSlotLabel = (iso: string) =>
+    new Date(iso).toLocaleString(lang === 'id' ? 'id-ID' : 'en-GB', { dateStyle: 'medium', timeStyle: 'short' });
+  const bookedSlots = (fetchTalentsBookedSlots.data ?? []).map((slot) => getSlotLabel(slot.scheduled_at));
 
   const saveBooking = async () => {
     if (!talent) return;
 
-    const amount = parseInt(bookingAmount);
     const payload: PayloadPostTalentsBooking = {
       talent_id: talent.id,
       booking_type: booking.booking_type,
-      scheduled_at: booking.scheduled_at,
+      // datetime-local has no zone; send the visitor's local time as an instant.
+      scheduled_at: new Date(booking.scheduled_at).toISOString(),
       notes: booking.notes || null,
-      amount,
+      amount: amountValue,
       admin_fee_percentage: adminFee,
       status: 'pending',
       client_id: user ? user.id : null,
@@ -67,8 +80,17 @@ export default function TalentBooking() {
     let created: { id: string } | null = null;
     try {
       created = await storeTalentsBooking.mutateAsync(payload);
-    } catch {
-      toast.error(t('Failed to create booking', 'Gagal membuat booking'));
+    } catch (error) {
+      // Raised by the bookings_no_clash trigger (migration 028).
+      const isSlotTaken = error instanceof Error && error.message.includes('BOOKING_SLOT_TAKEN');
+      toast.error(
+        isSlotTaken
+          ? t('This time is already booked. Please choose another slot.', 'Jadwal ini sudah terisi. Silakan pilih waktu lain.')
+          : t('Failed to create booking', 'Gagal membuat booking'),
+        isSlotTaken && bookedSlots.length
+          ? { description: `${t('Booked', 'Terisi')}: ${bookedSlots.join(', ')}` }
+          : undefined
+      );
       return;
     }
     setBookingId(created.id);
@@ -91,12 +113,17 @@ export default function TalentBooking() {
     );
   }
 
-  const netAmount = parseInt(bookingAmount || '0') * (1 - adminFee / 100);
-
   return (
     <AppShell>
       <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6 lg:px-8">
-        <Button variant="ghost" onClick={() => router.back()} className="mb-4 gap-2"><ArrowLeft className="h-4 w-4" /> {t('Back', 'Kembali')}</Button>
+        <div className="mb-4 flex items-center justify-between gap-2">
+          <Button variant="ghost" onClick={() => router.back()} className="gap-2"><ArrowLeft className="h-4 w-4" /> {t('Back', 'Kembali')}</Button>
+          <ShareButton
+            url={`/talents/${talent.id}`}
+            title={`${talent.full_name ?? 'Talent'} — MasmasIT`}
+            text={t('Book a 1-on-1 session', 'Pesan sesi 1-on-1')}
+          />
+        </div>
 
         {/* Talent info */}
         <Card className="glass mb-6 transition-all hover:border-primary/30">
@@ -127,6 +154,10 @@ export default function TalentBooking() {
           </CardContent>
         </Card>
 
+        <div className="mb-6">
+          <MemberReviews userId={talent.id} />
+        </div>
+
         {/* Booking form */}
         {booked && bookingId ? (
           <div className="space-y-4">
@@ -136,24 +167,30 @@ export default function TalentBooking() {
                 <h2 className="font-display text-xl font-semibold">{t('Booking Created!', 'Booking Dibuat!')}</h2>
                 <p className="mt-2 text-muted-foreground">{t('Your booking request has been sent. Complete payment to confirm.', 'Permintaan booking Anda telah dikirim. Selesaikan pembayaran untuk konfirmasi.')}</p>
                 <div className="mt-4 rounded-lg border border-border/60 p-4 text-left">
-                  <div className="flex justify-between text-sm"><span className="text-muted-foreground">{t('Session Amount', 'Jumlah Sesi')}</span><span className="font-medium">Rp {parseInt(booking.amount).toLocaleString('id-ID')}</span></div>
-                  <div className="flex justify-between text-sm"><span className="text-muted-foreground">{t('Admin Fee', 'Biaya Admin')} ({adminFee}%)</span><span className="text-destructive">- Rp {(parseInt(booking.amount) - Math.round(netAmount)).toLocaleString('id-ID')}</span></div>
+                  <div className="flex justify-between text-sm"><span className="text-muted-foreground">{t('Session Amount', 'Jumlah Sesi')}</span><span className="font-medium">Rp {amountValue.toLocaleString('id-ID')}</span></div>
+                  <div className="flex justify-between text-sm"><span className="text-muted-foreground">{t('Admin Fee', 'Biaya Admin')} ({adminFee}%)</span><span className="text-destructive">- Rp {adminFeeAmount.toLocaleString('id-ID')}</span></div>
                   <div className="mt-2 flex justify-between border-t border-border/60 pt-2 text-sm"><span className="font-medium">{t('Talent Receives', 'Talent Menerima')}</span><span className="font-bold text-success">Rp {Math.round(netAmount).toLocaleString('id-ID')}</span></div>
                 </div>
               </CardContent>
             </Card>
-            <PaymentCard
-              table="bookings"
-              recordId={bookingId}
-              itemName={t('Talent Booking', 'Booking Talent')}
-              amount={parseInt(booking.amount)}
-              paymentStatus={paymentStatus}
-              paymentLinkUrl={null}
-              paymentNote={null}
-              fallbackUrl={lynkidUrl}
-              onStatusChange={setPaymentStatus}
-            />
-            <Link href="/dashboard"><Button className="w-full">{t('Back to Dashboard', 'Kembali ke Dashboard')}</Button></Link>
+            {user ? (
+              <>
+                <PaymentCard
+                  table="bookings"
+                  recordId={bookingId}
+                  itemName={t('Talent Booking', 'Booking Talent')}
+                  amount={amountValue}
+                  paymentStatus={paymentStatus}
+                  paymentLinkUrl={null}
+                  paymentNote={null}
+                  fallbackUrl={goakalUrl}
+                  onStatusChange={setPaymentStatus}
+                />
+                <Link href="/dashboard"><Button className="w-full">{t('Back to Dashboard', 'Kembali ke Dashboard')}</Button></Link>
+              </>
+            ) : (
+              <GuestBookingNext email={booking.external_email} payUrl={goakalUrl} />
+            )}
           </div>
         ) : (
           <Card className="glass">
@@ -165,7 +202,12 @@ export default function TalentBooking() {
             <CardContent className="space-y-4">
               {!user && (
                 <div className="rounded-lg border border-primary/30 bg-primary/5 p-4">
-                  <p className="text-sm text-muted-foreground">{t('Booking as a guest. Sign in to save your booking history, or continue below.', 'Booking sebagai tamu. Masuk untuk menyimpan riwayat booking, atau lanjutkan di bawah.')}</p>
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <p className="text-sm text-muted-foreground">{t('Booking as a guest. Sign in to save your booking history, or continue below.', 'Booking sebagai tamu. Masuk untuk menyimpan riwayat booking, atau lanjutkan di bawah.')}</p>
+                    <Button type="button" variant="outline" size="sm" className="gap-1" onClick={() => router.push(loginHref())}>
+                      <LogIn className="h-3.5 w-3.5" /> {t('Sign in', 'Masuk')}
+                    </Button>
+                  </div>
                   <div className="mt-2 grid gap-3 sm:grid-cols-2">
                     <div className="space-y-2">
                       <Label htmlFor="en">{t('Your Name', 'Nama Anda')}</Label>
@@ -191,6 +233,11 @@ export default function TalentBooking() {
               <div className="space-y-2">
                 <Label htmlFor="schedule">{t('Date & Time', 'Tanggal & Waktu')}</Label>
                 <Input id="schedule" type="datetime-local" value={booking.scheduled_at} onChange={(e) => setBooking({ ...booking, scheduled_at: e.target.value })} />
+                {bookedSlots.length > 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    {t('Already booked (pick another time):', 'Sudah terisi (pilih waktu lain):')} {bookedSlots.join(', ')}
+                  </p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="amount">{t('Amount (IDR)', 'Jumlah (IDR)')}</Label>
@@ -203,14 +250,14 @@ export default function TalentBooking() {
 
               {/* Fee breakdown */}
               <div className="rounded-lg border border-border/60 p-4">
-                <div className="flex justify-between text-sm"><span className="text-muted-foreground">{t('Session Amount', 'Jumlah Sesi')}</span><span>Rp {parseInt(booking.amount || '0').toLocaleString('id-ID')}</span></div>
-                <div className="flex justify-between text-sm"><span className="text-muted-foreground">{t('Admin Fee', 'Biaya Admin')} ({adminFee}%)</span><span className="text-destructive">- Rp {(parseInt(booking.amount || '0') - Math.round(netAmount)).toLocaleString('id-ID')}</span></div>
+                <div className="flex justify-between text-sm"><span className="text-muted-foreground">{t('Session Amount', 'Jumlah Sesi')}</span><span>Rp {amountValue.toLocaleString('id-ID')}</span></div>
+                <div className="flex justify-between text-sm"><span className="text-muted-foreground">{t('Admin Fee', 'Biaya Admin')} ({adminFee}%)</span><span className="text-destructive">- Rp {adminFeeAmount.toLocaleString('id-ID')}</span></div>
                 <div className="mt-2 flex justify-between border-t border-border/60 pt-2 text-sm font-medium"><span>{t('Talent Receives', 'Talent Menerima')}</span><span className="text-success">Rp {Math.round(netAmount).toLocaleString('id-ID')}</span></div>
               </div>
 
               <Button
                 onClick={saveBooking}
-                disabled={saving || !booking.scheduled_at || !booking.amount || (!user && (!booking.external_name || !booking.external_email))}
+                disabled={isConfirmDisabled}
                 className="w-full gap-2"
               >
                 {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
@@ -222,5 +269,32 @@ export default function TalentBooking() {
         )}
       </div>
     </AppShell>
+  );
+}
+
+interface GuestBookingNextProps {
+  email: string;
+  payUrl: string | null;
+}
+
+/** Guests cannot report a payment (no account), so they get the link only. */
+function GuestBookingNext({ email, payUrl }: GuestBookingNextProps) {
+  const { t } = useLang();
+  return (
+    <Card className="glass border-primary/20">
+      <CardContent className="space-y-3 p-5 text-sm">
+        <p className="text-muted-foreground">
+          {t(
+            `We'll follow up at ${email} once the talent confirms your session.`,
+            `Kami akan menghubungi ${email} setelah talent mengonfirmasi sesi Anda.`
+          )}
+        </p>
+        {payUrl && (
+          <a href={payUrl} target="_blank" rel="noreferrer">
+            <Button className="w-full gap-2"><ExternalLink className="h-4 w-4" /> {t('Continue to payment', 'Lanjut ke pembayaran')}</Button>
+          </a>
+        )}
+      </CardContent>
+    </Card>
   );
 }

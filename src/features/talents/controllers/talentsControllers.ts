@@ -9,6 +9,7 @@ import {
   updateTalentsBookingStatus,
   getTalentProfile,
   getTalents,
+  getTalentsBookedSlots,
   postTalentsBooking,
 } from '../services/talentsServices';
 import type { PayloadPostTalentsBooking } from '../types/talentsTypes';
@@ -22,13 +23,22 @@ export const useTalentsControllers = () => {
   return { fetchTalents };
 };
 
-export const useTalentsBookingControllers = (talentId: string) => {
+export const useTalentsBookingControllers = (talentId: string, isSignedIn = false) => {
   const queryClient = useQueryClient();
 
   const fetchTalentProfile = useQuery({
-    queryKey: ['talentProfile', talentId],
-    queryFn: async () => unwrapApiResponse(await getTalentProfile(talentId)) ?? null,
+    queryKey: ['talentProfile', talentId, isSignedIn],
+    queryFn: async () => unwrapApiResponse(await getTalentProfile(talentId, isSignedIn)) ?? null,
     enabled: Boolean(talentId),
+  });
+
+  // Optional: until migration 028 is applied the RPC does not exist, so an
+  // error here simply means "no slots to show".
+  const fetchTalentsBookedSlots = useQuery({
+    queryKey: ['talentsBookedSlots', talentId],
+    queryFn: async () => unwrapApiResponse(await getTalentsBookedSlots(talentId)) ?? [],
+    enabled: Boolean(talentId),
+    retry: false,
   });
 
   const fetchBookingSettings = useQuery({
@@ -41,10 +51,11 @@ export const useTalentsBookingControllers = (talentId: string) => {
       unwrapApiResponse(await postTalentsBooking(payload)),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['talents'] });
+      queryClient.invalidateQueries({ queryKey: ['talentsBookedSlots', talentId] });
     },
   });
 
-  return { fetchTalentProfile, fetchBookingSettings, storeTalentsBooking };
+  return { fetchTalentProfile, fetchBookingSettings, fetchTalentsBookedSlots, storeTalentsBooking };
 };
 
 /** Talent inbox: incoming bookings plus the ones this member made. */

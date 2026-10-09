@@ -45,6 +45,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const loadProfile = useCallback(async (uid: string) => {
     const [profileRes, rolesRes] = await Promise.all([getAuthProfileFull(uid), getAuthRoles(uid)]);
+    // A suspended member's access token outlives the ban for up to an hour;
+    // end the session as soon as the profile says so (migration 030).
+    if (profileRes.success && (profileRes.data as { is_suspended?: boolean } | null)?.is_suspended) {
+      await postAuthSignOut();
+      setProfile(null);
+      setRoles([]);
+      return;
+    }
     setProfile(profileRes.success ? (profileRes.data as UserProfile | null) : null);
     setRoles(rolesRes.success ? (rolesRes.data ?? []).map((x) => x.role) : []);
   }, []);
@@ -107,6 +115,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // redirect-URL allowlist needs only the plain path.
     const redirectTo =
       typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : undefined;
+    // The page that sent the user to /login (?redirect=) rides along in a
+    // short-lived cookie instead of the query string, so the allowlist stays
+    // a plain path; /auth/callback reads it and clears it.
+    if (typeof window !== 'undefined') {
+      const target = new URLSearchParams(window.location.search).get('redirect');
+      const safeTarget = target && target.startsWith('/') && !target.startsWith('//') ? target : null;
+      document.cookie = safeTarget
+        ? `auth_next=${encodeURIComponent(safeTarget)}; path=/; max-age=600; samesite=lax`
+        : 'auth_next=; path=/; max-age=0; samesite=lax';
+    }
     const { error } = await postAuthGoogleSignIn(redirectTo);
     return { error: error?.message ?? null };
   };
