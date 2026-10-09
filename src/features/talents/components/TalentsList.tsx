@@ -14,17 +14,9 @@ import { BrowseToolbar } from '@/components/browse-toolbar';
 import { CardGridSkeleton } from '@/components/card-skeleton';
 import { useLang } from '@/components/language-provider';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { TONE_CHIP, toneOf } from '@/shared/lib/tones';
 
-const dummyTalents: Talent[] = [
-  { id: 'dummy-t1', full_name: 'Rani Saraswati', bio: 'Senior UX Designer with 6 years at Tokopedia and Gojek. I help designers build portfolios that get hired and teach UX research methods.', avatar_url: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&h=200&w=200', location: 'Bandung, Indonesia', linkedin_url: 'https://linkedin.com/in/ranisaraswati', calendly_url: null, whatsapp: null, _isDummy: true },
-  { id: 'dummy-t2', full_name: 'Budi Hartono', bio: 'DevOps Engineer & AWS Solutions Architect. 10 years scaling infrastructure for Indonesian unicorns. I mentor on cloud, CI/CD, and SRE practices.', avatar_url: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&h=200&w=200', location: 'Jakarta, Indonesia', linkedin_url: 'https://linkedin.com/in/budihartono', calendly_url: null, whatsapp: null, _isDummy: true },
-  { id: 'dummy-t3', full_name: 'Siti Rahayu', bio: 'Data Scientist & ML Engineer. PhD in Computer Science from ITB. I help beginners break into data science with practical, project-based learning.', avatar_url: 'https://images.pexels.com/photos/1130626/pexels-photo-1130626.jpeg?auto=compress&cs=tinysrgb&h=200&w=200', location: 'Surabaya, Indonesia', linkedin_url: 'https://linkedin.com/in/sitirahayu', calendly_url: null, whatsapp: null, _isDummy: true },
-  { id: 'dummy-t4', full_name: 'Ahmad Fauzi', bio: 'Senior Mobile Developer (Flutter & React Native). Shipped 20+ apps with 4.5+ star ratings. I coach on mobile architecture and app store optimization.', avatar_url: 'https://images.pexels.com/photos/1681010/pexels-photo-1681010.jpeg?auto=compress&cs=tinysrgb&h=200&w=200', location: 'Yogyakarta, Indonesia', linkedin_url: 'https://linkedin.com/in/ahmadfauzi', calendly_url: null, whatsapp: null, _isDummy: true },
-  { id: 'dummy-t5', full_name: 'Dewi Lestari', bio: 'Product Manager ex-Ruangguru. I help aspiring PMs master product discovery, user research, and data-driven decision making.', avatar_url: 'https://images.pexels.com/photos/733872/pexels-photo-733872.jpeg?auto=compress&cs=tinysrgb&h=200&w=200', location: 'Jakarta, Indonesia', linkedin_url: 'https://linkedin.com/in/dewilestari', calendly_url: null, whatsapp: null, _isDummy: true },
-];
 
 export default function TalentsList() {
   const { t } = useLang();
@@ -36,12 +28,6 @@ export default function TalentsList() {
   });
 
   const data = useMemo(() => {
-    // Demo profiles only fill an otherwise empty page; once one real talent is
-    // approved they disappear. They have no detail page, so they never link.
-    const getMergedTalents = (dbTalents: Talent[]) => {
-      const isLoaded = fetchTalents.isSuccess;
-      return isLoaded && dbTalents.length === 0 ? dummyTalents : dbTalents;
-    };
 
     const getMappedTalent = (talent: Talent) => ({
       id: talent.id,
@@ -51,7 +37,6 @@ export default function TalentsList() {
       location: talent.location,
       initial: (talent.full_name ?? '?').charAt(0).toUpperCase(),
       linkedinUrl: talent.linkedin_url,
-      isDummy: Boolean(talent._isDummy),
     });
 
     const getMatchesFilters = (talent: ReturnType<typeof getMappedTalent>) => {
@@ -61,7 +46,7 @@ export default function TalentsList() {
       return true;
     };
 
-    const all = getMergedTalents(fetchTalents.data ?? []).map(getMappedTalent);
+    const all = (fetchTalents.data ?? []).map(getMappedTalent);
     const list = all.filter(getMatchesFilters);
     const isFiltered = Boolean(filters.search) || filters.filter.location !== 'all';
 
@@ -145,14 +130,7 @@ export default function TalentsList() {
                       <AvatarFallback className={TONE_CHIP[toneOf('talents')]}>{talent.initial}</AvatarFallback>
                     </Avatar>
                     <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <h3 className="truncate font-semibold">{talent.name}</h3>
-                        {talent.isDummy && (
-                          <Badge variant="outline" className="shrink-0 text-[10px] uppercase tracking-wide">
-                            {t('Demo', 'Demo')}
-                          </Badge>
-                        )}
-                      </div>
+                      <h3 className="truncate font-semibold">{talent.name}</h3>
                       {talent.location && (
                         <p className="mt-0.5 flex items-center gap-1 truncate text-sm text-muted-foreground">
                           <MapPin className="h-3 w-3 shrink-0" />
@@ -165,15 +143,9 @@ export default function TalentsList() {
                   <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-muted-foreground text-pretty">{talent.bio}</p>
 
                   <div className="mt-auto flex gap-2 pt-4">
-                    {talent.isDummy ? (
-                      <Button size="sm" className="flex-1" disabled>
-                        {t('Demo profile', 'Profil demo')}
-                      </Button>
-                    ) : (
-                      <Link href={`/talents/${talent.id}`} className="flex-1">
-                        <Button size="sm" className="w-full">{t('Book a session', 'Pesan sesi')}</Button>
-                      </Link>
-                    )}
+                    <Link href={`/talents/${talent.id}`} className="flex-1">
+                      <Button size="sm" className="w-full">{t('Book a session', 'Pesan sesi')}</Button>
+                    </Link>
                     {talent.linkedinUrl && (
                       <a href={talent.linkedinUrl} target="_blank" rel="noreferrer">
                         <Button variant="outline" size="sm">LinkedIn</Button>

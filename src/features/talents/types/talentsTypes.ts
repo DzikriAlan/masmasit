@@ -7,7 +7,6 @@ export interface Talent {
   linkedin_url: string | null;
   calendly_url: string | null;
   whatsapp?: string | null;
-  _isDummy?: boolean;
 }
 
 export interface TalentProfile {

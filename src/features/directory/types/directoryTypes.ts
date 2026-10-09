@@ -10,7 +10,6 @@ export interface PayloadGetDirectory {
 
 export interface DataDirectory extends UserProfile {
   user_skills?: { level: string; skills: { name: string } }[];
-  _isDummy?: boolean;
 }
 
 export interface DataDirectoryDetail {
