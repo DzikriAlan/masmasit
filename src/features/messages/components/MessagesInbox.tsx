@@ -130,7 +130,7 @@ function PesanContent() {
   const editAttachment = (file: File | undefined) => {
     if (!file) return;
     if (file.size > MESSAGES_ATTACHMENT_MAX_BYTES) {
-      toast.error(t('File is too large. Maximum size is 10 MB.', 'File terlalu besar. Ukuran maksimal 10 MB.'));
+      toast.error(t('File is too large. Maximum size is 5 MB.', 'File terlalu besar. Ukuran maksimal 5 MB.'));
       clearAttachment();
       return;
     }
@@ -342,8 +342,8 @@ function PesanContent() {
                     variant="outline"
                     onClick={() => fileInputRef.current?.click()}
                     disabled={sending}
-                    aria-label={t('Attach file (max 10 MB)', 'Lampirkan file (maks 10 MB)')}
-                    title={t('Attach file (max 10 MB)', 'Lampirkan file (maks 10 MB)')}
+                    aria-label={t('Attach file (max 5 MB)', 'Lampirkan file (maks 5 MB)')}
+                    title={t('Attach file (max 5 MB)', 'Lampirkan file (maks 5 MB)')}
                   >
                     <Paperclip className="h-4 w-4" />
                   </Button>

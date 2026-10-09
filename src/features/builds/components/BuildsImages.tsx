@@ -56,7 +56,7 @@ export function BuildsImagesPicker({ images, onEditImages }: PickerProps) {
         {/* Keyed by count so the uploader resets to an empty drop zone after
             every upload instead of holding on to the last preview. */}
         {canAddMore && (
-          <FileUpload key={images.length} bucket="portfolios" onUpload={submitImage} existingUrl={null} maxSizeMB={3} />
+          <FileUpload key={images.length} bucket="portfolios" onUpload={submitImage} existingUrl={null} />
         )}
       </div>
       {!canAddMore && (

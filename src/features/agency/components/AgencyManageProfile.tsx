@@ -98,6 +98,8 @@ export default function AgencyManageProfile({ agency, isSaving, onEditAgencyMana
       <div className="mt-6 space-y-4 border-t border-border pt-6">
         <FileUpload
           bucket="company-logos"
+          fileName="agency-logo"
+          maxDimension={512}
           label={t('Logo', 'Logo')}
           existingUrl={form.logo_url || null}
           onUpload={(url) => editAgencyManageForm({ logo_url: url })}

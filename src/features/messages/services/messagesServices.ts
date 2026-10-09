@@ -13,7 +13,7 @@ import type {
 const PARTNER_FIELDS = 'id, full_name, avatar_url, location';
 
 const ATTACHMENT_BUCKET = 'message-attachments';
-export const MESSAGES_ATTACHMENT_MAX_BYTES = 10 * 1024 * 1024;
+export const MESSAGES_ATTACHMENT_MAX_BYTES = 5 * 1024 * 1024;
 
 export const getMessagesConversations = async (userId: string) => {
   try {
@@ -149,7 +149,7 @@ export const getMessagesUnreadCount = async (userId: string) => {
 export const postMessagesAttachment = async (payload: PayloadPostMessagesAttachment) => {
   try {
     if (payload.file.size > MESSAGES_ATTACHMENT_MAX_BYTES) {
-      return errorResponse(API_ERROR_CODE.VALIDATION_ERROR, 'File exceeds 10 MB');
+      return errorResponse(API_ERROR_CODE.VALIDATION_ERROR, 'File exceeds 5 MB');
     }
     const safeName = payload.file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
     const path = `${payload.sender_id}/${payload.recipient_id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safeName}`;

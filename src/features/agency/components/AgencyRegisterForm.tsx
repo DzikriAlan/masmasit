@@ -86,6 +86,8 @@ export default function AgencyRegisterForm() {
               </div>
               <FileUpload
                 bucket="company-logos"
+                fileName="agency-logo"
+                maxDimension={512}
                 label={t('Logo (optional)', 'Logo (opsional)')}
                 existingUrl={form.logo_url || null}
                 onUpload={(url) => updateForm('logo_url', url)}

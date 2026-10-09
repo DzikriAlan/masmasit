@@ -8,10 +8,10 @@
                              to a short-lived signed URL when rendering.
 - attachment_name text    - original file name, shown on the bubble
 - attachment_type text    - MIME type; image/... renders as a preview
-- attachment_size integer - bytes, capped at 10 MB
+- attachment_size integer - bytes, capped at 5 MB
 
 ## Storage
-- Private bucket `message-attachments`, 10 MB per object (bucket-level limit
+- Private bucket `message-attachments`, 5 MB per object (bucket-level limit
   as well as the column check, so an oversized upload is refused by Storage
   even if the UI check is bypassed).
 - INSERT: only into a path whose first folder is the uploader's uid.
@@ -33,14 +33,14 @@ DO $$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'messages_attachment_size_check') THEN
     ALTER TABLE messages ADD CONSTRAINT messages_attachment_size_check
-      CHECK (attachment_size IS NULL OR (attachment_size >= 0 AND attachment_size <= 10485760));
+      CHECK (attachment_size IS NULL OR (attachment_size >= 0 AND attachment_size <= 5242880));
   END IF;
 END $$;
 
 -- Bucket
 INSERT INTO storage.buckets (id, name, public, file_size_limit)
-VALUES ('message-attachments', 'message-attachments', false, 10485760)
-ON CONFLICT (id) DO UPDATE SET public = false, file_size_limit = 10485760;
+VALUES ('message-attachments', 'message-attachments', false, 5242880)
+ON CONFLICT (id) DO UPDATE SET public = false, file_size_limit = 5242880;
 
 DROP POLICY IF EXISTS "message_attachments_insert_own" ON storage.objects;
 CREATE POLICY "message_attachments_insert_own" ON storage.objects FOR INSERT
