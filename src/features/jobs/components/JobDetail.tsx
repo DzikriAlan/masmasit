@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Building2, MapPin, Clock, Wallet, Loader2, ArrowLeft, Send, CheckCircle2 } from 'lucide-react';
+import { Building2, MapPin, Clock, Wallet, Loader2, ArrowLeft, Send, CheckCircle2, Users } from 'lucide-react';
 import { AppShell } from '@/components/app-shell';
 import { LoadData } from '@/components/load-data';
 import { API_ERROR_CODE } from '@/shared/lib/apiResponse';
@@ -36,6 +36,8 @@ export default function JobDetail() {
   const loading = fetchJobsDetail.isPending;
   const applying = storeJobsApplication.isPending;
   const hasApplied = Boolean(fetchJobsApplication.data);
+  // The company that posted the job reviews applicants instead of applying.
+  const isOwner = Boolean(user && job?.companies?.user_id === user.id);
 
   const saveApplication = async () => {
     if (!user || !job) { router.push(loginHref()); return; }
@@ -140,7 +142,16 @@ export default function JobDetail() {
         {/* Apply section */}
         <Card className="glass">
           <CardContent className="p-6">
-            {hasApplied ? (
+            {isOwner ? (
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-sm text-muted-foreground">{t('You posted this job.', 'Anda memasang lowongan ini.')}</p>
+                <Link href="/jobs/applicants">
+                  <Button className="w-full gap-2 sm:w-auto">
+                    <Users className="h-4 w-4" /> {t('View Applicants', 'Lihat Pelamar')}
+                  </Button>
+                </Link>
+              </div>
+            ) : hasApplied ? (
               <div className="flex items-center gap-3 text-success">
                 <CheckCircle2 className="h-6 w-6" />
                 <div>

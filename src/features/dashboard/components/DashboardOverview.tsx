@@ -52,7 +52,7 @@ export default function DashboardOverview() {
     { show: isAdmin, href: '/admin', icon: ShieldCheck, label: t('Admin Panel', 'Panel Admin') },
     { show: isCoach, href: '/coach', icon: GraduationCap, label: t('Coach Dashboard', 'Dashboard Coach') },
     { show: isTalent, href: '/activity?tab=bookings', icon: Star, label: t('Talent Bookings', 'Booking Talent') },
-    { show: roles.includes('company'), href: '/jobs/applicants', icon: Briefcase, label: t('Job Applicants', 'Pelamar Kerja') },
+    { show: roles.includes('company'), href: '/jobs/applicants', icon: Briefcase, label: t('Job Applicants', 'Pelamar Lowongan') },
     { show: roles.includes('agency_owner'), href: '/agency/manage', icon: Building2, label: t('Manage Agency', 'Kelola Agency') },
     { show: roles.includes('client'), href: '/activity?tab=requests', icon: ClipboardList, label: t('My Requests', 'Permintaan Saya') },
   ].filter((shortcut) => shortcut.show);
