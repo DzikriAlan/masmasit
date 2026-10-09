@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Briefcase, Code2, GraduationCap, Calendar, Star, Users, Settings, ShieldCheck, TrendingUp, FileText, MessageCircle, Mail, Send } from 'lucide-react';
+import { Briefcase, Code2, GraduationCap, Calendar, Star, Users, Settings, ShieldCheck, TrendingUp, FileText, MessageCircle, Mail, Send, Building2, ClipboardList, Activity } from 'lucide-react';
 import { useAuth } from '@/components/auth-provider';
 import { useLang } from '@/components/language-provider';
 import { AppShell } from '@/components/app-shell';
@@ -26,6 +26,8 @@ export default function DashboardOverview() {
 
   const stats = fetchDashboardStats.data ?? { applications: 0, projects: 0, enrollments: 0, rsvps: 0 };
   const isAdmin = roles.includes('super_admin') || roles.includes('regional_admin');
+  const isCoach = Boolean(profile?.is_coach || profile?.coach_approved === 'approved');
+  const isTalent = Boolean(profile?.is_talent);
 
   useEffect(() => {
     if (!loading && !user) router.push(loginHref());
@@ -44,6 +46,16 @@ export default function DashboardOverview() {
     { href: '/talents', icon: Star, label: t('Book Talent', 'Pesan Talent'), desc: t('Hire expert consultants', 'Sewa konsultan ahli') },
     { href: '/pesan', icon: MessageCircle, label: t('Messages', 'Pesan'), desc: t('Chat with the community', 'Chat dengan komunitas') },
   ];
+
+  // Role shortcuts (TC-12-04): one per role the member holds.
+  const roleShortcuts = [
+    { show: isAdmin, href: '/admin', icon: ShieldCheck, label: t('Admin Panel', 'Panel Admin') },
+    { show: isCoach, href: '/coach', icon: GraduationCap, label: t('Coach Dashboard', 'Dashboard Coach') },
+    { show: isTalent, href: '/activity?tab=bookings', icon: Star, label: t('Talent Bookings', 'Booking Talent') },
+    { show: roles.includes('company'), href: '/jobs/applicants', icon: Briefcase, label: t('Job Applicants', 'Pelamar Kerja') },
+    { show: roles.includes('agency_owner'), href: '/agency/manage', icon: Building2, label: t('Manage Agency', 'Kelola Agency') },
+    { show: roles.includes('client'), href: '/activity?tab=requests', icon: ClipboardList, label: t('My Requests', 'Permintaan Saya') },
+  ].filter((shortcut) => shortcut.show);
 
   return (
     <AppShell>
@@ -140,25 +152,23 @@ export default function DashboardOverview() {
 
         {/* Admin & Profile links */}
         <div className="mt-8 flex flex-wrap gap-3">
-          {isAdmin && (
-            <Link href="/admin">
+          {roleShortcuts.map((shortcut) => (
+            <Link key={shortcut.href} href={shortcut.href}>
               <Button variant="outline" className="gap-2">
-                <ShieldCheck className="h-4 w-4" /> {t('Admin Panel', 'Panel Admin')}
+                <shortcut.icon className="h-4 w-4" /> {shortcut.label}
               </Button>
             </Link>
-          )}
+          ))}
+          <Link href="/activity">
+            <Button variant="outline" className="gap-2">
+              <Activity className="h-4 w-4" /> {t('My Activity', 'Aktivitas Saya')}
+            </Button>
+          </Link>
           <Link href="/profile">
             <Button variant="outline" className="gap-2">
               <Settings className="h-4 w-4" /> {t('Edit Profile', 'Edit Profil')}
             </Button>
           </Link>
-          {(profile?.is_coach || profile?.coach_approved === 'approved') && (
-            <Link href="/coach">
-              <Button variant="outline" className="gap-2">
-                <GraduationCap className="h-4 w-4" /> {t('Coach Dashboard', 'Dashboard Coach')}
-              </Button>
-            </Link>
-          )}
           <Link href="/case-studies">
             <Button variant="outline" className="gap-2">
               <FileText className="h-4 w-4" /> {t('Case Studies', 'Studi Kasus')}

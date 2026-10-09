@@ -68,3 +68,21 @@ export interface ProjectsDetail {
   statusSubtitle: string;
   data: DataProjectsDetail | null;
 }
+
+export interface PayloadPostProjectsReview {
+  project_id: string;
+  reviewer_id: string;
+  reviewee_id: string;
+  rating: number;
+  comment: string | null;
+}
+
+export interface DataProjectsReview {
+  id: string;
+  project_id: string;
+  reviewer_id: string;
+  reviewee_id: string;
+  rating: number;
+  comment: string | null;
+  created_at: string;
+}

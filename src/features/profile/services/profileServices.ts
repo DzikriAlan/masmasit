@@ -3,7 +3,12 @@ import { toApiResponse } from '@/shared/lib/apiResponse';
 
 import type { Skill } from '@/shared/lib/types';
 
-import type { DataProfileExperience, DataProfileSkill, PayloadPatchProfile } from '../types/profileTypes';
+import type {
+  DataProfileApproval,
+  DataProfileExperience,
+  DataProfileSkill,
+  PayloadPatchProfile,
+} from '../types/profileTypes';
 
 export const updateProfile = async (userId: string, payload: PayloadPatchProfile) => {
   return toApiResponse<null>(
@@ -92,4 +97,37 @@ export const deleteProfileExperiences = async (userId: string, keepIds: string[]
   let query = supabase.from('experiences').delete().eq('user_id', userId);
   if (keepIds.length > 0) query = query.not('id', 'in', `(${keepIds.join(',')})`);
   return toApiResponse<null>(query, 'Experiences removed successfully');
+};
+
+// Withdrawing a coach / talent application (TC-01-24). Migration 031 lets
+// the guard reset the approval flag to 'pending' when is_talent / is_coach
+// is turned off, so the member is back to "Not applied" and off /talents.
+export const updateProfileRoleWithdrawal = async (userId: string, role: 'talent' | 'coach') => {
+  const patch = role === 'talent' ? { is_talent: false } : { is_coach: false };
+  return toApiResponse<null>(
+    supabase.from('profiles').update(patch).eq('id', userId),
+    'Application withdrawn successfully'
+  );
+};
+
+/** Drops the matching user_roles row (own talent/coach row, migration 031). */
+export const deleteProfileRole = async (userId: string, role: 'talent' | 'coach') => {
+  return toApiResponse<null>(
+    supabase.from('user_roles').delete().eq('user_id', userId).eq('role', role),
+    'Role removed successfully'
+  );
+};
+
+export const getProfileCompany = async (userId: string) => {
+  return toApiResponse<DataProfileApproval>(
+    supabase.from('companies').select('id, name, approval_status').eq('user_id', userId).limit(1).maybeSingle(),
+    'Company retrieved successfully'
+  );
+};
+
+export const getProfileAgency = async (userId: string) => {
+  return toApiResponse<DataProfileApproval>(
+    supabase.from('agencies').select('id, name, approval_status').eq('owner_id', userId).limit(1).maybeSingle(),
+    'Agency retrieved successfully'
+  );
 };

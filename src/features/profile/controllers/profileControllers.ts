@@ -17,6 +17,10 @@ import {
   updateProfile,
   updateProfileCoachApplication,
   updateProfileTalentApplication,
+  updateProfileRoleWithdrawal,
+  deleteProfileRole,
+  getProfileCompany,
+  getProfileAgency,
 } from '../services/profileServices';
 import type { PayloadPatchProfile, PayloadProfileExperience } from '../types/profileTypes';
 
@@ -113,7 +117,35 @@ export const useProfileControllers = (userId: string | undefined) => {
     },
   });
 
+  const fetchProfileCompany = useQuery({
+    queryKey: ['profileCompany', userId],
+    queryFn: async () => unwrapApiResponse(await getProfileCompany(userId!)) ?? null,
+    enabled: !!userId,
+  });
+
+  const fetchProfileAgency = useQuery({
+    queryKey: ['profileAgency', userId],
+    queryFn: async () => unwrapApiResponse(await getProfileAgency(userId!)) ?? null,
+    enabled: !!userId,
+  });
+
+  const modifyProfileRoleWithdrawal = useMutation({
+    mutationFn: async (role: 'talent' | 'coach') => {
+      if (!userId) throw new Error('Missing user');
+      unwrapApiResponse(await updateProfileRoleWithdrawal(userId, role));
+      // Best effort: the profile flag is what the app gates on.
+      await deleteProfileRole(userId, role);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['directory'] });
+      queryClient.invalidateQueries({ queryKey: ['talents'] });
+    },
+  });
+
   return {
+    fetchProfileCompany,
+    fetchProfileAgency,
+    modifyProfileRoleWithdrawal,
     fetchProfileExperiences,
     modifyProfileExperiences,
     changeProfile,

@@ -4,6 +4,8 @@ import { slugify } from '@/shared/lib/utils';
 import type { Skill } from '@/shared/lib/types';
 
 import type {
+  DataOnboardingExperience,
+  DataOnboardingUserSkill,
   PayloadPatchOnboardingAnswers,
   PayloadPatchOnboardingSnooze,
   PayloadPostOnboardingAgency,
@@ -24,22 +26,46 @@ export const postOnboardingProfile = async (payload: PayloadPostOnboardingProfil
   return toApiResponse<null>(supabase.from('profiles').upsert(payload), 'Profile saved successfully');
 };
 
-export const deleteOnboardingSkills = async (userId: string) => {
-  return toApiResponse<null>(
-    supabase.from('user_skills').delete().eq('user_id', userId),
-    'Skills cleared successfully'
+// Saved skills / experiences, so revisiting /onboarding edits what is there
+// instead of starting blank (TC-01-16).
+export const getOnboardingUserSkills = async (userId: string) => {
+  return toApiResponse<DataOnboardingUserSkill[]>(
+    supabase.from('user_skills').select('skill_id, level').eq('user_id', userId),
+    'Skills retrieved successfully'
   );
 };
 
+export const getOnboardingExperiences = async (userId: string) => {
+  return toApiResponse<DataOnboardingExperience[]>(
+    supabase
+      .from('experiences')
+      .select('id, company, position, start_date, end_date, description')
+      .eq('user_id', userId)
+      .order('start_date', { ascending: false }),
+    'Experiences retrieved successfully'
+  );
+};
+
+/** Removes only the skills no longer listed (keepIds = the ones kept). */
+export const deleteOnboardingSkills = async (userId: string, keepIds: string[]) => {
+  let query = supabase.from('user_skills').delete().eq('user_id', userId);
+  if (keepIds.length > 0) query = query.not('skill_id', 'in', `(${keepIds.join(',')})`);
+  return toApiResponse<null>(query, 'Skills removed successfully');
+};
+
+/** Upsert on (user_id, skill_id): new skills are added, levels updated. */
 export const postOnboardingSkills = async (payload: PayloadPostOnboardingSkills[]) => {
-  return toApiResponse<null>(supabase.from('user_skills').insert(payload), 'Skills saved successfully');
+  return toApiResponse<null>(
+    supabase.from('user_skills').upsert(payload, { onConflict: 'user_id,skill_id' }),
+    'Skills saved successfully'
+  );
 };
 
-export const deleteOnboardingExperiences = async (userId: string) => {
-  return toApiResponse<null>(
-    supabase.from('experiences').delete().eq('user_id', userId),
-    'Experiences cleared successfully'
-  );
+/** Removes only the experiences no longer listed (keepIds = saved ids kept). */
+export const deleteOnboardingExperiences = async (userId: string, keepIds: string[]) => {
+  let query = supabase.from('experiences').delete().eq('user_id', userId);
+  if (keepIds.length > 0) query = query.not('id', 'in', `(${keepIds.join(',')})`);
+  return toApiResponse<null>(query, 'Experiences removed successfully');
 };
 
 export const postOnboardingExperiences = async (payload: PayloadPostOnboardingExperiences[]) => {
@@ -47,6 +73,10 @@ export const postOnboardingExperiences = async (payload: PayloadPostOnboardingEx
     supabase.from('experiences').insert(payload),
     'Experiences saved successfully'
   );
+};
+
+export const updateOnboardingExperiences = async (payload: (PayloadPostOnboardingExperiences & { id: string })[]) => {
+  return toApiResponse<null>(supabase.from('experiences').upsert(payload), 'Experiences updated successfully');
 };
 
 // user_roles already supports one user holding several roles (its unique key
@@ -114,6 +144,20 @@ export const patchOnboardingAnswers = async ({ id, ...answers }: PayloadPatchOnb
         .select('id')
     ),
     'Onboarding saved successfully'
+  );
+};
+
+// Full /onboarding form finished: the popup must not come back (TC-01-14).
+export const patchOnboardingCompleted = async (id: string) => {
+  return toApiResponse<null>(
+    requireUpdatedRow(
+      supabase
+        .from('profiles')
+        .update({ onboarding_completed_at: new Date().toISOString() })
+        .eq('id', id)
+        .select('id')
+    ),
+    'Onboarding completed'
   );
 };
 

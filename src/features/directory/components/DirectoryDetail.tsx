@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
 import { useDirectoryDetailControllers } from '@/features/directory/controllers/directoryControllers';
+import { MemberReviews } from '@/features/reviews/components/MemberReviews';
 
 export default function DirectoryDetail() {
   const { user } = useAuth();
@@ -150,6 +151,10 @@ export default function DirectoryDetail() {
               )}
             </CardContent>
           </Card>
+        </div>
+
+        <div className="mt-6">
+          <MemberReviews userId={profile.id} />
         </div>
       </div>
     </AppShell>

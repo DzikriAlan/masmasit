@@ -14,7 +14,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import type { Skill } from '@/shared/lib/types';
-import type { OnboardingRole } from '@/features/onboarding/types/onboardingTypes';
+import type { OnboardingRole, PayloadOnboardingExperience } from '@/features/onboarding/types/onboardingTypes';
+import { usePostJobControllers } from '@/features/jobs/controllers/jobsControllers';
 
 import { useOnboardingControllers } from '@/features/onboarding/controllers/onboardingControllers';
 import { loginHref } from '@/shared/lib/utils';
@@ -30,17 +31,23 @@ const roleOptions: { value: OnboardingRole; labelEn: string; labelId: string; de
   { value: 'agency_owner', labelEn: 'Agency Owner', labelId: 'Agency Owner', descEn: 'List an agency and its service catalogue.', descId: 'Mendaftarkan agency dan katalog jasanya.' },
 ];
 
-type Phase = 'roles' | 'agency' | 'profile' | 'skills' | 'experience';
+type Phase = 'roles' | 'company' | 'agency' | 'profile' | 'skills' | 'experience';
+
+// Same key OnboardingPopup reads, so finishing here also silences the popup
+// on this device even before the profile refetch lands.
+const onboardingDoneKey = (uid: string) => `mm:onboarding-done:${uid}`;
 
 export default function OnboardingForm() {
-  const { user, profile, loading, refreshProfile } = useAuth();
+  const { user, profile, roles, loading, refreshProfile } = useAuth();
   const { t } = useLang();
   const router = useRouter();
   const [phase, setPhase] = useState<Phase>('roles');
   const [selectedRoles, setSelectedRoles] = useState<OnboardingRole[]>([]);
   const [agencyForm, setAgencyForm] = useState({ name: '', logo_url: '', description: '' });
-  const [selectedSkills, setSelectedSkills] = useState<{ skillId: string; level: string }[]>([]);
-  const [experiences, setExperiences] = useState<{ company: string; position: string; start_date: string; end_date: string; description: string }[]>([]);
+  const [companyForm, setCompanyForm] = useState({ name: '', description: '', website: '', location: '', industry: '' });
+  // null = untouched: the saved rows are shown until the member edits.
+  const [skillsDraft, setSkillsDraft] = useState<{ skillId: string; level: string }[] | null>(null);
+  const [experiencesDraft, setExperiencesDraft] = useState<PayloadOnboardingExperience[] | null>(null);
 
   const [form, setForm] = useState({
     full_name: '',
@@ -54,7 +61,14 @@ export default function OnboardingForm() {
 
   // The progress dots only show the steps this particular user will
   // actually see — the Agency step is skipped entirely unless picked.
-  const phaseOrder: Phase[] = ['roles', ...(selectedRoles.includes('agency_owner') ? (['agency'] as Phase[]) : []), 'profile', 'skills', 'experience'];
+  const phaseOrder: Phase[] = [
+    'roles',
+    ...(selectedRoles.includes('company') ? (['company'] as Phase[]) : []),
+    ...(selectedRoles.includes('agency_owner') ? (['agency'] as Phase[]) : []),
+    'profile',
+    'skills',
+    'experience',
+  ];
   const phaseIndex = phaseOrder.indexOf(phase);
 
   useEffect(() => {
@@ -74,6 +88,9 @@ export default function OnboardingForm() {
 
   const {
     fetchOnboardingSkills,
+    fetchOnboardingUserSkills,
+    fetchOnboardingExperiences,
+    modifyOnboardingCompleted,
     storeOnboardingProfile,
     storeOnboardingSkills,
     storeOnboardingExperiences,
@@ -81,13 +98,33 @@ export default function OnboardingForm() {
     storeOnboardingAgency,
   } = useOnboardingControllers(user?.id);
 
+  // Company registration: same controller and insert as /jobs/post.
+  const { fetchJobsCompany, storeJobsCompany, storeJobsUserRole } = usePostJobControllers(user?.id);
+  const existingCompany = fetchJobsCompany.data ?? null;
+
   const skills: Skill[] = fetchOnboardingSkills.data ?? [];
+  const selectedSkills =
+    skillsDraft ?? (fetchOnboardingUserSkills.data ?? []).map((s) => ({ skillId: s.skill_id, level: s.level }));
+  const setSelectedSkills = (next: { skillId: string; level: string }[]) => setSkillsDraft(next);
+  const experiences: PayloadOnboardingExperience[] =
+    experiencesDraft ??
+    (fetchOnboardingExperiences.data ?? []).map((e) => ({
+      id: e.id,
+      company: e.company,
+      position: e.position,
+      start_date: e.start_date,
+      end_date: e.end_date ?? '',
+      description: e.description ?? '',
+    }));
+  const setExperiences = (next: PayloadOnboardingExperience[]) => setExperiencesDraft(next);
   const saving =
     storeOnboardingProfile.isPending ||
     storeOnboardingSkills.isPending ||
     storeOnboardingExperiences.isPending ||
     storeOnboardingRoles.isPending ||
-    storeOnboardingAgency.isPending;
+    storeOnboardingAgency.isPending ||
+    storeJobsCompany.isPending ||
+    modifyOnboardingCompleted.isPending;
 
   const updateForm = (key: string, value: string) => setForm((f) => ({ ...f, [key]: value }));
 
@@ -103,7 +140,32 @@ export default function OnboardingForm() {
       toast.error(t('Failed to save roles', 'Gagal menyimpan peran'));
       return;
     }
-    setPhase(selectedRoles.includes('agency_owner') ? 'agency' : 'profile');
+    if (selectedRoles.includes('company')) setPhase('company');
+    else setPhase(selectedRoles.includes('agency_owner') ? 'agency' : 'profile');
+  };
+
+  const nextAfterCompany: Phase = selectedRoles.includes('agency_owner') ? 'agency' : 'profile';
+
+  const saveCompany = async () => {
+    if (!user) return;
+    if (existingCompany) { setPhase(nextAfterCompany); return; }
+    if (!companyForm.name.trim()) {
+      toast.error(t('Please fill in the company name', 'Isi nama perusahaan'));
+      return;
+    }
+    try {
+      await storeJobsCompany.mutateAsync({ user_id: user.id, ...companyForm });
+    } catch {
+      toast.error(t('Failed to register company', 'Gagal mendaftarkan perusahaan'));
+      return;
+    }
+    // saveRoles already added the role; this only covers a role insert that
+    // was skipped (same fallback as /jobs/post).
+    if (!roles.includes('company')) {
+      try { await storeJobsUserRole.mutateAsync({ user_id: user.id, role: 'company' }); } catch { /* already present */ }
+    }
+    toast.success(t('Company registered! Waiting for admin approval.', 'Perusahaan terdaftar! Menunggu persetujuan admin.'));
+    setPhase(nextAfterCompany);
   };
 
   const saveAgency = async () => {
@@ -136,10 +198,10 @@ export default function OnboardingForm() {
   };
 
   const addExperience = () => {
-    setExperiences([...experiences, { company: '', position: '', start_date: '', end_date: '', description: '' }]);
+    setExperiences([...experiences, { id: null, company: '', position: '', start_date: '', end_date: '', description: '' }]);
   };
 
-  const updateExperience = (index: number, key: string, value: string) => {
+  const updateExperience = (index: number, key: keyof PayloadOnboardingExperience, value: string) => {
     setExperiences(experiences.map((e, i) => (i === index ? { ...e, [key]: value } : e)));
   };
 
@@ -179,15 +241,27 @@ export default function OnboardingForm() {
 
   const saveExperiences = async () => {
     if (!user) return;
-    const valid = experiences.filter((e) => e.company && e.position && e.start_date);
+    const valid = experiences.filter((e) => e.company.trim() && e.position.trim() && e.start_date);
+    if (valid.some((e) => e.end_date && e.end_date < e.start_date)) {
+      toast.error(t('End date cannot be before the start date', 'Tanggal selesai tidak boleh sebelum tanggal mulai'));
+      return;
+    }
     try {
-      await storeOnboardingExperiences.mutateAsync(
-        valid.map((e) => ({ user_id: user.id, ...e, end_date: e.end_date || null }))
-      );
+      // Only touch experiences when the member edited them, so an untouched
+      // step never rewrites saved rows.
+      if (experiencesDraft) await storeOnboardingExperiences.mutateAsync(valid);
     } catch {
       toast.error(t('Failed to save experiences', 'Gagal menyimpan pengalaman'));
       return;
     }
+    try {
+      await modifyOnboardingCompleted.mutateAsync();
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : '';
+      toast.error(t(`Could not mark onboarding complete. ${reason}`, `Gagal menandai onboarding selesai. ${reason}`));
+      return;
+    }
+    try { window.localStorage.setItem(onboardingDoneKey(user.id), '1'); } catch { /* storage blocked */ }
     await refreshProfile();
     toast.success(t('Onboarding complete!', 'Onboarding selesai!'));
     router.push('/dashboard');
@@ -262,6 +336,45 @@ export default function OnboardingForm() {
           </Card>
         )}
 
+        {phase === 'company' && (
+          <Card className="glass">
+            <CardHeader>
+              <div className="mb-2 flex items-center gap-2 text-primary">
+                <Building2 className="h-5 w-5" />
+              </div>
+              <CardTitle className="font-display">{t('Register Your Company', 'Daftarkan Perusahaan Anda')}</CardTitle>
+              <CardDescription>
+                {t('Companies require admin approval before posting jobs.', 'Perusahaan perlu persetujuan admin sebelum memposting lowongan.')}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {existingCompany ? (
+                <p className="rounded-lg border border-border/60 p-3 text-sm">
+                  {t('Your company', 'Perusahaan Anda')} &ldquo;{existingCompany.name}&rdquo; · {t('Status', 'Status')}:{' '}
+                  <span className="capitalize">{existingCompany.approval_status}</span>
+                </p>
+              ) : (
+                <>
+                  <div className="space-y-2"><Label htmlFor="ob_cname">{t('Company Name', 'Nama Perusahaan')}</Label><Input id="ob_cname" value={companyForm.name} onChange={(e) => setCompanyForm((f) => ({ ...f, name: e.target.value }))} placeholder="PT Tech Nusantara" /></div>
+                  <div className="space-y-2"><Label htmlFor="ob_cdesc">{t('Description', 'Deskripsi')}</Label><Textarea id="ob_cdesc" value={companyForm.description} onChange={(e) => setCompanyForm((f) => ({ ...f, description: e.target.value }))} placeholder={t('What does your company do?', 'Apa yang dilakukan perusahaan Anda?')} /></div>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2"><Label htmlFor="ob_cweb">{t('Website', 'Website')}</Label><Input id="ob_cweb" value={companyForm.website} onChange={(e) => setCompanyForm((f) => ({ ...f, website: e.target.value }))} placeholder="https://..." /></div>
+                    <div className="space-y-2"><Label htmlFor="ob_cloc">{t('Location', 'Lokasi')}</Label><Input id="ob_cloc" value={companyForm.location} onChange={(e) => setCompanyForm((f) => ({ ...f, location: e.target.value }))} placeholder="Jakarta" /></div>
+                  </div>
+                  <div className="space-y-2"><Label htmlFor="ob_cind">{t('Industry', 'Industri')}</Label><Input id="ob_cind" value={companyForm.industry} onChange={(e) => setCompanyForm((f) => ({ ...f, industry: e.target.value }))} placeholder={t('Fintech, E-commerce, etc.', 'Fintech, E-commerce, dll')} /></div>
+                </>
+              )}
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => setPhase('roles')} className="flex-1">{t('Back', 'Kembali')}</Button>
+                <Button onClick={saveCompany} className="flex-1" disabled={saving || (!existingCompany && !companyForm.name.trim())}>
+                  {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {existingCompany ? t('Continue', 'Lanjut') : t('Register Company', 'Daftarkan Perusahaan')}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {phase === 'agency' && (
           <Card className="glass">
             <CardHeader>
@@ -302,7 +415,7 @@ export default function OnboardingForm() {
                 />
               </div>
               <div className="flex gap-2">
-                <Button variant="outline" onClick={() => setPhase('roles')} className="flex-1">{t('Back', 'Kembali')}</Button>
+                <Button variant="outline" onClick={() => setPhase(selectedRoles.includes('company') ? 'company' : 'roles')} className="flex-1">{t('Back', 'Kembali')}</Button>
                 <Button onClick={saveAgency} className="flex-1" disabled={saving}>
                   {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   {t('Continue', 'Lanjut')}

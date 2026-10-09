@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Wallet, Clock, Loader2, Send, XCircle, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Wallet, Clock, Loader2, Send, XCircle, AlertTriangle, CheckCircle2, Ban } from 'lucide-react';
 import { AppShell } from '@/components/app-shell';
 import { LoadData } from '@/components/load-data';
 import { MatchedBadge, MatchedHandoff } from '@/components/matched-handoff';
@@ -18,6 +18,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { loginHref } from '@/shared/lib/utils';
+import { ShareButton } from '@/components/share-button';
+import { ReviewForm, StarRating } from '@/components/review-form';
 
 export default function ProjectDetail() {
   const params = useParams();
@@ -27,22 +29,29 @@ export default function ProjectDetail() {
   const [showBid, setShowBid] = useState(false);
   const [bidForm, setBidForm] = useState({ amount: '', proposal: '', eta_days: '' });
   const [confirmBidId, setConfirmBidId] = useState<string | null>(null);
+  const [confirmComplete, setConfirmComplete] = useState(false);
 
   const {
     fetchProjectsDetail,
     fetchProjectsBids,
+    fetchProjectsReviews,
     storeProjectsBid,
     storeProjectsBidAccepted,
+    storeProjectsReview,
     changeProjectsStatus,
+    modifyProjectsBidCancelled,
   } = useProjectsDetailControllers(params.id as string);
 
   const project = fetchProjectsDetail.data ?? null;
   const bids = fetchProjectsBids.data ?? [];
+  const reviews = fetchProjectsReviews.data ?? [];
   const loading = fetchProjectsDetail.isPending;
   const saving =
     storeProjectsBid.isPending ||
     storeProjectsBidAccepted.isPending ||
-    changeProjectsStatus.isPending;
+    changeProjectsStatus.isPending ||
+    modifyProjectsBidCancelled.isPending ||
+    storeProjectsReview.isPending;
   const hasBid = Boolean(user) && bids.some((bid) => bid.user_id === user?.id);
 
   const saveBid = async () => {
@@ -87,6 +96,50 @@ export default function ProjectDetail() {
     toast.success(t('Bid accepted! Project is now in progress.', 'Bid diterima! Proyek sekarang berjalan.'));
   };
 
+  const submitCompleted = async () => {
+    setConfirmComplete(false);
+    try {
+      await changeProjectsStatus.mutateAsync('completed');
+    } catch {
+      toast.error(t('Failed to update project', 'Gagal memperbarui proyek'));
+      return;
+    }
+    toast.success(t('Project marked completed. Rate your partner below.', 'Proyek ditandai selesai. Beri rating partner Anda di bawah.'));
+  };
+
+  const clearBid = async (bidId: string) => {
+    if (!window.confirm(t('Cancel your bid? This cannot be undone.', 'Batalkan bid Anda? Tindakan ini tidak bisa dibatalkan.'))) return;
+    try {
+      await modifyProjectsBidCancelled.mutateAsync(bidId);
+    } catch {
+      toast.error(t('Only a pending bid can be cancelled.', 'Hanya bid yang masih pending yang bisa dibatalkan.'));
+      return;
+    }
+    toast.success(t('Bid cancelled', 'Bid dibatalkan'));
+  };
+
+  const submitReview = async (revieweeId: string, review: { rating: number; comment: string }) => {
+    if (!user || !project) return;
+    try {
+      await storeProjectsReview.mutateAsync({
+        project_id: project.id,
+        reviewer_id: user.id,
+        reviewee_id: revieweeId,
+        rating: review.rating,
+        comment: review.comment || null,
+      });
+    } catch {
+      toast.error(t('Failed to submit review', 'Gagal mengirim ulasan'));
+      return;
+    }
+    toast.success(t('Thanks for your review!', 'Terima kasih atas ulasan Anda!'));
+  };
+
+  const loadBidForm = () => {
+    if (!user) { router.push(loginHref()); return; }
+    setShowBid(!showBid);
+  };
+
   // Once past this guard, `project` is narrowed to non-null both for
   // TypeScript and at runtime (a real early return, not an assertion) — so
   // everything below can use `project.field` directly with no risk of
@@ -99,6 +152,9 @@ export default function ProjectDetail() {
           response={{
             isLoading: loading,
             isEmpty: !project,
+            // Before migration 031 (anon read on projects) a guest gets zero
+            // rows; ask them to sign in rather than claim the project is gone.
+            isSignedOut: !user && !project,
             emptyTitle: t('Project not found.', 'Proyek tidak ditemukan.'),
           }}
         />
@@ -107,6 +163,12 @@ export default function ProjectDetail() {
   }
 
   const isOwner = user?.id === project.user_id;
+  const winningBid = bids.find((bid) => bid.status === 'accepted') ?? null;
+  const isWinner = Boolean(user) && winningBid?.user_id === user?.id;
+  const reviewPartnerId = isOwner ? winningBid?.user_id ?? null : isWinner ? project.user_id : null;
+  const hasReviewed = reviews.some((review) => review.reviewer_id === user?.id);
+  const canReview = project.status === 'completed' && Boolean(reviewPartnerId) && !hasReviewed;
+  const canPlaceBid = !isOwner && project.status === 'open' && !hasBid;
   const formatBudget = (min: number | null, max: number | null) => {
     if (!min && !max) return t('Negotiable', 'Negosiasi');
     if (min && max) return `Rp ${(min / 1000000).toFixed(1)}-${(max / 1000000).toFixed(1)}M`;
@@ -121,13 +183,21 @@ export default function ProjectDetail() {
 
         <Card className="glass mb-6">
           <CardContent className="p-6 sm:p-8">
-            <Badge variant={project.status === 'open' ? 'default' : 'secondary'} className="mb-3 capitalize">{project.status.replace('_', ' ')}</Badge>
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+              <Badge variant={project.status === 'open' ? 'default' : 'secondary'} className="capitalize">{project.status.replace('_', ' ')}</Badge>
+              <ShareButton url={`/projects/${project.id}`} title={project.title} text={project.description.slice(0, 140)} />
+            </div>
             <h1 className="font-display text-2xl font-semibold">{project.title}</h1>
             <p className="mt-1 text-sm text-muted-foreground">{t('by', 'oleh')} {project.profiles?.full_name ?? 'Anonymous'}</p>
             <div className="mt-3 flex flex-wrap gap-2">
               <Badge variant="outline" className="gap-1"><Wallet className="h-3 w-3" /> {formatBudget(project.budget_min, project.budget_max)}</Badge>
               {project.deadline && <Badge variant="outline" className="gap-1"><Clock className="h-3 w-3" /> {new Date(project.deadline).toLocaleDateString('id-ID')}</Badge>}
             </div>
+            {isOwner && project.status === 'in_progress' && (
+              <Button size="sm" className="mt-4 gap-2" onClick={() => setConfirmComplete(true)} disabled={saving}>
+                <CheckCircle2 className="h-3.5 w-3.5" /> {t('Mark completed', 'Tandai selesai')}
+              </Button>
+            )}
           </CardContent>
         </Card>
 
@@ -141,8 +211,10 @@ export default function ProjectDetail() {
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               {t('Bids', 'Bid')} ({bids.length})
-              {!isOwner && project.status === 'open' && !hasBid && (
-                <Button size="sm" onClick={() => setShowBid(!showBid)} className="gap-2"><Send className="h-3.5 w-3.5" /> {t('Place Bid', 'Ajukan Bid')}</Button>
+              {canPlaceBid && (
+                <Button size="sm" onClick={loadBidForm} className="gap-2">
+                  <Send className="h-3.5 w-3.5" /> {user ? t('Place Bid', 'Ajukan Bid') : t('Sign in to bid', 'Masuk untuk bid')}
+                </Button>
               )}
             </CardTitle>
           </CardHeader>
@@ -161,7 +233,11 @@ export default function ProjectDetail() {
             )}
 
             <LoadData
-              response={{ isLoading: false, isEmpty: bids.length === 0, emptyTitle: t('No bids yet.', 'Belum ada bid.') }}
+              response={{
+                isLoading: false,
+                isEmpty: bids.length === 0,
+                emptyTitle: user ? t('No bids yet.', 'Belum ada bid.') : t('Sign in to see the bids.', 'Masuk untuk melihat bid.'),
+              }}
             >
               <div className="space-y-3">
                 {bids.map((bid) => (
@@ -181,6 +257,10 @@ export default function ProjectDetail() {
                           status, never the instant-booking treatment. */}
                       {bid.status === 'accepted' && <MatchedBadge />}
                       {bid.status === 'rejected' && <Badge variant="secondary" className="gap-1 text-xs"><XCircle className="h-3 w-3" /> {t('Rejected', 'Ditolak')}</Badge>}
+                      {bid.status === 'cancelled' && <Badge variant="outline" className="gap-1 text-xs"><Ban className="h-3 w-3" /> {t('Cancelled', 'Dibatalkan')}</Badge>}
+                      {bid.status === 'pending' && bid.user_id === user?.id && (
+                        <Button size="sm" variant="outline" onClick={() => clearBid(bid.id)} disabled={saving}>{t('Cancel bid', 'Batalkan bid')}</Button>
+                      )}
                       {bid.status === 'pending' && isOwner && project.status === 'open' && (
                         <Button size="sm" onClick={() => setConfirmBidId(bid.id)} disabled={saving}>{t('Accept', 'Terima')}</Button>
                       )}
@@ -196,7 +276,52 @@ export default function ProjectDetail() {
             </LoadData>
           </CardContent>
         </Card>
+
+        {project.status === 'completed' && (canReview || reviews.length > 0) && (
+          <Card className="glass mb-6">
+            <CardHeader><CardTitle>{t('Reviews', 'Ulasan')}</CardTitle></CardHeader>
+            <CardContent className="space-y-3">
+              {canReview && reviewPartnerId && (
+                <ReviewForm
+                  title={isOwner ? t('Rate the freelancer', 'Beri rating freelancer') : t('Rate the project owner', 'Beri rating pemilik proyek')}
+                  submitting={storeProjectsReview.isPending}
+                  onSubmitReview={(review) => submitReview(reviewPartnerId, review)}
+                />
+              )}
+              {reviews.map((review) => (
+                <div key={review.id} className="rounded-lg border border-border/60 p-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-sm font-medium">
+                      {review.reviewer_id === project.user_id ? t('Owner → freelancer', 'Pemilik → freelancer') : t('Freelancer → owner', 'Freelancer → pemilik')}
+                    </p>
+                    <StarRating value={review.rating} size="sm" />
+                  </div>
+                  {review.comment && <p className="mt-2 text-sm text-muted-foreground">{review.comment}</p>}
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )}
       </div>
+
+      {confirmComplete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm animate-fade-up" onClick={() => setConfirmComplete(false)}>
+          <div className="mx-4 max-w-sm rounded-xl border border-border/60 bg-card p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <div className="mb-3 flex items-center gap-2 text-primary">
+              <CheckCircle2 className="h-5 w-5" />
+              <h3 className="font-semibold">{t('Mark this project completed?', 'Tandai proyek ini selesai?')}</h3>
+            </div>
+            <p className="text-sm text-muted-foreground">{t('Both of you can then rate each other.', 'Setelah itu Anda berdua bisa saling memberi rating.')}</p>
+            <div className="mt-4 flex gap-2">
+              <Button variant="outline" className="flex-1" onClick={() => setConfirmComplete(false)}>{t('Cancel', 'Batal')}</Button>
+              <Button className="flex-1" onClick={submitCompleted} disabled={saving}>
+                {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {t('Confirm', 'Konfirmasi')}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Confirmation dialog */}
       {confirmBidId && (

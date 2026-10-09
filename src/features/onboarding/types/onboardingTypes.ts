@@ -25,6 +25,30 @@ export interface PayloadPostOnboardingExperiences {
   description: string;
 }
 
+export interface DataOnboardingUserSkill {
+  skill_id: string;
+  level: string;
+}
+
+export interface DataOnboardingExperience {
+  id: string;
+  company: string;
+  position: string;
+  start_date: string;
+  end_date: string | null;
+  description: string | null;
+}
+
+/** Experience row being edited; `id` is null until first saved. */
+export interface PayloadOnboardingExperience {
+  id: string | null;
+  company: string;
+  position: string;
+  start_date: string;
+  end_date: string;
+  description: string;
+}
+
 // REST.md Bagian 8: "pilih peran (multi-select, bisa lebih dari satu)".
 // 'member' is assigned automatically at signup and is not offered here.
 export type OnboardingRole = 'talent' | 'coach' | 'company' | 'agency_owner';

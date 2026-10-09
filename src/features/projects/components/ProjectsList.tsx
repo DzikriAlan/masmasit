@@ -16,7 +16,6 @@ import { BrowseToolbar } from '@/components/browse-toolbar';
 import { CardGridSkeleton } from '@/components/card-skeleton';
 import { useAuth } from '@/components/auth-provider';
 import { useLang } from '@/components/language-provider';
-import { signedOutState } from '@/shared/lib/browse-gate';
 import { Button } from '@/components/ui/button';
 import { toneOf } from '@/shared/lib/tones';
 import { loginHref } from '@/shared/lib/utils';
@@ -73,7 +72,6 @@ export default function ProjectsList() {
       data: list,
       isLoading: fetchProjects.isPending,
       isError: fetchProjects.isError,
-      ...signedOutState(!authLoading && !user, t, t('projects', 'proyek')),
       isEmpty: !fetchProjects.isPending && !fetchProjects.isError && list.length === 0,
       errorTitle: t('Could not load projects.', 'Gagal memuat proyek.'),
       errorSubtitle: t('Check your connection and try again.', 'Periksa koneksi lalu coba lagi.'),

@@ -5,9 +5,11 @@ import type {
   DataProjects,
   DataProjectsBids,
   DataProjectsDetail,
+  DataProjectsReview,
   PayloadGetProjects,
   PayloadPostProjects,
   PayloadPostProjectsBid,
+  PayloadPostProjectsReview,
 } from '../types/projectsTypes';
 
 export const getProjects = async (payload: PayloadGetProjects) => {
@@ -71,4 +73,39 @@ export const updateProjectsStatus = async (projectId: string, status: string) =>
     supabase.from('projects').update({ status }).eq('id', projectId),
     'Project status updated successfully'
   );
+};
+
+/**
+ * Bidder withdraws a pending bid (migration 031). The guard trigger silently
+ * keeps the old status for any other move, so the returned row is checked.
+ */
+export const updateProjectsBidCancelled = async (bidId: string) => {
+  const result = await supabase
+    .from('project_bids')
+    .update({ status: 'cancelled' })
+    .eq('id', bidId)
+    .eq('status', 'pending')
+    .select('id, status');
+  const cancelled = (result.data ?? []).some((row) => row.status === 'cancelled');
+  if (!result.error && !cancelled) {
+    return toApiResponse<null>(
+      Promise.resolve({ data: null, error: { code: '42501', message: 'Only a pending bid can be cancelled.' } }),
+      'Bid cancelled'
+    );
+  }
+  return toApiResponse<null>(Promise.resolve({ data: null, error: result.error }), 'Bid cancelled');
+};
+
+export const getProjectsReviews = async (projectId: string) => {
+  return toApiResponse<DataProjectsReview[]>(
+    supabase
+      .from('project_reviews')
+      .select('id, project_id, reviewer_id, reviewee_id, rating, comment, created_at')
+      .eq('project_id', projectId),
+    'Reviews retrieved successfully'
+  );
+};
+
+export const postProjectsReview = async (payload: PayloadPostProjectsReview) => {
+  return toApiResponse<null>(supabase.from('project_reviews').insert(payload), 'Review submitted successfully');
 };

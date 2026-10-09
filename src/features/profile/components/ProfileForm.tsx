@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Loader2, Save, Star, GraduationCap, Upload, Plus, X } from 'lucide-react';
+import { Loader2, Save, Upload, Plus, X } from 'lucide-react';
+import { ProfileRolesStatus } from '@/features/profile/components/ProfileRolesStatus';
 import { AppShell } from '@/components/app-shell';
 import { useAuth } from '@/components/auth-provider';
 import { useLang } from '@/components/language-provider';
@@ -30,7 +31,7 @@ import { loginHref, normalizePhone } from '@/shared/lib/utils';
 const jobStatuses = ['Employed', 'Freelancing', 'Looking for work', 'Open to opportunities', 'Student'];
 
 export default function ProfileForm() {
-  const { user, profile, loading, refreshProfile } = useAuth();
+  const { user, profile, roles, loading, refreshProfile } = useAuth();
   const { t } = useLang();
   const router = useRouter();
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -70,6 +71,9 @@ export default function ProfileForm() {
     modifyProfileSkills,
     fetchProfileExperiences,
     modifyProfileExperiences,
+    fetchProfileCompany,
+    fetchProfileAgency,
+    modifyProfileRoleWithdrawal,
   } = useProfileControllers(user?.id);
 
   // Same seeding pattern as skills: saved rows until the member edits.
@@ -107,7 +111,8 @@ export default function ProfileForm() {
     changeProfile.isPending ||
     changeProfileTalentApplication.isPending ||
     modifyProfileSkills.isPending ||
-    modifyProfileExperiences.isPending;
+    modifyProfileExperiences.isPending ||
+    modifyProfileRoleWithdrawal.isPending;
 
   const toggle = (list: string[], value: string) =>
     list.includes(value) ? list.filter((v) => v !== value) : [...list, value];
@@ -169,6 +174,17 @@ export default function ProfileForm() {
       return;
     }
     toast.success(t('Talent application submitted!', 'Pendaftaran talent dikirim!'));
+    refreshProfile();
+  };
+
+  const clearRole = async (role: 'talent' | 'coach') => {
+    try {
+      await modifyProfileRoleWithdrawal.mutateAsync(role);
+    } catch {
+      toast.error(t('Failed to withdraw', 'Gagal menarik status'));
+      return;
+    }
+    toast.success(t('Withdrawn. Status is back to Not applied.', 'Status ditarik. Kembali ke Belum daftar.'));
     refreshProfile();
   };
 
@@ -321,26 +337,19 @@ export default function ProfileForm() {
         <Card className="glass glass-hover mb-6 animate-fade-up" style={{ animationDelay: '0.1s' }}>
           <CardHeader><CardTitle>{t('Roles & Status', 'Peran & Status')}</CardTitle></CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-center justify-between rounded-lg border border-border/60 p-4 transition-all hover:border-primary/30">
-              <div className="flex items-center gap-3">
-                <GraduationCap className="h-5 w-5 text-primary" />
-                <div>
-                  <p className="font-medium">{t('Coach', 'Coach')}</p>
-                  <p className="text-sm text-muted-foreground">{profile?.is_coach ? `${t('Status', 'Status')}: ${profile.coach_approved}` : t('Not applied', 'Belum daftar')}</p>
-                </div>
-              </div>
-              {!profile?.is_coach && <Button variant="outline" size="sm" onClick={() => router.push('/coach')}>{t('Apply', 'Daftar')}</Button>}
-            </div>
-            <div className="flex items-center justify-between rounded-lg border border-border/60 p-4 transition-all hover:border-primary/30">
-              <div className="flex items-center gap-3">
-                <Star className="h-5 w-5 text-amber-400" />
-                <div>
-                  <p className="font-medium">{t('Talent', 'Talent')}</p>
-                  <p className="text-sm text-muted-foreground">{profile?.is_talent ? `${t('Status', 'Status')}: ${profile.talent_approved}` : t('Not applied', 'Belum daftar')}</p>
-                </div>
-              </div>
-              {!profile?.is_talent && <Button variant="outline" size="sm" onClick={saveTalentApplication} disabled={saving}>{t('Apply', 'Daftar')}</Button>}
-            </div>
+            <ProfileRolesStatus
+              isCoach={Boolean(profile?.is_coach)}
+              coachApproved={profile?.coach_approved ?? null}
+              isTalent={Boolean(profile?.is_talent)}
+              talentApproved={profile?.talent_approved ?? null}
+              roles={roles}
+              company={fetchProfileCompany.data ?? null}
+              agency={fetchProfileAgency.data ?? null}
+              saving={saving}
+              onSubmitCoach={() => router.push('/coach')}
+              onSubmitTalent={saveTalentApplication}
+              onClearRole={clearRole}
+            />
 
             {profile?.is_talent && profile.talent_approved === 'approved' && (
               <div className="space-y-2 rounded-lg border border-border/60 p-4">

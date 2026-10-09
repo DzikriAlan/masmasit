@@ -38,6 +38,12 @@ export interface DataProfileSkill {
   skills: { name: string } | null;
 }
 
+export interface DataProfileApproval {
+  id: string;
+  name: string;
+  approval_status: string;
+}
+
 export interface Profile {
   status: string;
   statusTitle: string;

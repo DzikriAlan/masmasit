@@ -7,12 +7,15 @@ import {
   getProjects,
   getProjectsBids,
   getProjectsDetail,
+  getProjectsReviews,
   postProjects,
+  postProjectsReview,
+  updateProjectsBidCancelled,
   postProjectsBid,
   postProjectsBidAccepted,
   updateProjectsStatus,
 } from '../services/projectsServices';
-import type { PayloadPostProjects, PayloadPostProjectsBid } from '../types/projectsTypes';
+import type { PayloadPostProjects, PayloadPostProjectsBid, PayloadPostProjectsReview } from '../types/projectsTypes';
 
 export const useProjectsControllers = () => {
   const queryClient = useQueryClient();
@@ -72,11 +75,36 @@ export const useProjectsDetailControllers = (projectId: string) => {
     onSuccess: invalidateProject,
   });
 
+  const modifyProjectsBidCancelled = useMutation({
+    mutationFn: async (bidId: string) => unwrapApiResponse(await updateProjectsBidCancelled(bidId)),
+    onSuccess: () => {
+      invalidateProject();
+      queryClient.invalidateQueries({ queryKey: ['activityProjects'] });
+    },
+  });
+
+  const fetchProjectsReviews = useQuery({
+    queryKey: ['projectsReviews', projectId],
+    queryFn: async () => unwrapApiResponse(await getProjectsReviews(projectId)) ?? [],
+    enabled: Boolean(projectId),
+  });
+
+  const storeProjectsReview = useMutation({
+    mutationFn: async (payload: PayloadPostProjectsReview) => unwrapApiResponse(await postProjectsReview(payload)),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['projectsReviews', projectId] });
+      queryClient.invalidateQueries({ queryKey: ['memberReviews'] });
+    },
+  });
+
   return {
     fetchProjectsDetail,
     fetchProjectsBids,
+    fetchProjectsReviews,
     storeProjectsBid,
     storeProjectsBidAccepted,
+    storeProjectsReview,
     changeProjectsStatus,
+    modifyProjectsBidCancelled,
   };
 };
