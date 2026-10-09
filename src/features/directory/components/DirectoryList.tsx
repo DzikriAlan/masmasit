@@ -24,14 +24,6 @@ import { cn } from '@/shared/lib/utils';
 
 type DirectoryMember = DataDirectory;
 
-const dummyMembers: DirectoryMember[] = [
-  { id: 'dummy-m1', full_name: 'Andi Pratama', bio: 'Full-Stack Developer specializing in Next.js and PostgreSQL. Building SaaS products for the Indonesian market.', avatar_url: 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&h=200&w=200', location: 'Jakarta', current_job_status: 'Employed', user_skills: [{ level: 'expert', skills: { name: 'React' } }, { level: 'expert', skills: { name: 'Node.js' } }, { level: 'intermediate', skills: { name: 'PostgreSQL' } }], _isDummy: true } as any,
-  { id: 'dummy-m2', full_name: 'Maya Anggraini', bio: 'UI/UX Designer & Frontend Developer. Passionate about creating accessible and beautiful digital experiences.', avatar_url: 'https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&cs=tinysrgb&h=200&w=200', location: 'Bandung', current_job_status: 'Freelancing', user_skills: [{ level: 'expert', skills: { name: 'Figma' } }, { level: 'intermediate', skills: { name: 'React' } }, { level: 'beginner', skills: { name: 'TailwindCSS' } }], _isDummy: true } as any,
-  { id: 'dummy-m3', full_name: 'Reza Kurniawan', bio: 'DevOps Engineer with a passion for automation. AWS Certified Solutions Architect. Docker & Kubernetes enthusiast.', avatar_url: 'https://images.pexels.com/photos/3777943/pexels-photo-3777943.jpeg?auto=compress&cs=tinysrgb&h=200&w=200', location: 'Surabaya', current_job_status: 'Open to opportunities', user_skills: [{ level: 'expert', skills: { name: 'Docker' } }, { level: 'expert', skills: { name: 'Kubernetes' } }, { level: 'intermediate', skills: { name: 'AWS' } }], _isDummy: true } as any,
-  { id: 'dummy-m4', full_name: 'Putri Maharani', bio: 'Data Scientist & ML Engineer. Building predictive models and data pipelines. Python, TensorFlow, and BigQuery.', avatar_url: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&h=200&w=200', location: 'Yogyakarta', current_job_status: 'Employed', user_skills: [{ level: 'expert', skills: { name: 'Python' } }, { level: 'intermediate', skills: { name: 'TensorFlow' } }, { level: 'intermediate', skills: { name: 'SQL' } }], _isDummy: true } as any,
-  { id: 'dummy-m5', full_name: 'Bayu Setiawan', bio: 'Mobile Developer (Flutter & Kotlin). 5 years building production apps with millions of downloads.', avatar_url: 'https://images.pexels.com/photos/1681010/pexels-photo-1681010.jpeg?auto=compress&cs=tinysrgb&h=200&w=200', location: 'Medan', current_job_status: 'Looking for work', user_skills: [{ level: 'expert', skills: { name: 'Flutter' } }, { level: 'intermediate', skills: { name: 'Kotlin' } }], _isDummy: true } as any,
-  { id: 'dummy-m6', full_name: 'Citra Dewi', bio: 'Product Manager transitioning from software engineering. Building products that solve real Indonesian problems.', avatar_url: 'https://images.pexels.com/photos/733872/pexels-photo-733872.jpeg?auto=compress&cs=tinysrgb&h=200&w=200', location: 'Bali', current_job_status: 'Employed', user_skills: [{ level: 'intermediate', skills: { name: 'Product Management' } }, { level: 'beginner', skills: { name: 'React' } }], _isDummy: true } as any,
-];
 
 const LOCATIONS = ['Jakarta', 'Bandung', 'Surabaya', 'Yogyakarta', 'Medan', 'Makassar', 'Bali', 'Online'];
 const STATUSES = ['Employed', 'Freelancing', 'Looking for work', 'Open to opportunities', 'Student'];
@@ -54,13 +46,6 @@ export default function DirectoryList() {
       filters.filter.status !== 'all' ||
       filters.filter.skill !== 'all';
 
-    // The seeded profiles only stand in for a first, unfiltered page — never
-    // for a search that genuinely returned nothing.
-    const getMergedMembers = (dbMembers: DirectoryMember[]) => {
-      if (filters.pagination.currentPage !== 1 || isFiltered) return dbMembers;
-      const realIds = new Set(dbMembers.map((member) => member.id));
-      return [...dbMembers, ...dummyMembers.filter((dummy) => !realIds.has(dummy.id))];
-    };
 
     const getMappedMember = (member: DirectoryMember) => ({
       id: member.id,
@@ -76,7 +61,7 @@ export default function DirectoryList() {
     });
 
     const rows = fetchDirectory.data ?? [];
-    const list = getMergedMembers(rows).map(getMappedMember);
+    const list = rows.map(getMappedMember);
 
     return {
       data: list,

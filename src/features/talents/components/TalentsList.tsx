@@ -19,13 +19,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { TONE_CHIP, toneOf } from '@/shared/lib/tones';
 
-const dummyTalents: Talent[] = [
-  { id: 'dummy-t1', full_name: 'Rani Saraswati', bio: 'Senior UX Designer with 6 years at Tokopedia and Gojek. I help designers build portfolios that get hired and teach UX research methods.', avatar_url: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&h=200&w=200', location: 'Bandung, Indonesia', linkedin_url: 'https://linkedin.com/in/ranisaraswati', calendly_url: null, whatsapp: null, _isDummy: true },
-  { id: 'dummy-t2', full_name: 'Budi Hartono', bio: 'DevOps Engineer & AWS Solutions Architect. 10 years scaling infrastructure for Indonesian unicorns. I mentor on cloud, CI/CD, and SRE practices.', avatar_url: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&h=200&w=200', location: 'Jakarta, Indonesia', linkedin_url: 'https://linkedin.com/in/budihartono', calendly_url: null, whatsapp: null, _isDummy: true },
-  { id: 'dummy-t3', full_name: 'Siti Rahayu', bio: 'Data Scientist & ML Engineer. PhD in Computer Science from ITB. I help beginners break into data science with practical, project-based learning.', avatar_url: 'https://images.pexels.com/photos/1130626/pexels-photo-1130626.jpeg?auto=compress&cs=tinysrgb&h=200&w=200', location: 'Surabaya, Indonesia', linkedin_url: 'https://linkedin.com/in/sitirahayu', calendly_url: null, whatsapp: null, _isDummy: true },
-  { id: 'dummy-t4', full_name: 'Ahmad Fauzi', bio: 'Senior Mobile Developer (Flutter & React Native). Shipped 20+ apps with 4.5+ star ratings. I coach on mobile architecture and app store optimization.', avatar_url: 'https://images.pexels.com/photos/1681010/pexels-photo-1681010.jpeg?auto=compress&cs=tinysrgb&h=200&w=200', location: 'Yogyakarta, Indonesia', linkedin_url: 'https://linkedin.com/in/ahmadfauzi', calendly_url: null, whatsapp: null, _isDummy: true },
-  { id: 'dummy-t5', full_name: 'Dewi Lestari', bio: 'Product Manager ex-Ruangguru. I help aspiring PMs master product discovery, user research, and data-driven decision making.', avatar_url: 'https://images.pexels.com/photos/733872/pexels-photo-733872.jpeg?auto=compress&cs=tinysrgb&h=200&w=200', location: 'Jakarta, Indonesia', linkedin_url: 'https://linkedin.com/in/dewilestari', calendly_url: null, whatsapp: null, _isDummy: true },
-];
 
 export default function TalentsList() {
   const { t } = useLang();
@@ -38,10 +31,6 @@ export default function TalentsList() {
   });
 
   const data = useMemo(() => {
-    const getMergedTalents = (dbTalents: Talent[]) => {
-      const realNames = new Set(dbTalents.map((talent) => talent.full_name?.toLowerCase()));
-      return [...dbTalents, ...dummyTalents.filter((dummy) => !realNames.has(dummy.full_name?.toLowerCase()))];
-    };
 
     const getMappedTalent = (talent: Talent) => ({
       id: talent.id,
@@ -60,7 +49,7 @@ export default function TalentsList() {
       return true;
     };
 
-    const all = getMergedTalents(fetchTalents.data ?? []).map(getMappedTalent);
+    const all = (fetchTalents.data ?? []).map(getMappedTalent);
     const list = all.filter(getMatchesFilters);
     const isFiltered = Boolean(filters.search) || filters.filter.location !== 'all';
 
