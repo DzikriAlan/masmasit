@@ -152,6 +152,13 @@ export default function DashboardOverview() {
               <Settings className="h-4 w-4" /> {t('Edit Profile', 'Edit Profil')}
             </Button>
           </Link>
+          {roles.includes('company') && (
+            <Link href="/jobs/applicants">
+              <Button variant="outline" className="gap-2">
+                <Briefcase className="h-4 w-4" /> {t('Job Applicants', 'Pelamar Lowongan')}
+              </Button>
+            </Link>
+          )}
           {(profile?.is_coach || profile?.coach_approved === 'approved') && (
             <Link href="/coach">
               <Button variant="outline" className="gap-2">

@@ -59,7 +59,7 @@ export interface DataJobsDetail {
   deadline: string | null;
   created_at: string;
   company_id: string;
-  companies: { name: string; logo_url: string | null; description: string | null; website: string | null; location: string | null } | null;
+  companies: { name: string; logo_url: string | null; description: string | null; website: string | null; location: string | null; user_id: string } | null;
 }
 
 export interface Jobs {

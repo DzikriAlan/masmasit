@@ -46,7 +46,7 @@ export const getJobsDetail = async (id: string) => {
   return toApiResponse<DataJobsDetail>(
     supabase
       .from('jobs')
-      .select('*, companies(name, logo_url, description, website, location)')
+      .select('*, companies(name, logo_url, description, website, location, user_id)')
       .eq('id', id)
       .maybeSingle(),
     'Job retrieved successfully'

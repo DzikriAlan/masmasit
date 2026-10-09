@@ -96,6 +96,7 @@ export function Navbar() {
   const { user, profile, roles, signOut } = useAuth();
 
   const isAdmin = roles.includes('super_admin') || roles.includes('regional_admin');
+  const isCompany = roles.includes('company');
   const { lang, toggleLang, t } = useLang();
   const router = useRouter();
 
@@ -357,6 +358,11 @@ export function Navbar() {
                   <DropdownMenuItem asChild>
                     <Link href="/pesan">{t('Messages', 'Pesan')}</Link>
                   </DropdownMenuItem>
+                  {isCompany && (
+                    <DropdownMenuItem asChild>
+                      <Link href="/jobs/applicants">{t('Job Applicants', 'Pelamar Lowongan')}</Link>
+                    </DropdownMenuItem>
+                  )}
                   {isAdmin && (
                     <>
                       <DropdownMenuSeparator />
@@ -467,6 +473,18 @@ export function Navbar() {
                     )}
                   >
                     {t('Profile', 'Profil')}
+                  </Link>
+                )}
+                {user && isCompany && (
+                  <Link
+                    href="/jobs/applicants"
+                    onClick={() => setOpen(false)}
+                    className={cn(
+                      'rounded-md px-3 py-2.5 text-base font-medium transition-colors hover:bg-muted',
+                      pathname === '/jobs/applicants' ? 'bg-primary/5 text-primary' : 'text-muted-foreground'
+                    )}
+                  >
+                    {t('Job Applicants', 'Pelamar Lowongan')}
                   </Link>
                 )}
               </div>
