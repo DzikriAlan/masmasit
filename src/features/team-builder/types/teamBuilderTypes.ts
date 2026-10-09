@@ -12,9 +12,11 @@ export interface DataTeamBuilderRoster {
   member_id: string;
   user_id: string;
   role_title: string;
-  grade: 'junior' | 'mid' | 'senior';
+  // null while the member is still only invited (migration 032).
+  grade: 'junior' | 'mid' | 'senior' | null;
   full_name: string | null;
   avatar_url: string | null;
+  status: 'invited' | 'active';
 }
 
 export interface DataProfileSearch {
@@ -32,6 +34,17 @@ export interface PayloadPostTeamBuilder {
 export interface PayloadPostTeamBuilderMembers {
   team_id: string;
   user_id: string;
+  role_title: string;
+}
+
+export interface PayloadPatchTeamBuilder {
+  id: string;
+  name: string;
+  description: string;
+}
+
+export interface PayloadPatchTeamBuilderMembers {
+  member_id: string;
   role_title: string;
 }
 

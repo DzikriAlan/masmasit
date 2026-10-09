@@ -5,8 +5,9 @@ import { useParams } from 'next/navigation';
 import { AppShell } from '@/components/app-shell';
 import { LoadData } from '@/components/load-data';
 import { useLang } from '@/components/language-provider';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { waLink } from '@/shared/lib/external';
+import { WA_NUMBER, waLink } from '@/shared/lib/external';
 import { TONE_CHIP, TONE_TEXT, toneOf } from '@/shared/lib/tones';
 
 import { useAgencyDetailControllers } from '@/features/agency/controllers/agencyControllers';
@@ -20,6 +21,9 @@ export default function AgencyDetail() {
   const agency = fetchAgencyDetail.data;
   const loading = fetchAgencyDetail.isPending;
   const services = (agency?.agency_services ?? []).filter((s) => s.is_active);
+  // A member agency with its own WhatsApp gets the chat directly; the
+  // in-house agency (or one without a number) routes to MasmasIT.
+  const discussNumber = agency && !agency.is_in_house && agency.whatsapp ? agency.whatsapp : WA_NUMBER;
 
   return (
     <AppShell>
@@ -72,7 +76,10 @@ export default function AgencyDetail() {
                 {services.map((service) => (
                   <div key={service.id} className="flex flex-col gap-3 py-5 sm:flex-row sm:items-center sm:justify-between">
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold text-foreground">{service.title}</p>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="text-sm font-semibold text-foreground">{service.title}</p>
+                        <Badge variant="outline" className="text-xs">{service.category}</Badge>
+                      </div>
                       <p className="mt-1 text-sm text-muted-foreground">{service.description}</p>
                       {service.base_price !== null && (
                         <p className="mt-1 text-sm font-medium text-foreground">
@@ -81,7 +88,7 @@ export default function AgencyDetail() {
                       )}
                     </div>
                     <a
-                      href={waLink(t(`Hi ${agency.name}, I'd like to discuss "${service.title}".`, `Halo ${agency.name}, saya ingin diskusi soal "${service.title}".`))}
+                      href={waLink(t(`Hi ${agency.name}, I'd like to discuss "${service.title}".`, `Halo ${agency.name}, saya ingin diskusi soal "${service.title}".`), discussNumber)}
                       target="_blank"
                       rel="noreferrer"
                       className="shrink-0"

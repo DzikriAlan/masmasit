@@ -14,7 +14,6 @@ import { BrowseToolbar } from '@/components/browse-toolbar';
 import { CardGridSkeleton } from '@/components/card-skeleton';
 import { useAuth } from '@/components/auth-provider';
 import { useLang } from '@/components/language-provider';
-import { signedOutState } from '@/shared/lib/browse-gate';
 import { Button } from '@/components/ui/button';
 import { TONE_CHIP, TONE_TEXT, toneOf } from '@/shared/lib/tones';
 import { cn } from '@/shared/lib/utils';
@@ -25,10 +24,12 @@ import { cn } from '@/shared/lib/utils';
 // and it's informational, not a privileged placement).
 export default function AgencyList() {
   const { t } = useLang();
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, roles } = useAuth();
   const { fetchAgency } = useAgencyControllers();
 
   const [filters, setFilters] = useState({ search: '' });
+
+  const isAgencyOwner = Boolean(user) && roles.includes('agency_owner');
 
   const data = useMemo(() => {
     const getMappedAgency = (agency: DataAgency) => ({
@@ -54,7 +55,6 @@ export default function AgencyList() {
       data: list,
       isLoading: fetchAgency.isPending,
       isError: fetchAgency.isError,
-      ...signedOutState(!authLoading && !user, t, t('agencies', 'agency')),
       isEmpty: !fetchAgency.isPending && !fetchAgency.isError && list.length === 0,
       errorTitle: t('Could not load agencies.', 'Gagal memuat agency.'),
       errorSubtitle: t('Check your connection and try again.', 'Periksa koneksi lalu coba lagi.'),
@@ -87,9 +87,16 @@ export default function AgencyList() {
             'Setiap agency yang disetujui terdaftar setara — termasuk tim in-house MasmasIT.'
           )}
           action={
-            <Link href="/agency/register">
-              <Button variant="outline">{t('Register an agency', 'Daftarkan agency')}</Button>
-            </Link>
+            <div className="flex flex-wrap gap-2">
+              {isAgencyOwner && (
+                <Link href="/agency/manage">
+                  <Button>{t('My Agency', 'Agency Saya')}</Button>
+                </Link>
+              )}
+              <Link href="/agency/register">
+                <Button variant="outline">{t('Register an agency', 'Daftarkan agency')}</Button>
+              </Link>
+            </div>
           }
         />
 

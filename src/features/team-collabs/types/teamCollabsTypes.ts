@@ -17,6 +17,12 @@ export interface PayloadPostTeamCollabs {
   description: string;
 }
 
+export interface PayloadPatchTeamCollabs {
+  id: string;
+  focus: string;
+  description: string;
+}
+
 export interface TeamCollabs {
   status: string;
   statusTitle: string;

@@ -15,6 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { loginHref } from '@/shared/lib/utils';
+import { FileUpload } from '@/features/uploads/components/FileUpload';
 
 import { useAgencyRegisterControllers } from '@/features/agency/controllers/agencyControllers';
 
@@ -45,7 +46,9 @@ export default function AgencyRegisterForm() {
     try {
       const created = await storeAgency.mutateAsync({ owner_id: user.id, ...form });
       toast.success(t('Agency submitted — pending admin approval', 'Agency dikirim — menunggu approval admin'));
-      router.push(created ? `/agency/${created.slug}` : '/agency');
+      // A new agency is pending, so its public /agency/{slug} page would
+      // read "not found" — land on the owner's own dashboard instead.
+      router.push(created ? '/agency/manage' : '/agency');
     } catch {
       toast.error(t('Failed to register agency', 'Gagal mendaftarkan agency'));
     }
@@ -81,10 +84,12 @@ export default function AgencyRegisterForm() {
                 <Label htmlFor="agency_name">{t('Agency Name', 'Nama Agency')}</Label>
                 <Input id="agency_name" value={form.name} onChange={(e) => updateForm('name', e.target.value)} placeholder="Studio Kirana" />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="agency_logo">{t('Logo URL (optional)', 'URL Logo (opsional)')}</Label>
-                <Input id="agency_logo" value={form.logo_url} onChange={(e) => updateForm('logo_url', e.target.value)} placeholder="https://..." />
-              </div>
+              <FileUpload
+                bucket="company-logos"
+                label={t('Logo (optional)', 'Logo (opsional)')}
+                existingUrl={form.logo_url || null}
+                onUpload={(url) => updateForm('logo_url', url)}
+              />
               <div className="space-y-2">
                 <Label htmlFor="agency_desc">{t('Description', 'Deskripsi')}</Label>
                 <Textarea

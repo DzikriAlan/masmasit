@@ -2,9 +2,11 @@
 
 import { useMemo } from 'react';
 import Link from 'next/link';
+import { toast } from 'sonner';
 
 import type { DataTeamCollabs } from '@/features/team-collabs/types/teamCollabsTypes';
 import { useTeamCollabsControllers } from '@/features/team-collabs/controllers/teamCollabsControllers';
+import TeamCollabsEditDialog from '@/features/team-collabs/components/TeamCollabsEditDialog';
 
 import { AppShell } from '@/components/app-shell';
 import { PageHeader } from '@/components/page-header';
@@ -24,7 +26,7 @@ import { TONE_CHIP, toneOf } from '@/shared/lib/tones';
 export default function TeamCollabsList() {
   const { user, loading: authLoading } = useAuth();
   const { t } = useLang();
-  const { fetchTeamCollabs, changeTeamCollabsWithdraw } = useTeamCollabsControllers();
+  const { fetchTeamCollabs, changeTeamCollabsWithdraw, modifyTeamCollabs } = useTeamCollabsControllers();
 
   const data = useMemo(() => {
     const getMappedListing = (listing: DataTeamCollabs) => ({
@@ -32,6 +34,7 @@ export default function TeamCollabsList() {
       focus: listing.focus,
       description: listing.description,
       status: listing.status,
+      matchedWith: listing.matched_with?.trim() || null,
       teamName: listing.teams?.name ?? t('A team', 'Sebuah tim'),
       initial: (listing.teams?.name ?? '?').charAt(0).toUpperCase(),
       isOwner: listing.created_by === user?.id,
@@ -57,6 +60,17 @@ export default function TeamCollabsList() {
 
   const clearTeamCollabs = (id: string) => {
     changeTeamCollabsWithdraw.mutate(id);
+  };
+
+  const editTeamCollabs = async (id: string, form: { focus: string; description: string }) => {
+    try {
+      await modifyTeamCollabs.mutateAsync({ id, ...form });
+    } catch {
+      toast.error(t('Could not save — the listing may no longer be Open.', 'Gagal menyimpan — listing mungkin sudah tidak Terbuka.'));
+      return false;
+    }
+    toast.success(t('Listing updated', 'Listing diperbarui'));
+    return true;
   };
 
   return (
@@ -100,6 +114,11 @@ export default function TeamCollabsList() {
 
                   <div className="mt-auto pt-4">
                     {listing.status === 'matched' && <MatchedBadge />}
+                    {listing.status === 'matched' && listing.matchedWith && (
+                      <p className="mt-2 text-sm font-medium text-foreground">
+                        {t(`Matched with ${listing.matchedWith}`, `Matched dengan ${listing.matchedWith}`)}
+                      </p>
+                    )}
                     {listing.status === 'closed' && (
                       <Badge variant="outline" className="text-xs text-muted-foreground">
                         {t('Withdrawn', 'Ditarik')}
@@ -122,6 +141,14 @@ export default function TeamCollabsList() {
                       >
                         {t('Withdraw listing', 'Tarik listing')}
                       </Button>
+                    )}
+                    {listing.status === 'open' && listing.isOwner && (
+                      <TeamCollabsEditDialog
+                        focus={listing.focus}
+                        description={listing.description}
+                        isSaving={modifyTeamCollabs.isPending}
+                        onEditTeamCollabs={(form) => editTeamCollabs(listing.id, form)}
+                      />
                     )}
                   </div>
                 </div>

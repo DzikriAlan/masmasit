@@ -2,8 +2,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { unwrapApiResponse } from '@/shared/lib/apiResponse';
 
-import { getTeamCollabs, postTeamCollabs, updateTeamCollabsWithdraw } from '../services/teamCollabsServices';
-import type { PayloadPostTeamCollabs } from '../types/teamCollabsTypes';
+import { getTeamCollabs, patchTeamCollabs, postTeamCollabs, updateTeamCollabsWithdraw } from '../services/teamCollabsServices';
+import type { PayloadPatchTeamCollabs, PayloadPostTeamCollabs } from '../types/teamCollabsTypes';
 
 export const useTeamCollabsControllers = () => {
   const queryClient = useQueryClient();
@@ -23,5 +23,10 @@ export const useTeamCollabsControllers = () => {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['teamCollabs'] }),
   });
 
-  return { fetchTeamCollabs, storeTeamCollabs, changeTeamCollabsWithdraw };
+  const modifyTeamCollabs = useMutation({
+    mutationFn: async (payload: PayloadPatchTeamCollabs) => unwrapApiResponse(await patchTeamCollabs(payload)),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['teamCollabs'] }),
+  });
+
+  return { fetchTeamCollabs, storeTeamCollabs, changeTeamCollabsWithdraw, modifyTeamCollabs };
 };

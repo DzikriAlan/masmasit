@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
-import { Loader2, X } from 'lucide-react';
+import { useParams, useRouter } from 'next/navigation';
+import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { AppShell } from '@/components/app-shell';
@@ -12,20 +12,15 @@ import { useAuth } from '@/components/auth-provider';
 import { useLang } from '@/components/language-provider';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 import { useTeamBuilderDetailControllers, useTeamBuilderMembersSearchControllers } from '@/features/team-builder/controllers/teamBuilderControllers';
-
-const gradeTone: Record<string, string> = {
-  senior: 'border-eco-violet/40 bg-eco-violet/10 text-eco-violet',
-  mid: 'border-eco-blue/40 bg-eco-blue/10 text-eco-blue',
-  junior: 'border-border bg-muted text-muted-foreground',
-};
+import TeamBuilderRosterRow from '@/features/team-builder/components/TeamBuilderRosterRow';
+import TeamBuilderSettings from '@/features/team-builder/components/TeamBuilderSettings';
 
 export default function TeamBuilderDetail() {
   const params = useParams();
   const teamId = String(params.id ?? '');
+  const router = useRouter();
   const { user } = useAuth();
   const { t } = useLang();
   const {
@@ -33,6 +28,10 @@ export default function TeamBuilderDetail() {
     fetchTeamBuilderRoster,
     storeTeamBuilderMembers,
     removeTeamBuilderMembers,
+    modifyTeamBuilder,
+    removeTeamBuilder,
+    modifyTeamBuilderMembers,
+    modifyTeamBuilderMembersAccept,
   } = useTeamBuilderDetailControllers(teamId);
 
   const [search, setSearch] = useState('');
@@ -47,6 +46,11 @@ export default function TeamBuilderDetail() {
   const results = (fetchTeamBuilderMembersSearch.data ?? []).filter((p) => !roster.some((r) => r.user_id === p.id));
   const loading = fetchTeamBuilderDetail.isPending;
   const isOwner = team?.owner_id === user?.id;
+  // The caller's own roster row, if any — drives the invite banner and
+  // "Leave team" (the owner manages rather than leaves).
+  const ownMembership = roster.find((r) => r.user_id === user?.id) ?? null;
+  const isInvitee = !isOwner && ownMembership?.status === 'invited';
+  const canLeave = !isOwner && ownMembership?.status === 'active';
 
   const addMember = async () => {
     if (!pickedUserId || !roleTitle.trim()) {
@@ -60,7 +64,71 @@ export default function TeamBuilderDetail() {
       return;
     }
     setSearch(''); setRoleTitle(''); setPickedUserId(null); setPickedName('');
-    toast.success(t('Member added', 'Member ditambahkan'));
+    toast.success(t('Invitation sent', 'Undangan terkirim'));
+  };
+
+  const editTeamBuilder = async (form: { name: string; description: string }) => {
+    if (!form.name.trim()) {
+      toast.error(t('Please name the team', 'Beri nama timnya'));
+      return false;
+    }
+    try {
+      await modifyTeamBuilder.mutateAsync({ id: teamId, name: form.name.trim(), description: form.description.trim() });
+    } catch {
+      toast.error(t('Failed to save team', 'Gagal menyimpan tim'));
+      return false;
+    }
+    toast.success(t('Team updated', 'Tim diperbarui'));
+    return true;
+  };
+
+  const clearTeamBuilder = async () => {
+    try {
+      await removeTeamBuilder.mutateAsync();
+    } catch {
+      toast.error(t('Failed to delete team', 'Gagal menghapus tim'));
+      return;
+    }
+    toast.success(t('Team deleted', 'Tim dihapus'));
+    router.push('/team-builder');
+  };
+
+  const editTeamBuilderMembers = async (memberId: string, role: string) => {
+    try {
+      await modifyTeamBuilderMembers.mutateAsync({ member_id: memberId, role_title: role });
+    } catch {
+      toast.error(t('Failed to update role', 'Gagal mengubah role'));
+      return false;
+    }
+    toast.success(t('Role updated', 'Role diperbarui'));
+    return true;
+  };
+
+  const clearTeamBuilderMembers = (memberId: string) => {
+    removeTeamBuilderMembers.mutate(memberId);
+  };
+
+  const submitTeamBuilderInvite = async () => {
+    if (!ownMembership) return;
+    try {
+      await modifyTeamBuilderMembersAccept.mutateAsync(ownMembership.member_id);
+    } catch {
+      toast.error(t('Failed to accept invitation', 'Gagal menerima undangan'));
+      return;
+    }
+    toast.success(t('You joined the team', 'Kamu bergabung ke tim'));
+  };
+
+  const clearTeamBuilderMembership = async (isDecline: boolean) => {
+    if (!ownMembership) return;
+    try {
+      await removeTeamBuilderMembers.mutateAsync(ownMembership.member_id);
+    } catch {
+      toast.error(t('Something went wrong', 'Terjadi kesalahan'));
+      return;
+    }
+    toast.success(isDecline ? t('Invitation declined', 'Undangan ditolak') : t('You left the team', 'Kamu keluar dari tim'));
+    router.push('/team-builder');
   };
 
   return (
@@ -85,6 +153,33 @@ export default function TeamBuilderDetail() {
           <h1 className="mt-3 font-display text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">{team.name}</h1>
           {team.description && <p className="mt-3 max-w-xl text-base text-muted-foreground text-pretty">{team.description}</p>}
 
+          {isOwner && (
+            <TeamBuilderSettings
+              team={team}
+              isSaving={modifyTeamBuilder.isPending}
+              isDeleting={removeTeamBuilder.isPending}
+              onEditTeamBuilder={editTeamBuilder}
+              onClearTeamBuilder={clearTeamBuilder}
+            />
+          )}
+
+          {isInvitee && (
+            <section className="mt-6 rounded-xl border border-primary/30 bg-primary/5 p-5">
+              <p className="text-sm font-medium text-foreground">
+                {t(`You're invited to join as ${ownMembership?.role_title}.`, `Kamu diundang bergabung sebagai ${ownMembership?.role_title}.`)}
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Button size="sm" onClick={submitTeamBuilderInvite} disabled={modifyTeamBuilderMembersAccept.isPending} className="gap-2">
+                  {modifyTeamBuilderMembersAccept.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+                  {t('Accept', 'Terima')}
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => clearTeamBuilderMembership(true)} disabled={removeTeamBuilderMembers.isPending}>
+                  {t('Decline', 'Tolak')}
+                </Button>
+              </div>
+            </section>
+          )}
+
           <section className="mt-10">
             <h2 className="eyebrow text-muted-foreground">{t('Roster', 'Susunan Tim')}</h2>
             <LoadData
@@ -96,38 +191,25 @@ export default function TeamBuilderDetail() {
               }}
             >
               <div className="divide-y divide-border border-y border-border">
-                {roster.map((r) => {
-                  const initial = (r.full_name ?? '?').charAt(0).toUpperCase();
-                  return (
-                    <div key={r.member_id} className="flex items-center justify-between py-3.5">
-                      <div className="flex items-center gap-3">
-                        <Avatar className="h-9 w-9">
-                          {r.avatar_url && <AvatarImage src={r.avatar_url} />}
-                          <AvatarFallback className="bg-primary/15 text-xs text-primary">{initial}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="text-sm font-medium text-foreground">{r.full_name ?? t('Member', 'Member')}</p>
-                          <p className="text-xs text-muted-foreground">{r.role_title}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge variant="outline" className={`capitalize ${gradeTone[r.grade]}`}>{r.grade}</Badge>
-                        {isOwner && (
-                          <button onClick={() => removeTeamBuilderMembers.mutate(r.member_id)} className="text-muted-foreground hover:text-destructive">
-                            <X className="h-4 w-4" />
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
+                {roster.map((r) => (
+                  <TeamBuilderRosterRow
+                    key={r.member_id}
+                    member={r}
+                    isOwner={isOwner}
+                    onEditTeamBuilderMembers={editTeamBuilderMembers}
+                    onClearTeamBuilderMembers={clearTeamBuilderMembers}
+                  />
+                ))}
               </div>
             </LoadData>
           </section>
 
           {isOwner && (
             <section className="mt-8 rounded-xl border border-border p-5">
-              <p className="eyebrow text-muted-foreground">{t('Add a member', 'Tambah member')}</p>
+              <p className="eyebrow text-muted-foreground">{t('Invite a member', 'Undang member')}</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {t('They get a notification and appear as "Invited" until they accept.', 'Mereka mendapat notifikasi dan tampil "Diundang" sampai menerima.')}
+              </p>
               <div className="mt-3 space-y-3">
                 <div className="relative">
                   <Input
@@ -152,23 +234,35 @@ export default function TeamBuilderDetail() {
                 <Input value={roleTitle} onChange={(e) => setRoleTitle(e.target.value)} placeholder={t('Role (e.g. Backend, Design)', 'Role (mis. Backend, Desain)')} />
                 <Button onClick={addMember} disabled={storeTeamBuilderMembers.isPending} className="gap-2">
                   {storeTeamBuilderMembers.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
-                  {t('Add', 'Tambah')}
+                  {t('Send invite', 'Kirim undangan')}
                 </Button>
               </div>
             </section>
           )}
 
           <div className="mt-10 flex flex-col gap-3 border-t border-border pt-8 sm:flex-row">
-            <Link href={`/team-collabs/register?team=${team.id}`} className="w-full sm:w-auto">
-              <Button variant="outline" className="h-11 w-full rounded-full px-6 text-base font-semibold sm:w-auto">
-                {t('Register for Team Collabs', 'Daftar ke Team Collabs')}
-              </Button>
-            </Link>
+            {isOwner && (
+              <Link href={`/team-collabs/register?team=${team.id}`} className="w-full sm:w-auto">
+                <Button variant="outline" className="h-11 w-full rounded-full px-6 text-base font-semibold sm:w-auto">
+                  {t('Register for Team Collabs', 'Daftar ke Team Collabs')}
+                </Button>
+              </Link>
+            )}
             <Link href="/projects" className="w-full sm:w-auto">
               <Button variant="outline" className="h-11 w-full rounded-full px-6 text-base font-semibold sm:w-auto">
                 {t('Browse client projects', 'Jelajahi proyek klien')}
               </Button>
             </Link>
+            {canLeave && (
+              <Button
+                variant="ghost"
+                onClick={() => clearTeamBuilderMembership(false)}
+                disabled={removeTeamBuilderMembers.isPending}
+                className="h-11 w-full rounded-full px-6 text-base font-semibold text-destructive hover:text-destructive sm:ml-auto sm:w-auto"
+              >
+                {t('Leave team', 'Keluar dari tim')}
+              </Button>
+            )}
           </div>
           </>
           )}

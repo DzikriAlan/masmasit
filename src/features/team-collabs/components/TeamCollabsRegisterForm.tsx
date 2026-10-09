@@ -37,15 +37,18 @@ export default function TeamCollabsRegisterForm() {
     if (!loading && !user) router.push(loginHref());
   }, [loading, user, router]);
 
-  const { data: teams = [], isPending: teamsLoading } = useQuery({
+  const { data: allTeams = [], isPending: teamsLoading } = useQuery({
     queryKey: ['teamBuilder'],
     queryFn: async () => unwrapApiResponse(await getTeamBuilder()) ?? [],
     enabled: Boolean(user),
   });
+  // getTeamBuilder() also returns teams the user was only added to (RLS
+  // select_teams); insert_own_team_collabs only accepts teams they own.
+  const teams = allTeams.filter((tm) => tm.owner_id === user?.id);
 
   const submitRegistration = async () => {
     if (!user) return;
-    if (!teamId || !form.focus.trim() || !form.description.trim()) {
+    if (!teams.some((tm) => tm.id === teamId) || !form.focus.trim() || !form.description.trim()) {
       toast.error(t('Please pick a team and fill in the focus and description', 'Pilih tim dan isi fokus serta deskripsi'));
       return;
     }
