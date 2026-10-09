@@ -1,5 +1,6 @@
 export interface DataArticles {
   id: string;
+  slug: string | null;
   title: string;
   excerpt: string;
   body: string;
@@ -12,4 +13,11 @@ export interface Articles {
   statusTitle: string;
   statusSubtitle: string;
   data: DataArticles[] | null;
+}
+
+export interface ArticlesDetail {
+  status: string;
+  statusTitle: string;
+  statusSubtitle: string;
+  data: DataArticles | null;
 }

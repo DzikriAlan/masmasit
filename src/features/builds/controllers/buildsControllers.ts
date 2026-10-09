@@ -2,8 +2,16 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { unwrapApiResponse } from '@/shared/lib/apiResponse';
 
-import { deleteBuildsLike, getBuilds, getBuildsLiked, postBuilds, postBuildsLike } from '../services/buildsServices';
-import type { PayloadPostBuilds } from '../types/buildsTypes';
+import {
+  deleteBuilds,
+  deleteBuildsLike,
+  getBuilds,
+  getBuildsLiked,
+  patchBuilds,
+  postBuilds,
+  postBuildsLike,
+} from '../services/buildsServices';
+import type { PayloadPatchBuilds, PayloadPostBuilds } from '../types/buildsTypes';
 
 export const useBuildsControllers = (userId: string | undefined) => {
   const queryClient = useQueryClient();
@@ -40,5 +48,27 @@ export const useBuildsControllers = (userId: string | undefined) => {
     },
   });
 
-  return { fetchBuilds, fetchBuildsLiked, storeBuilds, storeBuildsLike, removeBuildsLike };
+  const getAffectedRows = <T,>(rows: T[] | null) => {
+    if (!rows || rows.length === 0) throw new Error('You do not have permission to change this build.');
+    return rows;
+  };
+
+  const modifyBuilds = useMutation({
+    mutationFn: async ({ id, ...payload }: PayloadPatchBuilds & { id: string }) =>
+      getAffectedRows(unwrapApiResponse(await patchBuilds(id, payload))),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['builds'] });
+      queryClient.invalidateQueries({ queryKey: ['spotlight'] });
+    },
+  });
+
+  const removeBuilds = useMutation({
+    mutationFn: async (id: string) => getAffectedRows(unwrapApiResponse(await deleteBuilds(id))),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['builds'] });
+      queryClient.invalidateQueries({ queryKey: ['spotlight'] });
+    },
+  });
+
+  return { fetchBuilds, fetchBuildsLiked, storeBuilds, storeBuildsLike, removeBuildsLike, modifyBuilds, removeBuilds };
 };

@@ -6,6 +6,7 @@ export interface DataBuilds {
   description: string;
   link_url: string | null;
   image_url: string | null;
+  image_urls?: string[] | null;
   source_type: 'build' | 'solo_builder' | 'agency';
   promoted_to_spotlight: boolean;
   likes_count: number;
@@ -18,7 +19,18 @@ export interface PayloadPostBuilds {
   title: string;
   description: string;
   link_url: string | null;
+  image_url: string | null;
+  image_urls: string[];
   promoted_to_spotlight: boolean;
+}
+
+export interface PayloadPatchBuilds {
+  title?: string;
+  description?: string;
+  link_url?: string | null;
+  image_url?: string | null;
+  image_urls?: string[];
+  promoted_to_spotlight?: boolean;
 }
 
 export interface Builds {

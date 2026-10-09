@@ -4,7 +4,7 @@ export interface PayloadGetSearch {
 
 export interface DataSearch {
   id: string;
-  type: 'profile' | 'job' | 'course' | 'project';
+  type: 'profile' | 'talent' | 'job' | 'course' | 'project' | 'agency' | 'service' | 'event' | 'discussion' | 'build';
   title: string;
   subtitle: string;
   href: string;

@@ -9,8 +9,14 @@ import { PageDecor } from '@/components/page-decor';
 import { useLang } from '@/components/language-provider';
 import { supabase } from '@/shared/lib/supabase';
 import { CONTACT_EMAIL, waLink } from '@/shared/lib/external';
+import { useFeedHomeControllers } from '@/features/feed/controllers/feedControllers';
+import { useFeedLabels } from '@/features/feed/components/FeedItem';
 import { Button } from '@/components/ui/button';
 import heroBackground from '@/shared/images/backgroundhero2.png';
+
+/* MasmasIT's own booking page. Set NEXT_PUBLIC_CALENDLY_URL to the real
+   Calendly link; the fallback is the old generic destination. */
+const CALENDLY_URL = process.env.NEXT_PUBLIC_CALENDLY_URL || 'https://calendly.com';
 
 const px = (id: string, w: number, h: number) =>
   `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&h=${h}&w=${w}`;
@@ -88,22 +94,14 @@ const demoTalents = [
   { id: 'd4', full_name: 'Maya Santoso', role: 'DevOps Engineer', location: 'Yogyakarta', skills: ['Terraform', 'AWS', 'CI/CD'], years: 7, available: true, avatar_url: px('1130626', 200, 200) as string | null },
 ];
 
-const courses = [
-  { title: 'Backend Scalable dengan Go', instructor: 'Rizky Pratama', level: 'Intermediate', duration: '8j 40m', rating: 4.8, learners: '1.2K', thumb: px('270404', 240, 160) },
-  { title: 'Design System dari Nol', instructor: 'Sarah Widodo', level: 'Beginner', duration: '5j 10m', rating: 4.9, learners: '2.4K', thumb: px('1966452', 240, 160) },
-  { title: 'MLOps untuk Data Scientist', instructor: 'Aditya Nugroho', level: 'Advanced', duration: '11j 05m', rating: 4.7, learners: '860', thumb: px('8386440', 240, 160) },
-  { title: 'React & Next.js Mendalam', instructor: 'Maya Santoso', level: 'Intermediate', duration: '9j 20m', rating: 4.8, learners: '1.8K', thumb: px('1181244', 240, 160) },
-  { title: 'Fundamental Keamanan Aplikasi Web', instructor: 'Bayu Prakoso', level: 'Beginner', duration: '6j 30m', rating: 4.6, learners: '950', thumb: px('60504', 240, 160) },
-];
+/* Stock artwork only — the course and event titles on top of it come from
+   the database (useFeedHomeControllers); rows carry no cover image yet. */
+const courseThumbs = [px('270404', 240, 160), px('1966452', 240, 160), px('8386440', 240, 160), px('1181244', 240, 160), px('60504', 240, 160)];
 
-const events = [
-  { day: '18', month: 'Sep', title: 'Jakarta Cloud Native Meetup', org: 'CNCF Jakarta', place: 'Jakarta · Onsite', cat: 'Meetup', attendees: 240, thumb: px('7643736', 320, 200) },
-  { day: '24', month: 'Sep', title: 'Hackathon Fintech Nusantara', org: 'Fintech ID', place: 'Bandung · Onsite', cat: 'Hackathon', attendees: 512, thumb: px('17724731', 320, 200) },
-  { day: '02', month: 'Okt', title: 'Workshop: Observability 101', org: 'DevOps Indonesia', place: 'Online', cat: 'Workshop', attendees: 890, thumb: px('9301872', 320, 200) },
-  { day: '11', month: 'Okt', title: 'UI/UX Conference Surabaya', org: 'Designudy', place: 'Surabaya · Onsite', cat: 'Conference', attendees: 320, thumb: px('8761524', 320, 200) },
-  { day: '19', month: 'Okt', title: 'Bootcamp AI untuk Developer', org: 'AI Indonesia', place: 'Yogyakarta · Onsite', cat: 'Bootcamp', attendees: 410, thumb: px('8438922', 320, 200) },
-  { day: '27', month: 'Okt', title: 'Meetup Rust & Systems Programming', org: 'Rust Jakarta', place: 'Jakarta · Onsite', cat: 'Meetup', attendees: 180, thumb: px('1181677', 320, 200) },
-];
+const eventThumbs = [px('7643736', 320, 200), px('17724731', 320, 200), px('9301872', 320, 200), px('8761524', 320, 200), px('8438922', 320, 200), px('1181677', 320, 200)];
+
+interface HomeCourse { id: string; title: string; thumb: string }
+interface HomeEvent { id: string; title: string; day: string; thumb: string }
 
 const serviceCategories = [
   'Software Development', 'UI/UX Design', 'AI Development', 'Cloud & DevOps',
@@ -115,19 +113,6 @@ const liveActivityLabels = [
   { en: 'New members this week', id: 'Member baru minggu ini' },
   { en: 'New projects this week', id: 'Proyek baru minggu ini' },
   { en: 'Talent bookings this month', id: 'Booking talent bulan ini' },
-];
-
-/* What the live feed cycles through. `avatar` rows are people, the rest
-   are organisations and get their activity icon instead. */
-const activityFeed = [
-  { avatar: null, who: 'Payungi', tone: 'blue' as Tone, en: 'posted a job', id: 'memposting lowongan', what: 'Backend Engineer (Go)', timeEn: '2m', timeId: '2 mnt' },
-  { avatar: demoTalents[1].avatar_url, who: 'Sarah Widodo', tone: 'green' as Tone, en: 'joined as', id: 'bergabung sebagai', what: 'Product Designer', timeEn: '5m', timeId: '5 mnt' },
-  { avatar: null, who: 'Koperasi Nusantara', tone: 'violet' as Tone, en: 'opened a project', id: 'membuka proyek', what: 'Payment Infrastructure Revamp', timeEn: '12m', timeId: '12 mnt' },
-  { avatar: demoTalents[0].avatar_url, who: 'Rizky Pratama', tone: 'orange' as Tone, en: 'was booked by', id: 'dibooking oleh', what: 'PT Kirana Teknologi', timeEn: '18m', timeId: '18 mnt' },
-  { avatar: demoTalents[2].avatar_url, who: 'Aditya Nugroho', tone: 'teal' as Tone, en: 'finished', id: 'menyelesaikan', what: 'MLOps untuk Data Scientist', timeEn: '26m', timeId: '26 mnt' },
-  { avatar: demoTalents[3].avatar_url, who: 'Maya Santoso', tone: 'pink' as Tone, en: 'is attending', id: 'akan hadir di', what: 'Jakarta Cloud Native Meetup', timeEn: '34m', timeId: '34 mnt' },
-  { avatar: null, who: 'Nusantara Cloud', tone: 'amber' as Tone, en: 'listed a service', id: 'menambahkan layanan', what: 'Cloud & DevOps', timeEn: '41m', timeId: '41 mnt' },
-  { avatar: null, who: 'Sahabat Finansial', tone: 'blue' as Tone, en: 'posted a job', id: 'memposting lowongan', what: 'Mobile Engineer (Flutter)', timeEn: '1h', timeId: '1 jam' },
 ];
 
 /* Turns the activity FOMO into a next step, one per audience. */
@@ -228,7 +213,7 @@ function Chip({ children }: { children: React.ReactNode }) {
 const chunk = <T,>(arr: T[], size: number) =>
   Array.from({ length: Math.ceil(arr.length / size) }, (_, i) => arr.slice(i * size, i * size + size));
 
-function EcosystemPreview({ ekey, flip }: { ekey: string; flip: boolean }) {
+function EcosystemPreview({ ekey, flip, courses, events }: { ekey: string; flip: boolean; courses: HomeCourse[]; events: HomeEvent[] }) {
 
   if (ekey === 'talents') {
     return (
@@ -310,7 +295,7 @@ function EcosystemPreview({ ekey, flip }: { ekey: string; flip: boolean }) {
       <div className={`flex-1 min-h-0 marquee-fade -mx-5 overflow-hidden ${flip ? '-mt-5' : '-mb-5'}`}>
         <div className={`animate-marquee flex h-full w-max gap-2.5 px-5 ${flip ? 'pb-3 pt-5' : 'pb-5 pt-4'}`}>
           {[...courses, ...courses].map((c, idx) => (
-            <div key={`${c.title}-${idx}`} className="relative h-full w-40 shrink-0 overflow-hidden rounded-lg border-2 border-white/25">
+            <div key={`${c.id}-${idx}`} className="relative h-full w-40 shrink-0 overflow-hidden rounded-lg border-2 border-white/25">
               <img src={c.thumb} alt="" loading="lazy" className="h-full w-full object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
               <p className="absolute inset-x-0 bottom-0 line-clamp-2 p-3 text-xs font-medium leading-snug text-white">{c.title}</p>
@@ -326,7 +311,7 @@ function EcosystemPreview({ ekey, flip }: { ekey: string; flip: boolean }) {
       <div className={`flex-1 min-h-0 marquee-fade -mx-5 overflow-hidden ${flip ? '-mt-5' : '-mb-5'}`}>
         <div className={`animate-marquee flex h-full w-max gap-2.5 px-5 ${flip ? 'pb-3 pt-5' : 'pb-5 pt-4'}`}>
           {[...events, ...events].map((ev, idx) => (
-            <div key={`${ev.title}-${idx}`} className="relative h-full w-40 shrink-0 overflow-hidden rounded-lg border-2 border-white/25">
+            <div key={`${ev.id}-${idx}`} className="relative h-full w-40 shrink-0 overflow-hidden rounded-lg border-2 border-white/25">
               <img src={ev.thumb} alt="" loading="lazy" className="h-full w-full object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
               <div className="absolute left-1.5 top-1.5 rounded bg-white px-1.5 py-0.5 leading-none text-neutral-900">
@@ -685,6 +670,32 @@ function TestimonialMarquee() {
 
 export default function HomePage() {
   const { t } = useLang();
+  const { fetchFeedHome, fetchFeedCourses, fetchFeedEvents } = useFeedHomeControllers();
+  const { verbs, fallbackActors, area, getRelativeTime } = useFeedLabels();
+
+  /* Real rows only (TC-10-05/07). Stock artwork is just the backdrop. */
+  const homeCourses: HomeCourse[] = (fetchFeedCourses.data ?? []).map((c, i) => ({
+    id: c.id,
+    title: c.title,
+    thumb: courseThumbs[i % courseThumbs.length],
+  }));
+  const homeEvents: HomeEvent[] = (fetchFeedEvents.data ?? []).map((ev, i) => ({
+    id: ev.id,
+    title: ev.title,
+    day: String(new Date(ev.event_date).getDate()).padStart(2, '0'),
+    thumb: eventThumbs[i % eventThumbs.length],
+  }));
+  const areaTone: Record<string, Tone> = { jobs: 'blue', projects: 'violet', builds: 'green', events: 'pink' };
+  const activityFeed = (fetchFeedHome.data ?? []).map((item) => ({
+    id: item.id,
+    href: item.href,
+    avatar: item.avatarUrl,
+    who: item.actor ?? fallbackActors[item.kind],
+    tone: areaTone[area[item.kind]] ?? 'blue',
+    verb: verbs[item.kind],
+    what: item.title,
+    time: getRelativeTime(item.created_at),
+  }));
   // null until counted — so a loading page never flashes a row of zeros.
   const [live, setLive] = useState<number[] | null>(null);
   // Zeros read as "nobody is here"; only surface the counters once real
@@ -840,7 +851,7 @@ export default function HomePage() {
                     </p>
                   </div>
                 );
-                const preview = <EcosystemPreview ekey={e.key} flip={flip} />;
+                const preview = <EcosystemPreview ekey={e.key} flip={flip} courses={homeCourses} events={homeEvents} />;
                 const inner = (
                   <div className={`group flex h-full flex-col overflow-hidden rounded-xl transition-[box-shadow,transform] duration-300 hover:-translate-y-0.5 hover:shadow-card-hover ${tone.wash} ${lead ? 'min-h-[320px] p-6' : 'min-h-[380px] p-5'}`}>
                     {flip ? <>{preview}{header}</> : <>{header}{preview}</>}
@@ -947,8 +958,8 @@ export default function HomePage() {
             <SectionHead
               eyebrow={t('Live activity', 'Aktivitas terkini')}
               title={t('Happening on MasmasIT right now', 'Yang sedang terjadi di MasmasIT')}
-              desc={t('Jobs, projects, bookings and new members — as they happen.', 'Lowongan, proyek, booking, dan member baru — saat itu juga.')}
-              href="/activity"
+              desc={t('Jobs, projects, builds and events — as they happen.', 'Lowongan, proyek, build, dan event — saat itu juga.')}
+              href="/feed"
               cta={t('See all activity', 'Lihat semua aktivitas')}
             />
 
@@ -976,26 +987,41 @@ export default function HomePage() {
                   </div>
                 )}
 
+                {activityFeed.length === 0 ? (
+                  <div className="flex h-[340px] flex-col items-center justify-center gap-2 px-6 text-center sm:h-[380px]">
+                    <p className="text-sm font-medium">
+                      {fetchFeedHome.isPending ? t('Loading activity…', 'Memuat aktivitas…') : t('Quiet for the moment.', 'Sedang sepi untuk saat ini.')}
+                    </p>
+                    {!fetchFeedHome.isPending && (
+                      <p className="text-xs text-muted-foreground">
+                        {t('New jobs, projects, builds and events show up here as they are posted.', 'Lowongan, proyek, build, dan event baru muncul di sini begitu diposting.')}
+                      </p>
+                    )}
+                  </div>
+                ) : (
                 <div className="group marquee-fade-y relative h-[340px] overflow-hidden sm:h-[380px]">
                   <ul className="animate-marquee-y group-hover:[animation-play-state:paused]">
                     {[...activityFeed, ...activityFeed].map((a, idx) => (
-                      <li key={`${a.who}-${idx}`} aria-hidden={idx >= activityFeed.length} className="flex items-center gap-3.5 border-b border-white/15 px-5 py-3.5">
-                        {a.avatar ? (
-                          <img src={a.avatar} alt="" loading="lazy" className="h-9 w-9 shrink-0 rounded-full border-2 border-white/30 object-cover" />
-                        ) : (
-                          <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-xs font-semibold ${tones[a.tone].text}`}>
-                            {initials(a.who)}
-                          </span>
-                        )}
-                        <p className="min-w-0 flex-1 text-sm leading-snug text-muted-foreground">
-                          <span className="font-medium text-foreground">{a.who}</span> {t(a.en, a.id)}{' '}
-                          <span className="font-medium text-foreground">{a.what}</span>
-                        </p>
-                        <span className="tnum shrink-0 text-xs text-muted-foreground">{t(a.timeEn, a.timeId)}</span>
+                      <li key={`${a.id}-${idx}`} aria-hidden={idx >= activityFeed.length} className="border-b border-white/15">
+                        <Link href={a.href} tabIndex={idx >= activityFeed.length ? -1 : undefined} className="flex items-center gap-3.5 px-5 py-3.5 transition-colors hover:bg-black/10">
+                          {a.avatar ? (
+                            <img src={a.avatar} alt="" loading="lazy" className="h-9 w-9 shrink-0 rounded-full border-2 border-white/30 object-cover" />
+                          ) : (
+                            <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-xs font-semibold ${tones[a.tone].text}`}>
+                              {initials(a.who)}
+                            </span>
+                          )}
+                          <p className="min-w-0 flex-1 text-sm leading-snug text-muted-foreground">
+                            <span className="font-medium text-foreground">{a.who}</span> {a.verb}{' '}
+                            <span className="font-medium text-foreground">{a.what}</span>
+                          </p>
+                          <span className="tnum shrink-0 text-xs text-muted-foreground">{a.time}</span>
+                        </Link>
                       </li>
                     ))}
                   </ul>
                 </div>
+                )}
               </div>
 
               <div className="wash wash-orange flex flex-col rounded-xl p-5 lg:col-span-2">
@@ -1069,7 +1095,7 @@ export default function HomePage() {
                     <span className="block truncate text-xs text-muted-foreground">{t('Usually replies within an hour', 'Biasanya dibalas dalam 1 jam')}</span>
                   </span>
                 </a>
-                <a href="https://calendly.com" target="_blank" rel="noreferrer" className="group flex items-center gap-3 bg-card p-4 transition-colors hover:bg-secondary">
+                <a href={CALENDLY_URL} target="_blank" rel="noreferrer" className="group flex items-center gap-3 bg-card p-4 transition-colors hover:bg-secondary">
                   <span className="min-w-0 flex-1">
                     <span className="block text-sm font-medium">{t('Schedule a call', 'Jadwalkan panggilan')}</span>
                     <span className="block truncate text-xs text-muted-foreground">{t('30 min · Calendly', '30 menit · Calendly')}</span>

@@ -2,11 +2,12 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { ExternalLink, Heart, Loader2 } from 'lucide-react';
+import { ExternalLink, Heart, Loader2, Pencil, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 import type { DataBuilds } from '@/features/builds/types/buildsTypes';
 import { useBuildsControllers } from '@/features/builds/controllers/buildsControllers';
+import { BuildsImagesGallery, BuildsImagesPicker } from '@/features/builds/components/BuildsImages';
 
 import { AppShell } from '@/components/app-shell';
 import { PageHeader } from '@/components/page-header';
@@ -14,6 +15,7 @@ import { LoadData } from '@/components/load-data';
 import { RowSkeleton } from '@/components/card-skeleton';
 import { useAuth } from '@/components/auth-provider';
 import { useLang } from '@/components/language-provider';
+import { DeleteConfirmButton } from '@/components/delete-confirm-button';
 import { signedOutState } from '@/shared/lib/browse-gate';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -25,7 +27,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { TONE_CHIP, toneOf } from '@/shared/lib/tones';
 import { cn, loginHref } from '@/shared/lib/utils';
 
-const EMPTY_FORM = { title: '', description: '', link_url: '', spotlight: false };
+const EMPTY_FORM = { title: '', description: '', link_url: '', spotlight: false, images: [] as string[] };
 
 // REST.md Bagian 2/9: work-in-progress feed. Checking "Show in Spotlight"
 // is how a post also becomes a Spotlight submission (source_type flips to
@@ -33,9 +35,10 @@ const EMPTY_FORM = { title: '', description: '', link_url: '', spotlight: false 
 export default function BuildsList() {
   const { user, loading: authLoading } = useAuth();
   const { t } = useLang();
-  const { fetchBuilds, fetchBuildsLiked, storeBuilds, storeBuildsLike, removeBuildsLike } = useBuildsControllers(user?.id);
+  const { fetchBuilds, fetchBuildsLiked, storeBuilds, storeBuildsLike, removeBuildsLike, modifyBuilds, removeBuilds } =
+    useBuildsControllers(user?.id);
 
-  const [filters, setFilters] = useState({ isComposerOpen: false });
+  const [filters, setFilters] = useState({ isComposerOpen: false, editingId: '' });
   const [form, setForm] = useState(EMPTY_FORM);
 
   const data = useMemo(() => {
@@ -52,8 +55,16 @@ export default function BuildsList() {
       return new Date(iso).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
     };
 
+    // image_urls is the gallery (migration 033); older rows only carry image_url.
+    const getImages = (build: DataBuilds) => {
+      if (build.image_urls && build.image_urls.length > 0) return build.image_urls;
+      return build.image_url ? [build.image_url] : [];
+    };
+
     const getMappedBuild = (build: DataBuilds) => ({
       id: build.id,
+      images: getImages(build),
+      isOwner: build.user_id === user?.id,
       title: build.title,
       description: build.description,
       linkUrl: build.link_url,
@@ -89,7 +100,34 @@ export default function BuildsList() {
       window.location.href = loginHref();
       return;
     }
-    setFilters((prev) => ({ ...prev, isComposerOpen: !prev.isComposerOpen }));
+    if (filters.isComposerOpen) {
+      clearBuildsForm();
+      return;
+    }
+    setForm(EMPTY_FORM);
+    setFilters((prev) => ({ ...prev, isComposerOpen: true, editingId: '' }));
+  };
+
+  const editBuilds = (build: (typeof data.data)[number]) => {
+    setForm({
+      title: build.title,
+      description: build.description,
+      link_url: build.linkUrl ?? '',
+      spotlight: build.isOnSpotlight,
+      images: build.images,
+    });
+    setFilters((prev) => ({ ...prev, isComposerOpen: true, editingId: build.id }));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const clearBuilds = async (buildId: string) => {
+    try {
+      await removeBuilds.mutateAsync(buildId);
+    } catch {
+      toast.error(t('Failed to delete the build', 'Gagal menghapus build'));
+      return;
+    }
+    toast.success(t('Build deleted', 'Build dihapus'));
   };
 
   const editBuildsForm = (patch: Partial<typeof EMPTY_FORM>) => {
@@ -98,7 +136,7 @@ export default function BuildsList() {
 
   const clearBuildsForm = () => {
     setForm(EMPTY_FORM);
-    setFilters((prev) => ({ ...prev, isComposerOpen: false }));
+    setFilters((prev) => ({ ...prev, isComposerOpen: false, editingId: '' }));
   };
 
   const editBuildsLike = (buildId: string, isLiked: boolean) => {
@@ -118,14 +156,29 @@ export default function BuildsList() {
       return;
     }
 
+    const fields = {
+      title: form.title,
+      description: form.description,
+      link_url: form.link_url || null,
+      image_url: form.images[0] ?? null,
+      image_urls: form.images.slice(0, 4),
+      promoted_to_spotlight: form.spotlight,
+    };
+
+    if (filters.editingId) {
+      try {
+        await modifyBuilds.mutateAsync({ id: filters.editingId, ...fields });
+      } catch {
+        toast.error(t('Failed to save changes', 'Gagal menyimpan perubahan'));
+        return;
+      }
+      toast.success(t('Build updated', 'Build diperbarui'));
+      clearBuildsForm();
+      return;
+    }
+
     try {
-      await storeBuilds.mutateAsync({
-        user_id: user.id,
-        title: form.title,
-        description: form.description,
-        link_url: form.link_url || null,
-        promoted_to_spotlight: form.spotlight,
-      });
+      await storeBuilds.mutateAsync({ user_id: user.id, ...fields });
     } catch {
       toast.error(t('Failed to post', 'Gagal memposting'));
       return;
@@ -156,7 +209,9 @@ export default function BuildsList() {
         {filters.isComposerOpen && (
           <Card className="mb-8 border-dashed">
             <CardHeader>
-              <CardTitle className="font-display text-xl">{t('Share progress', 'Bagikan progres')}</CardTitle>
+              <CardTitle className="font-display text-xl">
+                {filters.editingId ? t('Edit build', 'Ubah build') : t('Share progress', 'Bagikan progres')}
+              </CardTitle>
               <CardDescription>
                 {t('A work in progress counts — that is the whole feed.', 'Yang belum kelar pun boleh — memang itu isi feed-nya.')}
               </CardDescription>
@@ -188,6 +243,7 @@ export default function BuildsList() {
                   placeholder="https://"
                 />
               </div>
+              <BuildsImagesPicker images={form.images} onEditImages={(images) => editBuildsForm({ images })} />
               <label className="flex items-center gap-2.5 text-sm text-muted-foreground">
                 <Checkbox
                   checked={form.spotlight}
@@ -196,9 +252,9 @@ export default function BuildsList() {
                 {t('Also show this on Spotlight', 'Tampilkan juga di Spotlight')}
               </label>
               <div className="flex flex-wrap items-center gap-3 border-t border-border pt-4">
-                <Button onClick={submitBuilds} disabled={storeBuilds.isPending} className="gap-2">
-                  {storeBuilds.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
-                  {t('Post', 'Posting')}
+                <Button onClick={submitBuilds} disabled={storeBuilds.isPending || modifyBuilds.isPending} className="gap-2">
+                  {(storeBuilds.isPending || modifyBuilds.isPending) && <Loader2 className="h-4 w-4 animate-spin" />}
+                  {filters.editingId ? t('Save', 'Simpan') : t('Post', 'Posting')}
                 </Button>
                 <Button variant="ghost" onClick={clearBuildsForm}>{t('Cancel', 'Batal')}</Button>
               </div>
@@ -227,6 +283,7 @@ export default function BuildsList() {
                       </p>
                       <h3 className="mt-1 font-semibold leading-snug">{build.title}</h3>
                       <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground text-pretty">{build.description}</p>
+                      <BuildsImagesGallery images={build.images} title={build.title} />
 
                       <div className="mt-4 flex flex-wrap items-center gap-4">
                         <button
@@ -258,6 +315,32 @@ export default function BuildsList() {
                           <Link href="/spotlight" className="text-xs font-medium text-foreground hover:underline">
                             {t('On Spotlight', 'Di Spotlight')}
                           </Link>
+                        )}
+
+                        {build.isOwner && (
+                          <div className="ml-auto flex items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() => editBuilds(build)}
+                              className="flex items-center gap-1 rounded px-1.5 py-1 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+                            >
+                              <Pencil className="h-3.5 w-3.5" />
+                              {t('Edit', 'Ubah')}
+                            </button>
+                            <DeleteConfirmButton
+                              title={t('Delete this build?', 'Hapus build ini?')}
+                              description={t(
+                                'It will also disappear from Spotlight if it was there.',
+                                'Build ini juga akan hilang dari Spotlight jika tampil di sana.'
+                              )}
+                              disabled={removeBuilds.isPending}
+                              className="flex items-center gap-1 rounded px-1.5 py-1 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-destructive"
+                              onClearConfirm={() => clearBuilds(build.id)}
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                              {t('Delete', 'Hapus')}
+                            </DeleteConfirmButton>
+                          </div>
                         )}
                       </div>
                     </div>

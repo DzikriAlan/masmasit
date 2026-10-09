@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import type { DataSpotlight } from '@/features/spotlight/types/spotlightTypes';
 import { useSpotlightControllers } from '@/features/spotlight/controllers/spotlightControllers';
 import { SpotlightCard } from '@/features/spotlight/components/SpotlightCard';
+import type { SpotlightCardItem } from '@/features/spotlight/components/SpotlightCard';
 
 import { AppShell } from '@/components/app-shell';
 import { PageHeader } from '@/components/page-header';
@@ -14,7 +15,6 @@ import { LoadData } from '@/components/load-data';
 import { CardGridSkeleton } from '@/components/card-skeleton';
 import { useAuth } from '@/components/auth-provider';
 import { useLang } from '@/components/language-provider';
-import { signedOutState } from '@/shared/lib/browse-gate';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -34,12 +34,23 @@ const EMPTY_FORM = { title: '', description: '', link_url: '', as: 'solo_builder
 export default function SpotlightList() {
   const { user, loading: authLoading } = useAuth();
   const { t } = useLang();
-  const { fetchSpotlight, fetchSpotlightAgenciesOwned, storeSpotlight } = useSpotlightControllers(user?.id);
+  const {
+    fetchSpotlight,
+    fetchSpotlightAgenciesOwned,
+    fetchSpotlightLiked,
+    storeSpotlight,
+    storeSpotlightLike,
+    removeSpotlightLike,
+    modifySpotlight,
+    removeSpotlight,
+  } = useSpotlightControllers(user?.id);
 
-  const [filters, setFilters] = useState({ isComposerOpen: false });
+  const [filters, setFilters] = useState({ isComposerOpen: false, editingId: '' });
   const [form, setForm] = useState(EMPTY_FORM);
 
   const data = useMemo(() => {
+    const likedIds = new Set((fetchSpotlightLiked.data ?? []).map((like) => like.build_id));
+
     const getSourceLabel = (item: DataSpotlight) => {
       const labels: Record<DataSpotlight['source_type'], string> = {
         agency: t('Agency', 'Agency'),
@@ -63,6 +74,10 @@ export default function SpotlightList() {
       likes: item.likes_count,
       linkUrl: item.link_url,
       isHot: index === 0 && item.likes_count > 0,
+      isLiked: likedIds.has(item.id),
+      isOwner: item.user_id === user?.id,
+      isFromBuilds: item.source_type === 'build',
+      href: `/spotlight/${item.id}`,
     });
 
     const list = (fetchSpotlight.data ?? []).map(getMappedItem);
@@ -71,14 +86,13 @@ export default function SpotlightList() {
       data: list,
       isLoading: fetchSpotlight.isPending,
       isError: fetchSpotlight.isError,
-      ...signedOutState(!authLoading && !user, t, t('Spotlight', 'Spotlight')),
       isEmpty: !fetchSpotlight.isPending && !fetchSpotlight.isError && list.length === 0,
       errorTitle: t('Could not load Spotlight.', 'Gagal memuat Spotlight.'),
       errorSubtitle: t('Check your connection and try again.', 'Periksa koneksi lalu coba lagi.'),
       emptyTitle: t('Nothing on the shelf yet.', 'Belum ada yang tayang di etalase.'),
       emptySubtitle: t('Shipped something? Submit it and start the ranking.', 'Baru rilis sesuatu? Submit dan mulai peringkatnya.'),
     };
-  }, [fetchSpotlight.data, fetchSpotlight.isPending, fetchSpotlight.isError, t, user, authLoading]);
+  }, [fetchSpotlight.data, fetchSpotlight.isPending, fetchSpotlight.isError, fetchSpotlightLiked.data, t, user, authLoading]);
 
   const ownedAgencies = fetchSpotlightAgenciesOwned.data ?? [];
 
@@ -87,7 +101,41 @@ export default function SpotlightList() {
       window.location.href = loginHref();
       return;
     }
-    setFilters((prev) => ({ ...prev, isComposerOpen: !prev.isComposerOpen }));
+    if (filters.isComposerOpen) {
+      clearSpotlightForm();
+      return;
+    }
+    setForm(EMPTY_FORM);
+    setFilters((prev) => ({ ...prev, isComposerOpen: true, editingId: '' }));
+  };
+
+  const editSpotlightLike = (item: SpotlightCardItem) => {
+    if (!user) {
+      window.location.href = loginHref();
+      return;
+    }
+    if (storeSpotlightLike.isPending || removeSpotlightLike.isPending) return;
+    if (item.isLiked) removeSpotlightLike.mutate(item.id);
+    else storeSpotlightLike.mutate(item.id);
+  };
+
+  const editSpotlightItem = (item: SpotlightCardItem) => {
+    setForm({ ...EMPTY_FORM, title: item.title, description: item.description, link_url: item.linkUrl ?? '' });
+    setFilters((prev) => ({ ...prev, isComposerOpen: true, editingId: item.id }));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // An entry that came from Builds is only taken off the shelf (the build
+  // itself stays on /builds); a direct submission is deleted outright.
+  const clearSpotlightItem = async (item: SpotlightCardItem) => {
+    try {
+      if (item.isFromBuilds) await modifySpotlight.mutateAsync({ id: item.id, promoted_to_spotlight: false });
+      else await removeSpotlight.mutateAsync(item.id);
+    } catch {
+      toast.error(t('Failed to remove the entry', 'Gagal menghapus entri'));
+      return;
+    }
+    toast.success(t('Removed from Spotlight', 'Dihapus dari Spotlight'));
   };
 
   const editSpotlightForm = (patch: Partial<typeof EMPTY_FORM>) => {
@@ -96,7 +144,7 @@ export default function SpotlightList() {
 
   const clearSpotlightForm = () => {
     setForm(EMPTY_FORM);
-    setFilters((prev) => ({ ...prev, isComposerOpen: false }));
+    setFilters((prev) => ({ ...prev, isComposerOpen: false, editingId: '' }));
   };
 
   const submitSpotlight = async () => {
@@ -104,6 +152,22 @@ export default function SpotlightList() {
 
     if (!form.title.trim() || !form.description.trim()) {
       toast.error(t('Please fill in a title and description', 'Isi judul dan deskripsi'));
+      return;
+    }
+    if (filters.editingId) {
+      try {
+        await modifySpotlight.mutateAsync({
+          id: filters.editingId,
+          title: form.title,
+          description: form.description,
+          link_url: form.link_url || null,
+        });
+      } catch {
+        toast.error(t('Failed to save changes', 'Gagal menyimpan perubahan'));
+        return;
+      }
+      toast.success(t('Spotlight entry updated', 'Entri Spotlight diperbarui'));
+      clearSpotlightForm();
       return;
     }
     if (form.as === 'agency' && !form.agency_id) {
@@ -150,12 +214,15 @@ export default function SpotlightList() {
         {filters.isComposerOpen && (
           <Card className="mb-8 border-dashed">
             <CardHeader>
-              <CardTitle className="font-display text-xl">{t('Submit to Spotlight', 'Submit ke Spotlight')}</CardTitle>
+              <CardTitle className="font-display text-xl">
+                {filters.editingId ? t('Edit Spotlight entry', 'Ubah entri Spotlight') : t('Submit to Spotlight', 'Submit ke Spotlight')}
+              </CardTitle>
               <CardDescription>
                 {t('Tell members what you built and where to find it.', 'Ceritakan apa yang kamu bangun dan di mana menemukannya.')}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-5">
+              {!filters.editingId && (
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="spotlight-as">{t('Submitting as', 'Submit sebagai')}</Label>
@@ -184,6 +251,7 @@ export default function SpotlightList() {
                   </div>
                 )}
               </div>
+              )}
 
               <div className="space-y-2">
                 <Label htmlFor="spotlight-title">{t('Product or service name', 'Nama produk atau jasa')}</Label>
@@ -217,9 +285,9 @@ export default function SpotlightList() {
               </div>
 
               <div className="flex flex-wrap items-center gap-3 border-t border-border pt-4">
-                <Button onClick={submitSpotlight} disabled={storeSpotlight.isPending} className="gap-2">
-                  {storeSpotlight.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
-                  {t('Submit', 'Submit')}
+                <Button onClick={submitSpotlight} disabled={storeSpotlight.isPending || modifySpotlight.isPending} className="gap-2">
+                  {(storeSpotlight.isPending || modifySpotlight.isPending) && <Loader2 className="h-4 w-4 animate-spin" />}
+                  {filters.editingId ? t('Save', 'Simpan') : t('Submit', 'Submit')}
                 </Button>
                 <Button variant="ghost" onClick={clearSpotlightForm}>{t('Cancel', 'Batal')}</Button>
               </div>
@@ -238,6 +306,20 @@ export default function SpotlightList() {
                   item={item}
                   hotLabel={t('Hot', 'Hot')}
                   visitLabel={t('Visit', 'Kunjungi')}
+                  labels={{
+                    like: item.isLiked ? t('Unlike', 'Batal suka') : t('Like', 'Suka'),
+                    edit: t('Edit', 'Ubah'),
+                    delete: item.isFromBuilds ? t('Remove', 'Turunkan') : t('Delete', 'Hapus'),
+                    deleteTitle: item.isFromBuilds
+                      ? t('Remove from Spotlight?', 'Turunkan dari Spotlight?')
+                      : t('Delete this entry?', 'Hapus entri ini?'),
+                    deleteDescription: item.isFromBuilds
+                      ? t('The build stays on /builds; it just leaves Spotlight.', 'Build tetap ada di /builds; hanya turun dari Spotlight.')
+                      : t('This cannot be undone.', 'Tindakan ini tidak bisa dibatalkan.'),
+                  }}
+                  onEditLike={editSpotlightLike}
+                  onEditItem={editSpotlightItem}
+                  onClearItem={clearSpotlightItem}
                 />
               ))}
             </div>

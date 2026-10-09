@@ -30,6 +30,16 @@ export interface PayloadPostDiscussionsComments {
   body: string;
 }
 
+export interface PayloadPatchDiscussions {
+  title?: string;
+  body?: string;
+  is_featured?: boolean;
+}
+
+export interface PayloadPatchDiscussionsComments {
+  body: string;
+}
+
 export interface Discussions {
   status: string;
   statusTitle: string;

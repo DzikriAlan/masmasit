@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 
 import { unwrapApiResponse } from '@/shared/lib/apiResponse';
 
-import { getArticles } from '../services/articlesServices';
+import { getArticles, getArticlesDetail } from '../services/articlesServices';
 
 export const useArticlesControllers = () => {
   const fetchArticles = useQuery({
@@ -11,4 +11,14 @@ export const useArticlesControllers = () => {
   });
 
   return { fetchArticles };
+};
+
+export const useArticlesDetailControllers = (slug: string) => {
+  const fetchArticlesDetail = useQuery({
+    queryKey: ['articlesDetail', slug],
+    queryFn: async () => unwrapApiResponse(await getArticlesDetail(slug)) ?? null,
+    enabled: Boolean(slug),
+  });
+
+  return { fetchArticlesDetail };
 };

@@ -1,7 +1,7 @@
 import { supabase } from '@/shared/lib/supabase';
 import { toApiResponse } from '@/shared/lib/apiResponse';
 
-import type { DataBuilds, PayloadPostBuilds } from '../types/buildsTypes';
+import type { DataBuilds, PayloadPatchBuilds, PayloadPostBuilds } from '../types/buildsTypes';
 
 export const getBuilds = async () => {
   return toApiResponse<DataBuilds[]>(
@@ -35,5 +35,21 @@ export const deleteBuildsLike = async (buildId: string, userId: string) => {
   return toApiResponse<null>(
     supabase.from('build_likes').delete().eq('build_id', buildId).eq('user_id', userId),
     'Unliked'
+  );
+};
+
+// `.select('id')` on writes: RLS silently skips rows that are not the
+// caller's, so an empty result is how a denied edit/delete shows up.
+export const patchBuilds = async (id: string, payload: PayloadPatchBuilds) => {
+  return toApiResponse<{ id: string }[]>(
+    supabase.from('builds').update(payload).eq('id', id).select('id'),
+    'Build updated successfully'
+  );
+};
+
+export const deleteBuilds = async (id: string) => {
+  return toApiResponse<{ id: string }[]>(
+    supabase.from('builds').delete().eq('id', id).select('id'),
+    'Build deleted successfully'
   );
 };

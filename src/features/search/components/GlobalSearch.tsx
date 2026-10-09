@@ -7,10 +7,10 @@ import { useAuth } from '@/components/auth-provider';
 import { useLang } from '@/components/language-provider';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 
 import type { DataSearch } from '@/features/search/types/searchTypes';
 import { useSearchControllers } from '@/features/search/controllers/searchControllers';
+import { SearchTypeBadge } from '@/features/search/components/SearchTypeBadge';
 
 type SearchResult = DataSearch;
 
@@ -51,8 +51,6 @@ export function GlobalSearch() {
     setOpen(false);
   };
 
-  const labels = { profile: t('Members', 'Member'), job: t('Jobs', 'Lowongan'), course: t('Courses', 'Kursus'), project: t('Projects', 'Proyek') };
-
   return (
     <>
       <button
@@ -70,7 +68,7 @@ export function GlobalSearch() {
               ref={inputRef}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder={t('Search members, jobs, courses, projects...', 'Cari member, lowongan, kursus, proyek...')}
+              placeholder={t('Search members, jobs, events, discussions...', 'Cari member, lowongan, event, diskusi...')}
               className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
             />
             {loading && <span className="shrink-0 text-xs text-muted-foreground">{t('Searching…', 'Mencari…')}</span>}
@@ -92,7 +90,7 @@ export function GlobalSearch() {
                       <p className="text-sm font-medium truncate">{r.title}</p>
                       <p className="text-xs text-muted-foreground truncate">{r.subtitle}</p>
                     </div>
-                    <Badge variant="outline" className="text-xs shrink-0">{labels[r.type]}</Badge>
+                    <SearchTypeBadge type={r.type} />
                   </button>
                 );
               })

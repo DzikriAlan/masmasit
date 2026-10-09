@@ -26,6 +26,7 @@ import { useDiscussionsFeaturedControllers } from '@/features/discussions/contro
 import { useEventsControllers } from '@/features/events/controllers/eventsControllers';
 import { useTalentsControllers } from '@/features/talents/controllers/talentsControllers';
 import { getSearch } from '@/features/search/services/searchServices';
+import { SearchTypeBadge } from '@/features/search/components/SearchTypeBadge';
 import { getJobs } from '@/features/jobs/services/jobsServices';
 
 /**
@@ -91,7 +92,6 @@ export default function DiscoverList() {
     enabled: debouncedTerm.length >= 2,
   });
   const heroResults = debouncedTerm.length >= 2 ? fetchHeroSearch.data ?? [] : [];
-  const searchLabels = { profile: t('Members', 'Member'), job: t('Jobs', 'Lowongan'), course: t('Courses', 'Kursus'), project: t('Projects', 'Proyek') };
 
   const { fetchCaseStudies } = useCaseStudiesControllers();
   const { fetchArticles } = useArticlesControllers();
@@ -121,6 +121,7 @@ export default function DiscoverList() {
       ...articles.map((a) => ({
         id: `article-${a.id}`, kind: 'article' as const, title: a.title, excerpt: a.excerpt,
         image: a.cover_image_url, created_at: a.created_at,
+        href: a.slug ? `/articles/${a.slug}` : undefined,
       })),
       ...studies.map((cs) => ({
         id: `case-study-${cs.id}`, kind: 'case-study' as const, title: cs.title, excerpt: cs.result,
@@ -205,7 +206,7 @@ export default function DiscoverList() {
                         <p className="truncate text-sm font-medium">{r.title}</p>
                         <p className="truncate text-xs text-muted-foreground">{r.subtitle}</p>
                       </div>
-                      <Badge variant="outline" className="shrink-0 text-xs">{searchLabels[r.type]}</Badge>
+                      <SearchTypeBadge type={r.type} />
                     </button>
                   ))
                 )}
@@ -394,7 +395,7 @@ export default function DiscoverList() {
             >
               <div className="flex flex-col gap-3">
                 {upcomingEvents.map((e) => (
-                  <div key={e.id} className="flex items-center gap-3 rounded-lg border border-border p-3.5">
+                  <Link key={e.id} href={`/events/${e.id}`} className="flex items-center gap-3 rounded-lg border border-border p-3.5 transition-colors hover:border-primary/40">
                     <div className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-lg', TONE_CHIP[toneOf('events')])}>
                       <Calendar className="h-4.5 w-4.5" />
                     </div>
@@ -410,7 +411,7 @@ export default function DiscoverList() {
                     ) : (
                       <Badge variant="outline" className="shrink-0 text-[11px]">{t('Free', 'Gratis')}</Badge>
                     )}
-                  </div>
+                  </Link>
                 ))}
               </div>
             </LoadData>
@@ -448,7 +449,8 @@ export default function DiscoverList() {
               >
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
                   {articles.map((a) => (
-                    <Card key={a.id} className="glass group h-full overflow-hidden transition-all hover:border-primary/40 hover:-translate-y-0.5">
+                    <Link key={a.id} href={a.slug ? `/articles/${a.slug}` : '/discover'}>
+                    <Card className="glass group h-full overflow-hidden transition-all hover:border-primary/40 hover:-translate-y-0.5">
                       {a.cover_image_url && (
                         <div className="relative h-40 overflow-hidden">
                           <img src={a.cover_image_url} alt={a.title} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" />
@@ -459,6 +461,7 @@ export default function DiscoverList() {
                         <p className="mt-2 text-sm leading-relaxed text-muted-foreground text-pretty">{a.excerpt}</p>
                       </CardContent>
                     </Card>
+                    </Link>
                   ))}
                 </div>
               </LoadData>

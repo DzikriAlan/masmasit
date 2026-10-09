@@ -4,6 +4,8 @@ import { toApiResponse } from '@/shared/lib/apiResponse';
 import type {
   DataDiscussions,
   DataDiscussionsComments,
+  PayloadPatchDiscussions,
+  PayloadPatchDiscussionsComments,
   PayloadPostDiscussions,
   PayloadPostDiscussionsComments,
 } from '../types/discussionsTypes';
@@ -59,5 +61,35 @@ export const postDiscussionsComments = async (payload: PayloadPostDiscussionsCom
   return toApiResponse<{ id: string }>(
     supabase.from('discussion_comments').insert(payload).select('id').single(),
     'Comment posted successfully'
+  );
+};
+
+// `.select('id')` on writes: RLS silently filters rows a member may not touch,
+// so an empty result is how a denied edit/delete shows up.
+export const patchDiscussions = async (id: string, payload: PayloadPatchDiscussions) => {
+  return toApiResponse<{ id: string }[]>(
+    supabase.from('discussions').update(payload).eq('id', id).select('id'),
+    'Discussion updated successfully'
+  );
+};
+
+export const deleteDiscussions = async (id: string) => {
+  return toApiResponse<{ id: string }[]>(
+    supabase.from('discussions').delete().eq('id', id).select('id'),
+    'Discussion deleted successfully'
+  );
+};
+
+export const patchDiscussionsComments = async (id: string, payload: PayloadPatchDiscussionsComments) => {
+  return toApiResponse<{ id: string }[]>(
+    supabase.from('discussion_comments').update(payload).eq('id', id).select('id'),
+    'Comment updated successfully'
+  );
+};
+
+export const deleteDiscussionsComments = async (id: string) => {
+  return toApiResponse<{ id: string }[]>(
+    supabase.from('discussion_comments').delete().eq('id', id).select('id'),
+    'Comment deleted successfully'
   );
 };

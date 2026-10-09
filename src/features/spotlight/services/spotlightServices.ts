@@ -1,6 +1,8 @@
 import { supabase } from '@/shared/lib/supabase';
 import { toApiResponse } from '@/shared/lib/apiResponse';
 
+import type { PayloadPatchBuilds } from '@/features/builds/types/buildsTypes';
+
 import type { DataSpotlight, PayloadPostSpotlight } from '../types/spotlightTypes';
 
 // Spotlight has no table of its own — REST.md Bagian 2 says its data comes
@@ -33,5 +35,44 @@ export const postSpotlight = async (payload: PayloadPostSpotlight) => {
       .select('id')
       .single(),
     'Submitted to Spotlight'
+  );
+};
+
+// Likes are the same build_likes rows Builds uses — one like, one Hot Rank
+// signal, whichever page it was clicked on.
+export const getSpotlightLiked = async (userId: string) => {
+  return toApiResponse<{ build_id: string }[]>(
+    supabase.from('build_likes').select('build_id').eq('user_id', userId),
+    'Liked entries retrieved successfully'
+  );
+};
+
+export const postSpotlightLike = async (buildId: string, userId: string) => {
+  return toApiResponse<null>(
+    supabase.from('build_likes').insert({ build_id: buildId, user_id: userId }),
+    'Liked'
+  );
+};
+
+export const deleteSpotlightLike = async (buildId: string, userId: string) => {
+  return toApiResponse<null>(
+    supabase.from('build_likes').delete().eq('build_id', buildId).eq('user_id', userId),
+    'Unliked'
+  );
+};
+
+// `.select('id')`: RLS skips rows the caller doesn't own without raising, so
+// an empty result is how a denied edit/delete shows up.
+export const patchSpotlight = async (id: string, payload: PayloadPatchBuilds) => {
+  return toApiResponse<{ id: string }[]>(
+    supabase.from('builds').update(payload).eq('id', id).select('id'),
+    'Spotlight entry updated'
+  );
+};
+
+export const deleteSpotlight = async (id: string) => {
+  return toApiResponse<{ id: string }[]>(
+    supabase.from('builds').delete().eq('id', id).select('id'),
+    'Spotlight entry deleted'
   );
 };

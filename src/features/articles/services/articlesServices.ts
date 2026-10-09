@@ -9,9 +9,21 @@ export const getArticles = async () => {
   return toApiResponse<DataArticles[]>(
     supabase
       .from('articles')
-      .select('id, title, excerpt, body, cover_image_url, created_at')
+      .select('id, slug, title, excerpt, body, cover_image_url, created_at')
       .eq('is_published', true)
       .order('created_at', { ascending: false }),
     'Articles retrieved successfully'
+  );
+};
+
+export const getArticlesDetail = async (slug: string) => {
+  return toApiResponse<DataArticles | null>(
+    supabase
+      .from('articles')
+      .select('id, slug, title, excerpt, body, cover_image_url, created_at')
+      .eq('slug', slug)
+      .eq('is_published', true)
+      .maybeSingle(),
+    'Article retrieved successfully'
   );
 };
