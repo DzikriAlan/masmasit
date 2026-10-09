@@ -8,7 +8,7 @@ export const postUploads = async (payload: PayloadPostUploads) => {
   try {
     const { error } = await supabase.storage
       .from(payload.bucket)
-      .upload(payload.path, payload.file, { cacheControl: '3600', upsert: true });
+      .upload(payload.path, payload.file, { cacheControl: '3600', upsert: true, contentType: payload.contentType });
 
     if (error) return errorResponse(API_ERROR_CODE.VALIDATION_ERROR, error.message);
 

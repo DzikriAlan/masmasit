@@ -5,6 +5,7 @@ import { Upload, Loader2, X, ImageIcon } from 'lucide-react';
 import { useAuth } from '@/components/auth-provider';
 import { useLang } from '@/components/language-provider';
 import { toast } from 'sonner';
+import { compressImage } from '@/shared/lib/image-compress';
 
 import { useUploadsControllers } from '@/features/uploads/controllers/uploadsControllers';
 
@@ -15,8 +16,20 @@ interface FileUploadProps {
   label?: string;
   accept?: string;
   maxSizeMB?: number;
+  /** Longest side after compression; avatars and logos need far less than photos. */
+  maxDimension?: number;
+  /**
+   * Fixed name inside the member's folder (e.g. 'avatar'). Re-uploading then
+   * replaces the previous file instead of piling up a new one each time.
+   * Leave empty for galleries that keep several images.
+   */
+  fileName?: string;
   className?: string;
 }
+
+// Originals may be large phone photos; what is stored is the compressed
+// result, which must fit maxSizeMB (the bucket enforces the same limit).
+const MAX_ORIGINAL_MB = 15;
 
 export function FileUpload({
   bucket,
@@ -25,6 +38,8 @@ export function FileUpload({
   label,
   accept = 'image/png,image/jpeg,image/webp',
   maxSizeMB = 2,
+  maxDimension = 1600,
+  fileName,
   className = '',
 }: FileUploadProps) {
   const { user } = useAuth();
@@ -54,18 +69,25 @@ export function FileUpload({
       return;
     }
 
-    if (file.size > maxSizeMB * 1024 * 1024) {
-      toast.error(t(`File must be under ${maxSizeMB}MB`, `File harus di bawah ${maxSizeMB}MB`));
+    if (file.size > MAX_ORIGINAL_MB * 1024 * 1024) {
+      toast.error(t(`File must be under ${MAX_ORIGINAL_MB}MB`, `File harus di bawah ${MAX_ORIGINAL_MB}MB`));
       return;
     }
 
     setUploading(true);
-    const ext = file.name.split('.').pop()?.toLowerCase() ?? 'jpg';
-    const path = `${user.id}/${Date.now()}.${ext}`;
-
     let uploaded: { publicUrl: string };
     try {
-      uploaded = await storeUploads.mutateAsync({ bucket, path, file });
+      const image = await compressImage(file, { maxDimension });
+      if (image.blob.size > maxSizeMB * 1024 * 1024) {
+        setUploading(false);
+        toast.error(t(`Image is still over ${maxSizeMB}MB after compression`, `Gambar masih di atas ${maxSizeMB}MB setelah dikompres`));
+        return;
+      }
+      const name = fileName ?? `${Date.now()}`;
+      const path = `${user.id}/${name}.${image.extension}`;
+      uploaded = await storeUploads.mutateAsync({ bucket, path, file: image.blob, contentType: image.type });
+      // A fixed name keeps the same public URL; the version busts browser and CDN caches.
+      if (fileName) uploaded = { publicUrl: `${uploaded.publicUrl}?v=${Date.now()}` };
     } catch (error) {
       setUploading(false);
       const message = error instanceof Error ? error.message : '';
@@ -77,7 +99,7 @@ export function FileUpload({
     onUpload(uploaded.publicUrl);
     setUploading(false);
     toast.success(t('Upload complete', 'Upload selesai'));
-  }, [user, bucket, maxSizeMB, onUpload, t, storeUploads]);
+  }, [user, bucket, maxSizeMB, maxDimension, fileName, onUpload, t, storeUploads]);
 
   const modifyDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
