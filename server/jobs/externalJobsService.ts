@@ -1,14 +1,17 @@
 /**
- * Live remote engineer/developer listings — fetched from Remotive's public
- * job board API on every request (cached at the edge for an hour), not
- * stored in our own database. Remotive's API terms ask for at most a
- * handful of requests a day per consumer; Next.js's fetch cache below is
- * what keeps this app within that regardless of how many visitors open the
- * page, since only a cache miss actually reaches Remotive.
+ * Live remote engineer/developer listings — fetched from Remotive's and
+ * Jobicy's public job board APIs on every request (cached at the edge for an
+ * hour), not stored in our own database. Both ask consumers to poll sparingly;
+ * Next.js's fetch cache below is what keeps this app within that regardless
+ * of how many visitors open the page, since only a cache miss reaches them.
  *
- * Attribution requirement from Remotive's terms: every listing links back
- * to its own remotive.com URL, and the client UI credits "Remotive" as the
- * source — see ExternalJobsList.tsx.
+ * Attribution requirement from both boards' terms: every listing links back
+ * to its own posting URL, and each card credits its board by name — see
+ * `source` here and ExternalJobsList.tsx.
+ *
+ * Why two boards: since Oct 2026 Remotive's free API returns a fixed batch of
+ * ~18 jobs and ignores `search`, which left this page with ~9 listings and a
+ * search box that changed nothing. Jobicy's `tag` search does filter.
  */
 
 // Two queries merged and de-duplicated — `category=software-dev` alone
@@ -17,6 +20,10 @@
 const REMOTIVE_ENDPOINTS = [
   'https://remotive.com/api/remote-jobs?search=developer&limit=100',
   'https://remotive.com/api/remote-jobs?search=engineer&limit=100',
+];
+const JOBICY_ENDPOINTS = [
+  'https://jobicy.com/api/v2/remote-jobs?count=50&tag=developer',
+  'https://jobicy.com/api/v2/remote-jobs?count=50&tag=engineer',
 ];
 
 // Same exclusion the original request specified: engineer/developer roles,
@@ -27,8 +34,12 @@ const INCLUDE_TITLE = /\b(engineer|developer)\b/i;
 
 export type ExternalJobRole = 'backend' | 'frontend' | 'fullstack' | 'mobile' | 'devops' | 'data' | 'software';
 
+export type ExternalJobSource = 'Remotive' | 'Jobicy';
+
 export interface ExternalJob {
-  id: number;
+  /** `<source>-<board id>` — the two boards' numeric ids can collide. */
+  id: string;
+  source: ExternalJobSource;
   title: string;
   company_name: string;
   company_domain: string | null;
@@ -55,6 +66,22 @@ interface RemotiveJob {
   description: string;
 }
 
+interface JobicyJob {
+  id: number;
+  url: string;
+  jobTitle: string;
+  companyName: string;
+  jobIndustry?: string[];
+  jobType?: string[];
+  jobGeo?: string;
+  jobDescription?: string;
+  pubDate: string;
+  salaryMin?: number;
+  salaryMax?: number;
+  salaryCurrency?: string;
+  salaryPeriod?: string;
+}
+
 // Remotive's own logo endpoint (remotive.com/job/<id>/logo) sits behind a
 // Cloudflare bot challenge that 403s any hotlinked <img> request, so it can
 // never render client-side. Instead, pull the company's real site out of the
@@ -62,7 +89,7 @@ interface RemotiveJob {
 // tracking pixel, a social network, or a known ATS/apply-flow host — that
 // domain then drives a favicon lookup client-side (see ExternalJobsList).
 const NON_COMPANY_HOSTS = new Set([
-  'remotive.com', 'remotive.io',
+  'remotive.com', 'remotive.io', 'jobicy.com',
   'linkedin.com', 'twitter.com', 'x.com', 'facebook.com', 'instagram.com', 'youtube.com', 'github.com',
   'indeed.com', 'glassdoor.com', 'wellfound.com', 'angel.co',
   'bit.ly', 't.co', 'goo.gl', 'lnkd.in',
@@ -102,50 +129,86 @@ const roleFromJob = (title: string, tags: string[]): ExternalJobRole => {
 // anything — while the staff/principal/lead/hybrid exclusion stays.
 const MAX_QUERY_LENGTH = 60;
 
+// Next.js data cache: one shared fetch per hour across every visitor, not
+// one fetch per page view — this is what keeps us inside both boards'
+// "poll sparingly" guidance no matter how much traffic the page gets.
+const fetchJson = async <T,>(url: string): Promise<T> => {
+  const res = await fetch(url, { next: { revalidate: 3600 }, headers: { Accept: 'application/json' } });
+  if (!res.ok) throw new Error(`${new URL(url).hostname} responded ${res.status}`);
+  return (await res.json()) as T;
+};
+
+const jobicySalary = (j: JobicyJob): string | null => {
+  if (!j.salaryMin && !j.salaryMax) return null;
+  const fmt = (n: number) => n.toLocaleString('en-US');
+  const range = j.salaryMin && j.salaryMax && j.salaryMin !== j.salaryMax
+    ? `${fmt(j.salaryMin)}–${fmt(j.salaryMax)}`
+    : fmt((j.salaryMin || j.salaryMax) as number);
+  return [j.salaryCurrency, range, j.salaryPeriod && `/ ${j.salaryPeriod}`].filter(Boolean).join(' ');
+};
+
+const fromRemotive = (j: RemotiveJob): ExternalJob => ({
+  id: `remotive-${j.id}`,
+  source: 'Remotive',
+  title: j.title,
+  company_name: j.company_name,
+  company_domain: companyDomainFromDescription(j.description ?? ''),
+  url: j.url,
+  location: j.candidate_required_location || 'Worldwide',
+  job_type: j.job_type,
+  role_category: roleFromJob(j.title, j.tags ?? []),
+  tags: (j.tags ?? []).slice(0, 6),
+  salary: j.salary || null,
+  published_at: j.publication_date,
+});
+
+const fromJobicy = (j: JobicyJob): ExternalJob => ({
+  id: `jobicy-${j.id}`,
+  source: 'Jobicy',
+  title: j.jobTitle,
+  company_name: j.companyName,
+  company_domain: companyDomainFromDescription(j.jobDescription ?? ''),
+  url: j.url,
+  location: j.jobGeo?.trim() || 'Worldwide',
+  job_type: (j.jobType?.[0] ?? '').toLowerCase().replace(/-/g, '_'),
+  role_category: roleFromJob(j.jobTitle, j.jobIndustry ?? []),
+  tags: (j.jobIndustry ?? []).slice(0, 6),
+  salary: jobicySalary(j),
+  published_at: j.pubDate,
+});
+
 export const getExternalJobs = async (query?: string): Promise<ExternalJob[]> => {
   const q = query?.trim().slice(0, MAX_QUERY_LENGTH) ?? '';
-  const endpoints = q
+  const remotiveUrls = q
     ? [`https://remotive.com/api/remote-jobs?search=${encodeURIComponent(q)}&limit=100`]
     : REMOTIVE_ENDPOINTS;
+  const jobicyUrls = q
+    ? [`https://jobicy.com/api/v2/remote-jobs?count=50&tag=${encodeURIComponent(q)}`]
+    : JOBICY_ENDPOINTS;
 
-  const responses = await Promise.all(
-    endpoints.map((url) =>
-      fetch(url, {
-        // Next.js data cache: one shared fetch per hour across every
-        // visitor, not one fetch per page view — this is what keeps us
-        // inside Remotive's "a few requests a day" guidance no matter how
-        // much traffic the page gets.
-        next: { revalidate: 3600 },
-        headers: { Accept: 'application/json' },
-      })
-    )
-  );
+  // allSettled: one board being down (or rate-limiting us) should thin the
+  // list, not blank the page. Only when every request fails is it an error.
+  const results = await Promise.allSettled([
+    ...remotiveUrls.map(async (url) => (await fetchJson<{ jobs: RemotiveJob[] }>(url)).jobs.map(fromRemotive)),
+    ...jobicyUrls.map(async (url) => (await fetchJson<{ jobs?: JobicyJob[] }>(url)).jobs?.map(fromJobicy) ?? []),
+  ]);
 
-  for (const res of responses) {
-    if (!res.ok) throw new Error(`Remotive API responded ${res.status}`);
+  const failures = results.filter((r): r is PromiseRejectedResult => r.status === 'rejected');
+  if (failures.length === results.length) throw failures[0].reason;
+  for (const f of failures) console.warn('[external-jobs] source failed:', f.reason);
+
+  const byId = new Map<string, ExternalJob>();
+  for (const r of results) {
+    if (r.status === 'fulfilled') for (const job of r.value) byId.set(job.id, job);
   }
 
-  const bodies = (await Promise.all(responses.map((res) => res.json()))) as { jobs: RemotiveJob[] }[];
-
-  const byId = new Map<number, RemotiveJob>();
-  for (const body of bodies) {
-    for (const job of body.jobs) byId.set(job.id, job);
-  }
+  // Remotive ignores `search` (see top of file), so its batch is filtered
+  // against the query here; Jobicy's `tag` search already did that upstream.
+  const qLower = q.toLowerCase();
+  const matchesQuery = (j: ExternalJob) =>
+    j.source !== 'Remotive' || `${j.title} ${j.company_name} ${j.tags.join(' ')}`.toLowerCase().includes(qLower);
 
   return Array.from(byId.values())
-    .filter((j) => (q || INCLUDE_TITLE.test(j.title)) && !EXCLUDE_TITLE.test(j.title))
-    .sort((a, b) => new Date(b.publication_date).getTime() - new Date(a.publication_date).getTime())
-    .map((j) => ({
-      id: j.id,
-      title: j.title,
-      company_name: j.company_name,
-      company_domain: companyDomainFromDescription(j.description ?? ''),
-      url: j.url,
-      location: j.candidate_required_location || 'Worldwide',
-      job_type: j.job_type,
-      role_category: roleFromJob(j.title, j.tags ?? []),
-      tags: (j.tags ?? []).slice(0, 6),
-      salary: j.salary || null,
-      published_at: j.publication_date,
-    }));
+    .filter((j) => (q ? matchesQuery(j) : INCLUDE_TITLE.test(j.title)) && !EXCLUDE_TITLE.test(j.title))
+    .sort((a, b) => new Date(b.published_at).getTime() - new Date(a.published_at).getTime());
 };

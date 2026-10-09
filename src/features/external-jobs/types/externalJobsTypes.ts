@@ -1,7 +1,10 @@
 export type ExternalJobRole = 'backend' | 'frontend' | 'fullstack' | 'mobile' | 'devops' | 'data' | 'software';
 
+export type ExternalJobSource = 'Remotive' | 'Jobicy';
+
 export interface DataExternalJobs {
-  id: number;
+  id: string;
+  source: ExternalJobSource;
   title: string;
   company_name: string;
   company_domain: string | null;

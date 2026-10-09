@@ -79,9 +79,9 @@ const roleLabels: Record<ExternalJobRole, { en: string; id: string }> = {
 
 /**
  * Real remote engineer/developer listings, fetched live on every page load
- * (via /api/v1/external-jobs → Remotive's public API, cached ~1h server
+ * (via /api/v1/external-jobs → Remotive's and Jobicy's public APIs, cached ~1h server
  * side — see server/jobs/externalJobsService.ts) rather than stored in our
- * own database. The search box is the scrape query (forwarded to Remotive, never stored);
+ * own database. The search box is the scrape query (forwarded to both boards, never stored);
  * the country/role filters narrow the fetched batch client-side; applying leaves the site for the original posting.
  */
 // Remotive's `location` is often several regions in one string, e.g.
@@ -123,8 +123,8 @@ export default function ExternalJobsList() {
     <div>
       <p className="text-sm text-muted-foreground">
         {t(
-          'Fetched live from Remotive — applying takes you to the original posting.',
-          'Diambil langsung dari Remotive — melamar akan membawamu ke postingan aslinya.'
+          'Fetched live from Remotive and Jobicy — applying takes you to the original posting.',
+          'Diambil langsung dari Remotive dan Jobicy — melamar akan membawamu ke postingan aslinya.'
         )}
       </p>
 
@@ -197,7 +197,7 @@ export default function ExternalJobsList() {
           isError: fetchExternalJobs.isError,
           isEmpty: jobs.length === 0,
           errorTitle: t('Could not load jobs right now.', 'Gagal memuat lowongan saat ini.'),
-          errorSubtitle: t('Remotive may be briefly unavailable — try again shortly.', 'Remotive mungkin sedang tidak tersedia — coba lagi sebentar lagi.'),
+          errorSubtitle: t('The job boards may be briefly unavailable — try again shortly.', 'Sumber lowongan mungkin sedang tidak tersedia — coba lagi sebentar lagi.'),
           emptyTitle: t('No matching jobs found.', 'Tidak ada lowongan yang cocok.'),
           emptySubtitle: t('Try a different search or filter.', 'Coba pencarian atau filter lain.'),
         }}
@@ -248,7 +248,7 @@ export default function ExternalJobsList() {
               )}
 
               <p className="mt-auto pt-3 text-xs text-muted-foreground/70">
-                {t('via Remotive', 'via Remotive')} · {new Date(job.published_at).toLocaleDateString('id-ID')}
+                via {job.source} · {new Date(job.published_at).toLocaleDateString('id-ID')}
               </p>
             </a>
           ))}
