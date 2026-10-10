@@ -22,7 +22,7 @@ export default function DirectoryDetail() {
   const params = useParams();
   const router = useRouter();
 
-  const { fetchDirectoryDetail } = useDirectoryDetailControllers(params.id as string);
+  const { fetchDirectoryDetail } = useDirectoryDetailControllers(params.id as string, Boolean(user));
 
   const profile = fetchDirectoryDetail.data ?? null;
   const loading = fetchDirectoryDetail.isPending;

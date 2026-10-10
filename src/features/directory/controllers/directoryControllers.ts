@@ -21,10 +21,10 @@ export const useDirectoryControllers = () => {
   return { fetchDirectorySkills, fetchDirectory, payloadGetDirectory, setGetDirectory };
 };
 
-export const useDirectoryDetailControllers = (id: string) => {
+export const useDirectoryDetailControllers = (id: string, isSignedIn = false) => {
   const fetchDirectoryDetail = useQuery({
-    queryKey: ['directoryDetail', id],
-    queryFn: async () => unwrapApiResponse(await getDirectoryDetail(id)) ?? null,
+    queryKey: ['directoryDetail', id, isSignedIn],
+    queryFn: async () => unwrapApiResponse(await getDirectoryDetail(id, isSignedIn)) ?? null,
     enabled: Boolean(id),
   });
 

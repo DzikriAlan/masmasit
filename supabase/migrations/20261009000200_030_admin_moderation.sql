@@ -151,5 +151,10 @@ DROP POLICY IF EXISTS "update_bookings_admin" ON bookings;
 CREATE POLICY "update_bookings_admin" ON bookings FOR UPDATE
   TO authenticated USING (is_admin()) WITH CHECK (is_admin());
 
+-- 028 limits guests to a column whitelist on profiles and builds it from the
+-- columns that exist at that point, which is before these two. Public pages
+-- (shared profile links, talents) filter on is_suspended, so guests need it.
+GRANT SELECT (is_suspended, region_id) ON profiles TO anon;
+
 -- PostgREST caches the schema; the new columns must be visible immediately.
 NOTIFY pgrst, 'reload schema';

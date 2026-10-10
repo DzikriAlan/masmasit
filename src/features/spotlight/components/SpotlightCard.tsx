@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { ArrowUpRight, Heart, Pencil, Trash2 } from 'lucide-react';
+import { ShareButton } from '@/components/share-button';
 
 import { DeleteConfirmButton } from '@/components/delete-confirm-button';
 import { Badge } from '@/components/ui/badge';
@@ -117,6 +118,7 @@ export function SpotlightCard({
               {labels.delete}
             </DeleteConfirmButton>
           )}
+          <ShareButton compact url={`/spotlight/${item.id}`} title={`${item.title} — MasmasIT Spotlight`} />
           {item.linkUrl && (
             <a
               href={item.linkUrl}

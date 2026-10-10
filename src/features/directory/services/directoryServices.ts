@@ -46,11 +46,17 @@ export const getDirectory = async (payload: PayloadGetDirectory) => {
   );
 };
 
-export const getDirectoryDetail = async (id: string) => {
+// Guests may open a shared profile link; anon can only read these columns
+// (028). WhatsApp is added for signed-in members.
+const DIRECTORY_PUBLIC_COLUMNS =
+  'id, full_name, bio, avatar_url, location, current_job_status, linkedin_url, calendly_url, is_coach, coach_approved, is_talent, talent_approved, created_at';
+
+export const getDirectoryDetail = async (id: string, isSignedIn = false) => {
+  const columns = isSignedIn ? `${DIRECTORY_PUBLIC_COLUMNS}, whatsapp` : DIRECTORY_PUBLIC_COLUMNS;
   return toApiResponse<DataDirectoryDetail>(
     supabase
       .from('profiles')
-      .select('*, user_skills(level, skills(name, category)), experiences(*)')
+      .select(`${columns}, user_skills(level, skills(name, category)), experiences(*)`)
       .eq('id', id)
       .eq('is_suspended', false)
       .maybeSingle(),
