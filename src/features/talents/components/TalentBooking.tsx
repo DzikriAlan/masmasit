@@ -13,6 +13,7 @@ import { AppShell } from '@/components/app-shell';
 import { LoadData } from '@/components/load-data';
 import { useAuth } from '@/components/auth-provider';
 import { useLang } from '@/components/language-provider';
+import { ShareButton } from '@/components/share-button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -20,7 +21,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ShareButton } from '@/components/share-button';
 import { MemberReviews } from '@/features/reviews/components/MemberReviews';
 import { loginHref } from '@/shared/lib/utils';
 

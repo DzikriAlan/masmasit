@@ -19,6 +19,7 @@ import { signedOutState } from '@/shared/lib/browse-gate';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { ShareButton } from '@/components/share-button';
 import { TONE_CHIP, toneOf } from '@/shared/lib/tones';
 import { cn } from '@/shared/lib/utils';
 
@@ -197,6 +198,7 @@ export default function DirectoryList() {
                             {t('Talent', 'Talent')}
                           </Badge>
                         )}
+                        <ShareButton compact url={`/directory/${member.id}`} title={`${member.name} — MasmasIT`} className="-my-1.5 -mr-2" />
                       </div>
                       {member.location && (
                         <p className="mt-0.5 flex items-center gap-1 truncate text-sm text-muted-foreground">

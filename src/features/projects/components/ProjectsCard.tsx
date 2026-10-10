@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { CalendarDays } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
+import { ShareButton } from '@/components/share-button';
 import { TONE_TEXT, toneOf } from '@/shared/lib/tones';
 import { cn } from '@/shared/lib/utils';
 
@@ -42,12 +43,15 @@ export function ProjectsCard({ project }: Readonly<{ project: ProjectsCardItem }
         <p className={cn('font-display text-lg font-semibold', TONE_TEXT[toneOf('projects')])}>{project.budget}</p>
         <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border/60 pt-3 text-xs text-muted-foreground">
           <span className="truncate">{project.author}</span>
-          {project.deadline && (
-            <span className="flex shrink-0 items-center gap-1">
-              <CalendarDays className="h-3 w-3" />
-              {project.deadline}
-            </span>
-          )}
+          <span className="flex shrink-0 items-center gap-1">
+            {project.deadline && (
+              <>
+                <CalendarDays className="h-3 w-3" />
+                {project.deadline}
+              </>
+            )}
+            <ShareButton compact url={`/projects/${project.id}`} title={project.title} />
+          </span>
         </div>
       </div>
     </Link>

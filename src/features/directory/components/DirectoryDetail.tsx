@@ -8,6 +8,7 @@ import { AppShell } from '@/components/app-shell';
 import { LoadData } from '@/components/load-data';
 import { useAuth } from '@/components/auth-provider';
 import { useLang } from '@/components/language-provider';
+import { ShareButton } from '@/components/share-button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -64,6 +65,12 @@ export default function DirectoryDetail() {
                   {profile.is_coach && profile.coach_approved === 'approved' && (
                     <Badge variant="secondary" className="gap-1"><GraduationCap className="h-3 w-3" /> Coach</Badge>
                   )}
+                  <ShareButton
+                    url={`/directory/${profile.id}`}
+                    title={`${profile.full_name ?? 'Member'} — MasmasIT`}
+                    text={t('IT practitioner on MasmasIT', 'Praktisi IT di MasmasIT')}
+                    className="ml-auto"
+                  />
                 </div>
                 {profile.location && (
                   <p className="mt-1 flex items-center gap-1 text-sm text-muted-foreground">

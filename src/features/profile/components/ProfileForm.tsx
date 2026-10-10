@@ -6,6 +6,7 @@ import { Loader2, Save, Upload, Plus, X } from 'lucide-react';
 import { ProfileRolesStatus } from '@/features/profile/components/ProfileRolesStatus';
 import { AppShell } from '@/components/app-shell';
 import { useAuth } from '@/components/auth-provider';
+import { ShareButton } from '@/components/share-button';
 import { useLang } from '@/components/language-provider';
 import { FileUpload } from '@/features/uploads/components/FileUpload';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -197,7 +198,16 @@ export default function ProfileForm() {
           <span className="h-1.5 w-1.5 animate-pulse-soft rounded-full bg-primary" />
           {t('Settings', 'Pengaturan')}
         </div>
-        <h1 className="mb-8 font-display text-3xl font-semibold animate-fade-up">{t('Edit Profile', 'Edit Profil')}</h1>
+        <div className="mb-8 flex flex-wrap items-center justify-between gap-3 animate-fade-up">
+          <h1 className="font-display text-3xl font-semibold">{t('Edit Profile', 'Edit Profil')}</h1>
+          {user && (
+            <ShareButton
+              url={`/directory/${user.id}`}
+              title={`${profile?.full_name ?? 'Member'} — MasmasIT`}
+              text={t('My profile on MasmasIT', 'Profil saya di MasmasIT')}
+            />
+          )}
+        </div>
 
         <Card className="glass glass-hover mb-6 animate-fade-up">
           <CardHeader><CardTitle>{t('Profile Information', 'Informasi Profil')}</CardTitle><CardDescription>{t('This information is visible to other members.', 'Informasi ini terlihat oleh member lain.')}</CardDescription></CardHeader>

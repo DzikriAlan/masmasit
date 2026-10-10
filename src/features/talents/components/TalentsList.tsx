@@ -15,6 +15,7 @@ import { CardGridSkeleton } from '@/components/card-skeleton';
 import { useLang } from '@/components/language-provider';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import { ShareButton } from '@/components/share-button';
 import { TONE_CHIP, toneOf } from '@/shared/lib/tones';
 
 
@@ -151,6 +152,7 @@ export default function TalentsList() {
                         <Button variant="outline" size="sm">LinkedIn</Button>
                       </a>
                     )}
+                    <ShareButton compact url={`/talents/${talent.id}`} title={`${talent.name} — MasmasIT`} />
                   </div>
                 </div>
               ))}
