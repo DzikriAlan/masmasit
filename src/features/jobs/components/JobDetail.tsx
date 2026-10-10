@@ -18,6 +18,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { loginHref } from '@/shared/lib/utils';
 import { ShareButton } from '@/components/share-button';
+import { extractUrls } from '@/shared/lib/linkify';
 
 export default function JobDetail() {
   const params = useParams();
@@ -41,6 +42,11 @@ export default function JobDetail() {
 
   const saveApplication = async () => {
     if (!user || !job) { router.push(loginHref()); return; }
+    // The company reads the CV and LinkedIn from this field, so it needs a link.
+    if (extractUrls(coverLetter).length === 0) {
+      toast.error(t('Paste at least one link: your CV or LinkedIn', 'Tempel minimal satu link: CV atau LinkedIn kamu'));
+      return;
+    }
     try {
       await storeJobsApplication.mutateAsync({
         job_id: job.id,
@@ -165,8 +171,23 @@ export default function JobDetail() {
             ) : showApply ? (
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="cover">{t('Cover Letter (optional)', 'Surat Lamaran (opsional)')}</Label>
-                  <Textarea id="cover" value={coverLetter} onChange={(e) => setCoverLetter(e.target.value)} placeholder={t('Why are you a good fit?', 'Mengapa Anda cocok?')} className="min-h-[120px]" />
+                  <Label htmlFor="cover">{t('CV link, LinkedIn & cover letter', 'Link CV, LinkedIn & surat lamaran')}</Label>
+                  <p className="text-xs text-muted-foreground">
+                    {t(
+                      'Paste your CV link (Google Drive / Dropbox, set to "Anyone with the link") and your LinkedIn or portfolio, then a few lines on why you fit.',
+                      'Tempel link CV (Google Drive / Dropbox, atur ke "Anyone with the link") dan LinkedIn atau portfolio, lalu beberapa kalimat kenapa kamu cocok.'
+                    )}
+                  </p>
+                  <Textarea
+                    id="cover"
+                    value={coverLetter}
+                    onChange={(e) => setCoverLetter(e.target.value)}
+                    placeholder={t(
+                      'CV: https://drive.google.com/...\nLinkedIn: https://linkedin.com/in/...\n\nWhy I fit: ...',
+                      'CV: https://drive.google.com/...\nLinkedIn: https://linkedin.com/in/...\n\nKenapa saya cocok: ...'
+                    )}
+                    className="min-h-[140px]"
+                  />
                 </div>
                 <div className="flex gap-2">
                   <Button variant="outline" onClick={() => setShowApply(false)}>{t('Cancel', 'Batal')}</Button>

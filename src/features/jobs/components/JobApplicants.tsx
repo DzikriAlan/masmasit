@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Loader2, Users, Briefcase, Check, X, Eye, MapPin, ArrowLeft, CalendarDays } from 'lucide-react';
+import Link from 'next/link';
+import { Loader2, Users, Briefcase, Check, X, Eye, MapPin, ArrowLeft, CalendarDays, ExternalLink } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
@@ -12,6 +13,7 @@ import { useLang } from '@/components/language-provider';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { LinkifiedText, extractUrls, urlLabel } from '@/shared/lib/linkify';
 
 import { usePostJobControllers, useJobsEmployerControllers } from '@/features/jobs/controllers/jobsControllers';
 import { JobsEditDialog } from '@/features/jobs/components/JobsEditDialog';
@@ -169,7 +171,14 @@ export default function JobApplicants() {
                         <div key={app.id} className="rounded-lg border border-border/60 p-4">
                           <div className="flex flex-wrap items-start justify-between gap-3">
                             <div>
-                              <p className="font-medium">{app.profiles?.full_name ?? t('Anonymous', 'Anonim')}</p>
+                              <Link
+                                href={`/directory/${app.user_id}`}
+                                target="_blank"
+                                className="font-medium hover:text-primary hover:underline"
+                                title={t('View profile', 'Lihat profil')}
+                              >
+                                {app.profiles?.full_name ?? t('Anonymous', 'Anonim')}
+                              </Link>
                               {app.profiles?.location && (
                                 <p className="flex items-center gap-1 text-xs text-muted-foreground">
                                   <MapPin className="h-3 w-3" /> {app.profiles.location}
@@ -184,6 +193,18 @@ export default function JobApplicants() {
                             </Badge>
                           </div>
 
+                          {extractUrls(app.cover_letter).length > 0 && (
+                            <div className="mt-3 flex flex-wrap gap-2">
+                              {extractUrls(app.cover_letter).map((url) => (
+                                <a key={url} href={url} target="_blank" rel="noopener noreferrer">
+                                  <Button size="sm" variant="outline" className="gap-1">
+                                    <ExternalLink className="h-3.5 w-3.5" /> {urlLabel(url)}
+                                  </Button>
+                                </a>
+                              ))}
+                            </div>
+                          )}
+
                           {app.cover_letter && (
                             <>
                               <Button
@@ -192,11 +213,11 @@ export default function JobApplicants() {
                                 className="mt-2 gap-1 px-0"
                                 onClick={() => setOpenLetterId(openLetterId === app.id ? null : app.id)}
                               >
-                                <Eye className="h-3.5 w-3.5" /> {t('Cover letter', 'Surat lamaran')}
+                                <Eye className="h-3.5 w-3.5" /> {t('Full application text', 'Isi lamaran lengkap')}
                               </Button>
                               {openLetterId === app.id && (
                                 <p className="mt-2 whitespace-pre-wrap rounded-md bg-muted/40 p-3 text-sm">
-                                  {app.cover_letter}
+                                  <LinkifiedText text={app.cover_letter} />
                                 </p>
                               )}
                             </>
