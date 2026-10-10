@@ -10,6 +10,7 @@ import { API_ERROR_CODE } from '@/shared/lib/apiResponse';
 import { useProjectsDetailControllers } from '@/features/projects/controllers/projectsControllers';
 import { useAuth } from '@/components/auth-provider';
 import { useLang } from '@/components/language-provider';
+import { ShareButton } from '@/components/share-button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -117,7 +118,10 @@ export default function ProjectDetail() {
   return (
     <AppShell>
       <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
-        <Button variant="ghost" onClick={() => router.back()} className="mb-4 gap-2"><ArrowLeft className="h-4 w-4" /> {t('Back', 'Kembali')}</Button>
+        <div className="mb-4 flex items-center justify-between gap-2">
+          <Button variant="ghost" onClick={() => router.back()} className="gap-2"><ArrowLeft className="h-4 w-4" /> {t('Back', 'Kembali')}</Button>
+          <ShareButton url={`/projects/${project.id}`} title={project.title} text={t('Project open for bids on MasmasIT', 'Proyek terbuka untuk bid di MasmasIT')} />
+        </div>
 
         <Card className="glass mb-6">
           <CardContent className="p-6 sm:p-8">

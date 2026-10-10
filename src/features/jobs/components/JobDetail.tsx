@@ -10,6 +10,7 @@ import { API_ERROR_CODE } from '@/shared/lib/apiResponse';
 import { useJobsDetailControllers } from '@/features/jobs/controllers/jobsControllers';
 import { useAuth } from '@/components/auth-provider';
 import { useLang } from '@/components/language-provider';
+import { ShareButton } from '@/components/share-button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -90,7 +91,10 @@ export default function JobDetail() {
   return (
     <AppShell>
       <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
-        <Button variant="ghost" onClick={() => router.back()} className="mb-4 gap-2"><ArrowLeft className="h-4 w-4" /> {t('Back', 'Kembali')}</Button>
+        <div className="mb-4 flex items-center justify-between gap-2">
+          <Button variant="ghost" onClick={() => router.back()} className="gap-2"><ArrowLeft className="h-4 w-4" /> {t('Back', 'Kembali')}</Button>
+          <ShareButton url={`/jobs/${job.id}`} title={`${job.title}${job.companies?.name ? ` — ${job.companies.name}` : ''}`} text={t('Open role on MasmasIT', 'Lowongan di MasmasIT')} />
+        </div>
 
         <Card className="glass mb-6">
           <CardContent className="p-6 sm:p-8">

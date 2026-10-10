@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { MapPin } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
+import { ShareButton } from '@/components/share-button';
 import { TONE_CHIP, toneOf } from '@/shared/lib/tones';
 
 export interface JobsCardItem {
@@ -52,7 +53,10 @@ export function JobsCard({ job }: Readonly<{ job: JobsCardItem }>) {
 
       <div className="mt-auto flex items-end justify-between gap-3 border-t border-border/60 pt-4">
         <p className="text-sm font-semibold text-success">{job.salary}</p>
-        {job.deadline && <p className="shrink-0 text-xs text-muted-foreground">{job.deadline}</p>}
+        <div className="flex shrink-0 items-center gap-1">
+          {job.deadline && <p className="text-xs text-muted-foreground">{job.deadline}</p>}
+          <ShareButton compact url={`/jobs/${job.id}`} title={`${job.title} — ${job.companyName}`} />
+        </div>
       </div>
     </Link>
   );
