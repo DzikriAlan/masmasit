@@ -14,9 +14,9 @@ import { useFeedLabels } from '@/features/feed/components/FeedItem';
 import { Button } from '@/components/ui/button';
 import heroBackground from '@/shared/images/backgroundhero2.png';
 
-/* MasmasIT's own booking page. Set NEXT_PUBLIC_CALENDLY_URL to the real
-   Calendly link; the fallback is the old generic destination. */
-const CALENDLY_URL = process.env.NEXT_PUBLIC_CALENDLY_URL || 'https://calendly.com';
+/* MasmasIT's own booking page. Without NEXT_PUBLIC_CALENDLY_URL the
+   "Schedule a call" option is hidden rather than sent to calendly.com. */
+const CALENDLY_URL = process.env.NEXT_PUBLIC_CALENDLY_URL?.trim() || null;
 
 const px = (id: string, w: number, h: number) =>
   `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&h=${h}&w=${w}`;
@@ -1095,12 +1095,14 @@ export default function HomePage() {
                     <span className="block truncate text-xs text-muted-foreground">{t('Usually replies within an hour', 'Biasanya dibalas dalam 1 jam')}</span>
                   </span>
                 </a>
-                <a href={CALENDLY_URL} target="_blank" rel="noreferrer" className="group flex items-center gap-3 bg-card p-4 transition-colors hover:bg-secondary">
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-sm font-medium">{t('Schedule a call', 'Jadwalkan panggilan')}</span>
-                    <span className="block truncate text-xs text-muted-foreground">{t('30 min · Calendly', '30 menit · Calendly')}</span>
-                  </span>
-                </a>
+                {CALENDLY_URL && (
+                  <a href={CALENDLY_URL} target="_blank" rel="noreferrer" className="group flex items-center gap-3 bg-card p-4 transition-colors hover:bg-secondary">
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-sm font-medium">{t('Schedule a call', 'Jadwalkan panggilan')}</span>
+                      <span className="block truncate text-xs text-muted-foreground">{t('30 min · Calendly', '30 menit · Calendly')}</span>
+                    </span>
+                  </a>
+                )}
                 <div className="group relative flex items-center gap-3 bg-card p-4 transition-colors hover:bg-secondary">
                   <a href={`mailto:${CONTACT_EMAIL}`} className="absolute inset-0" aria-label={t('Email us', 'Kirim email')} />
                   <span className="min-w-0 flex-1">
