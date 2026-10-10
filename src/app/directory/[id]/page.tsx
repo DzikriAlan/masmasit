@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const name = data.full_name || 'Member';
     return getDetailMetadata({
       path,
-      title: `${name} — MasmasIT`,
+      title: name,
       description: [data.location, data.bio].filter(Boolean).join(' · ') || `${name} is an IT practitioner on MasmasIT.`,
       image: data.avatar_url,
       type: 'profile',
