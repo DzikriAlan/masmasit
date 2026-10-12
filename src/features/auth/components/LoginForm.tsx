@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Loader2, Eye, EyeOff } from 'lucide-react';
@@ -26,6 +26,23 @@ export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
 
   const { fetchAuthLandingRoute } = useAuthControllers();
+
+  // /auth/callback sends a failed Google sign-in back here with the reason.
+  // Show it once, then drop it from the URL (keeping ?redirect=).
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('error') !== 'oauth') return;
+    const reason = params.get('error_description');
+    toast.error(t('Google sign-in failed. Please try again.', 'Login dengan Google gagal. Silakan coba lagi.'), {
+      description: reason ?? undefined,
+      duration: 10000,
+    });
+    params.delete('error');
+    params.delete('error_description');
+    const query = params.toString();
+    window.history.replaceState(null, '', `${window.location.pathname}${query ? `?${query}` : ''}`);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const saveGoogleSignIn = async () => {
     setGoogleLoading(true);

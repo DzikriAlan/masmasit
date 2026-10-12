@@ -9,12 +9,23 @@ export async function middleware(req: NextRequest) {
 
   // Supabase drops the user on the Site URL (e.g. /?code=...) when the app's
   // redirect_to isn't in the allowlist. Forward the code to the exchange route
-  // so login still completes wherever it lands.
+  // so login still completes wherever it lands. A failed sign-in lands the same
+  // way with ?error_description= instead; forward it so /login can report it.
   const code = searchParams.get('code');
-  if (code && pathname !== '/auth/callback') {
+  // /login is where the callback reports the error, so never forward from it.
+  const authError = pathname === '/login' ? null : searchParams.get('error_description');
+  if ((code || authError) && pathname !== '/auth/callback') {
     const url = req.nextUrl.clone();
     url.pathname = '/auth/callback';
-    url.search = `?code=${code}&next=${encodeURIComponent(pathname === '/' ? '/' : pathname)}`;
+    url.search = '';
+    if (code) url.searchParams.set('code', code);
+    if (authError) {
+      url.searchParams.set('error', searchParams.get('error') ?? 'oauth');
+      url.searchParams.set('error_description', authError);
+    }
+    const flowId = searchParams.get('sb_flow_id');
+    if (flowId) url.searchParams.set('sb_flow_id', flowId);
+    url.searchParams.set('next', pathname);
     return NextResponse.redirect(url);
   }
 
