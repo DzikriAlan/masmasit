@@ -23,6 +23,10 @@ export default function ForgotPasswordForm() {
   const savePasswordReset = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    // If Supabase doesn't allowlist redirectTo, the email link lands on the Site
+    // URL root and /auth/callback would send the user to the landing page. The
+    // callback honours auth_next, so point it at /reset-password (link lifetime: 1h).
+    document.cookie = `auth_next=${encodeURIComponent('/reset-password')}; path=/; max-age=3600; samesite=lax`;
     try {
       await storeAuthPasswordReset.mutateAsync({
         email,
