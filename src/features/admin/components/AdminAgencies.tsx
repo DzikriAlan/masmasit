@@ -1,5 +1,6 @@
 'use client';
 
+import { friendlyError } from '@/shared/lib/friendlyError';
 import { useState } from 'react';
 import { Building2, Loader2, Pencil, Trash2, X } from 'lucide-react';
 import { toast } from 'sonner';
@@ -54,7 +55,7 @@ export default function AdminAgencies({ enabled }: Props) {
         data: { name: form.name.trim(), description: form.description.trim(), logo_url: form.logo_url.trim() || null },
       });
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : t('Failed to update agency', 'Gagal memperbarui agency'));
+      toast.error(friendlyError(error, t, t('Failed to update agency', 'Gagal memperbarui agency')));
       return;
     }
     toast.success(t('Agency updated', 'Agency diperbarui'));
@@ -66,7 +67,7 @@ export default function AdminAgencies({ enabled }: Props) {
     try {
       await removeAdminAgency.mutateAsync(agency.id);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : t('Failed to delete agency', 'Gagal menghapus agency'));
+      toast.error(friendlyError(error, t, t('Failed to delete agency', 'Gagal menghapus agency')));
       return;
     }
     toast.success(t('Agency deleted', 'Agency dihapus'));

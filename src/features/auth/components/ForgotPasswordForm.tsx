@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { toast } from 'sonner';
+import { friendlyError } from '@/shared/lib/friendlyError';
 
 export default function ForgotPasswordForm() {
   const { t } = useLang();
@@ -22,6 +23,10 @@ export default function ForgotPasswordForm() {
   const savePasswordReset = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    // If Supabase doesn't allowlist redirectTo, the email link lands on the Site
+    // URL root and /auth/callback would send the user to the landing page. The
+    // callback honours auth_next, so point it at /reset-password (link lifetime: 1h).
+    document.cookie = `auth_next=${encodeURIComponent('/reset-password')}; path=/; max-age=3600; samesite=lax`;
     try {
       await storeAuthPasswordReset.mutateAsync({
         email,
@@ -29,7 +34,7 @@ export default function ForgotPasswordForm() {
       });
     } catch (error) {
       setLoading(false);
-      toast.error(error instanceof Error ? error.message : 'Request failed');
+      toast.error(friendlyError(error, t, t('Could not send the reset link. Please try again.', 'Link reset gagal dikirim. Silakan coba lagi.')));
       return;
     }
     setLoading(false);

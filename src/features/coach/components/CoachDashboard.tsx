@@ -261,7 +261,7 @@ export default function CoachDashboard() {
     try {
       await removeCoachModules.mutateAsync(moduleId);
     } catch {
-      toast.error('Failed to delete module');
+      toast.error(t('Failed to delete module', 'Gagal menghapus modul'));
       return;
     }
     toast.success('Module deleted');
@@ -290,7 +290,7 @@ export default function CoachDashboard() {
     try {
       await removeCoachMaterials.mutateAsync(materialId);
     } catch {
-      toast.error('Failed to delete material');
+      toast.error(t('Failed to delete material', 'Gagal menghapus materi'));
       return;
     }
     toast.success('Material deleted');
@@ -317,7 +317,7 @@ export default function CoachDashboard() {
     try {
       await removeCoachQuizzes.mutateAsync(quizId);
     } catch {
-      toast.error('Failed to delete quiz');
+      toast.error(t('Failed to delete quiz', 'Gagal menghapus kuis'));
       return;
     }
     toast.success('Quiz deleted');
@@ -337,7 +337,7 @@ export default function CoachDashboard() {
     try {
       await storeCoachQuizQuestions.mutateAsync(payload);
     } catch {
-      toast.error('Failed to add question');
+      toast.error(t('Failed to add question', 'Gagal menambah pertanyaan'));
       return;
     }
     toast.success('Question added!');
@@ -349,7 +349,7 @@ export default function CoachDashboard() {
     try {
       await removeCoachQuizQuestions.mutateAsync(questionId);
     } catch {
-      toast.error('Failed to delete question');
+      toast.error(t('Failed to delete question', 'Gagal menghapus pertanyaan'));
       return;
     }
     toast.success('Question deleted');

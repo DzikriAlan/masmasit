@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { toast } from 'sonner';
+import { friendlyError } from '@/shared/lib/friendlyError';
 
 export default function ResetPasswordForm() {
   const { t } = useLang();
@@ -42,7 +43,7 @@ export default function ResetPasswordForm() {
       await changeAuthPassword.mutateAsync({ password });
     } catch (error) {
       setLoading(false);
-      toast.error(error instanceof Error ? error.message : 'Request failed');
+      toast.error(friendlyError(error, t, t('Could not update your password. Please try again.', 'Kata sandi gagal diperbarui. Silakan coba lagi.')));
       return;
     }
     setLoading(false);
