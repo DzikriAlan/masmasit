@@ -13,6 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
+import { friendlyError } from '@/shared/lib/friendlyError';
 import type { Skill } from '@/shared/lib/types';
 import type { OnboardingRole, PayloadOnboardingExperience } from '@/features/onboarding/types/onboardingTypes';
 import { usePostJobControllers } from '@/features/jobs/controllers/jobsControllers';
@@ -257,8 +258,7 @@ export default function OnboardingForm() {
     try {
       await modifyOnboardingCompleted.mutateAsync();
     } catch (error) {
-      const reason = error instanceof Error ? error.message : '';
-      toast.error(t(`Could not mark onboarding complete. ${reason}`, `Gagal menandai onboarding selesai. ${reason}`));
+      toast.error(friendlyError(error, t, t('Could not finish onboarding. Please try again.', 'Onboarding gagal diselesaikan. Silakan coba lagi.')));
       return;
     }
     try { window.localStorage.setItem(onboardingDoneKey(user.id), '1'); } catch { /* storage blocked */ }

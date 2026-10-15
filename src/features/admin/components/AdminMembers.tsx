@@ -1,5 +1,6 @@
 'use client';
 
+import { friendlyError } from '@/shared/lib/friendlyError';
 import { useEffect, useState } from 'react';
 import { Ban, Loader2, Search, UserCheck, Users } from 'lucide-react';
 import { toast } from 'sonner';
@@ -69,7 +70,7 @@ export default function AdminMembers({ enabled, currentUserId }: Props) {
     try {
       await changeAdminMemberSuspension.mutateAsync({ id: target.id, data: { suspended: true, reason: reason.trim() } });
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : t('Failed to suspend', 'Gagal menangguhkan'));
+      toast.error(friendlyError(error, t, t('Failed to suspend', 'Gagal menangguhkan')));
       return;
     }
     toast.success(t('Member suspended', 'Member ditangguhkan'));
@@ -80,7 +81,7 @@ export default function AdminMembers({ enabled, currentUserId }: Props) {
     try {
       await changeAdminMemberSuspension.mutateAsync({ id: member.id, data: { suspended: false, reason: null } });
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : t('Failed to restore', 'Gagal memulihkan'));
+      toast.error(friendlyError(error, t, t('Failed to restore', 'Gagal memulihkan')));
       return;
     }
     toast.success(t('Member restored', 'Member dipulihkan'));
@@ -120,7 +121,7 @@ export default function AdminMembers({ enabled, currentUserId }: Props) {
         {fetchAdminMembers.isPending ? (
           <div className="flex justify-center py-10"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
         ) : fetchAdminMembers.isError ? (
-          <p className="text-sm text-destructive">{fetchAdminMembers.error.message}</p>
+          <p className="text-sm text-destructive">{friendlyError(fetchAdminMembers.error, t)}</p>
         ) : members.length === 0 ? (
           <p className="text-sm text-muted-foreground">{t('No members found.', 'Tidak ada member.')}</p>
         ) : (

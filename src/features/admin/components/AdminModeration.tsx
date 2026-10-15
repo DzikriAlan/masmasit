@@ -1,5 +1,6 @@
 'use client';
 
+import { friendlyError } from '@/shared/lib/friendlyError';
 import { useEffect, useState } from 'react';
 import { Flag, Loader2, Search, Star, Trash2, ArrowDownCircle } from 'lucide-react';
 import { toast } from 'sonner';
@@ -72,7 +73,7 @@ export default function AdminModeration({ enabled }: Props) {
     try {
       await removeAdminModeration.mutateAsync({ type: item.type, id: item.id });
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : t('Failed to delete', 'Gagal menghapus'));
+      toast.error(friendlyError(error, t, t('Failed to delete', 'Gagal menghapus')));
       return;
     }
     toast.success(t('Content deleted', 'Konten dihapus'));
@@ -83,7 +84,7 @@ export default function AdminModeration({ enabled }: Props) {
     try {
       await changeAdminModeration.mutateAsync({ type: item.type, id: item.id, data: { is_featured: next } });
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : t('Failed to update', 'Gagal memperbarui'));
+      toast.error(friendlyError(error, t, t('Failed to update', 'Gagal memperbarui')));
       return;
     }
     toast.success(next ? t('Marked as Featured', 'Ditandai Featured') : t('Removed from Featured', 'Dilepas dari Featured'));
@@ -93,7 +94,7 @@ export default function AdminModeration({ enabled }: Props) {
     try {
       await changeAdminModeration.mutateAsync({ type: item.type, id: item.id, data: { promoted_to_spotlight: false } });
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : t('Failed to take down', 'Gagal menurunkan'));
+      toast.error(friendlyError(error, t, t('Failed to take down', 'Gagal menurunkan')));
       return;
     }
     toast.success(t('Taken down from Spotlight', 'Diturunkan dari Spotlight'));
@@ -136,7 +137,7 @@ export default function AdminModeration({ enabled }: Props) {
         {fetchAdminModeration.isPending ? (
           <div className="flex justify-center py-10"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
         ) : fetchAdminModeration.isError ? (
-          <p className="text-sm text-destructive">{fetchAdminModeration.error.message}</p>
+          <p className="text-sm text-destructive">{friendlyError(fetchAdminModeration.error, t)}</p>
         ) : items.length === 0 ? (
           <p className="text-sm text-muted-foreground">{t('No content to moderate.', 'Tidak ada konten untuk dimoderasi.')}</p>
         ) : (

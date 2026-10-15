@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Loader2, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
+import { friendlyError } from '@/shared/lib/friendlyError';
 
 import { useAuthControllers } from '@/features/auth/controllers/authControllers';
 import { GoogleGlyph } from '@/features/auth/components/GoogleGlyph';
@@ -33,10 +34,7 @@ export default function LoginForm() {
     const params = new URLSearchParams(window.location.search);
     if (params.get('error') !== 'oauth') return;
     const reason = params.get('error_description');
-    toast.error(t('Google sign-in failed. Please try again.', 'Login dengan Google gagal. Silakan coba lagi.'), {
-      description: reason ?? undefined,
-      duration: 10000,
-    });
+    toast.error(friendlyError(reason, t, t('Google sign-in failed. Please try again.', 'Login dengan Google gagal. Silakan coba lagi.')), { duration: 10000 });
     params.delete('error');
     params.delete('error_description');
     const query = params.toString();
@@ -49,7 +47,7 @@ export default function LoginForm() {
     const { error } = await signInWithGoogle();
     if (error) {
       setGoogleLoading(false);
-      toast.error(error);
+      toast.error(friendlyError(error, t, t('Google sign-in failed. Please try again.', 'Login dengan Google gagal. Silakan coba lagi.')));
     }
   };
 
@@ -59,7 +57,7 @@ export default function LoginForm() {
     const { error } = await signIn(email, password);
     setLoading(false);
     if (error) {
-      toast.error(error);
+      toast.error(friendlyError(error, t, t('Could not sign you in. Please try again.', 'Gagal masuk. Silakan coba lagi.')));
       return;
     }
     toast.success(t('Welcome back!', 'Selamat datang kembali!'));

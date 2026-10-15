@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { toast } from 'sonner';
+import { friendlyError } from '@/shared/lib/friendlyError';
 
 export default function RegisterForm() {
   const { signUp, signInWithGoogle } = useAuth();
@@ -30,7 +31,7 @@ export default function RegisterForm() {
     const { error } = await signInWithGoogle();
     if (error) {
       setGoogleLoading(false);
-      toast.error(error);
+      toast.error(friendlyError(error, t, t('Google sign-in failed. Please try again.', 'Login dengan Google gagal. Silakan coba lagi.')));
     }
   };
 
@@ -44,7 +45,7 @@ export default function RegisterForm() {
     const { error } = await signUp(email, password, fullName);
     setLoading(false);
     if (error) {
-      toast.error(error);
+      toast.error(friendlyError(error, t, t('Could not create your account. Please try again.', 'Akun gagal dibuat. Silakan coba lagi.')));
     } else {
       toast.success(t('Account created! Please check your email to verify.', 'Akun dibuat! Silakan cek email untuk verifikasi.'));
       setRegistered(true);

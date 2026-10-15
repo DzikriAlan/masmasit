@@ -1,5 +1,6 @@
 'use client';
 
+import { friendlyError } from '@/shared/lib/friendlyError';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ShieldCheck, Loader2, Check, X, Users, Briefcase, Code2, GraduationCap, Star, TrendingUp, Settings, Calendar, FolderKanban, Ban, CreditCard, BarChart3, ExternalLink, RotateCcw } from 'lucide-react';
@@ -118,7 +119,7 @@ export default function AdminDashboard() {
     try {
       await changeAdminPaymentPaid.mutateAsync({ table: row.table, id: row.id, subField: row.subField });
     } catch {
-      toast.error('Failed to mark as paid');
+      toast.error(t('Failed to mark as paid', 'Gagal menandai lunas'));
       return;
     }
     toast.success('Payment marked as paid');
@@ -128,7 +129,7 @@ export default function AdminDashboard() {
     try {
       await changeAdminPaymentReset.mutateAsync({ table: row.table, id: row.id, subField: row.subField });
     } catch {
-      toast.error('Failed to reset');
+      toast.error(t('Failed to reset', 'Gagal mereset'));
       return;
     }
     toast.success('Payment reset');
@@ -138,7 +139,7 @@ export default function AdminDashboard() {
     try {
       await changeAdminCompanyApproval.mutateAsync({ id, status });
     } catch {
-      toast.error('Failed to update');
+      toast.error(t('Failed to update', 'Gagal memperbarui'));
       return;
     }
     toast.success(`Company ${status}`);
@@ -148,7 +149,7 @@ export default function AdminDashboard() {
     try {
       await changeAdminUserApproval.mutateAsync({ id, field, status });
     } catch {
-      toast.error('Failed to update');
+      toast.error(t('Failed to update', 'Gagal memperbarui'));
       return;
     }
     toast.success(`${field.includes('coach') ? 'Coach' : 'Talent'} ${status}`);
@@ -173,7 +174,7 @@ export default function AdminDashboard() {
         },
       });
     } catch {
-      toast.error('Failed to save settings');
+      toast.error(t('Failed to save settings', 'Gagal menyimpan pengaturan'));
       return;
     }
     toast.success('Settings saved!');
@@ -183,7 +184,7 @@ export default function AdminDashboard() {
     try {
       await changeAdminAgencyStatus.mutateAsync({ id, status });
     } catch {
-      toast.error('Failed to update status');
+      toast.error(t('Failed to update status', 'Gagal memperbarui status'));
       return;
     }
     toast.success(`Status updated to ${status.replace('_', ' ')}`);
@@ -193,7 +194,7 @@ export default function AdminDashboard() {
     try {
       await changeAdminEventApproval.mutateAsync({ id, status });
     } catch {
-      toast.error('Failed to update event');
+      toast.error(t('Failed to update event', 'Gagal memperbarui event'));
       return;
     }
     toast.success(`Event ${status}`);
@@ -203,7 +204,7 @@ export default function AdminDashboard() {
     try {
       await changeAdminAgencyApproval.mutateAsync({ id, status });
     } catch {
-      toast.error('Failed to update agency');
+      toast.error(t('Failed to update agency', 'Gagal memperbarui agency'));
       return;
     }
     toast.success(`Agency ${status}`);
@@ -221,7 +222,7 @@ export default function AdminDashboard() {
     try {
       await changeAdminTeamCollabsMatch.mutateAsync({ id, matchedWith });
     } catch {
-      toast.error('Failed to mark as matched');
+      toast.error(t('Failed to mark as matched', 'Gagal menandai sudah dicocokkan'));
       return;
     }
     setMatchDrafts((d) => ({ ...d, [id]: '' }));
@@ -233,7 +234,7 @@ export default function AdminDashboard() {
     try {
       await changeAdminTeamCollabsClose.mutateAsync(id);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : t('Failed to close listing', 'Gagal menutup listing'));
+      toast.error(friendlyError(error, t, t('Failed to close listing', 'Gagal menutup listing')));
       return;
     }
     toast.success(t('Listing closed', 'Listing ditutup'));

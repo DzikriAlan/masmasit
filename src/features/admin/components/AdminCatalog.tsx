@@ -1,5 +1,6 @@
 'use client';
 
+import { friendlyError } from '@/shared/lib/friendlyError';
 import { useState } from 'react';
 import { Loader2, Plus, Trash2, Package, TrendingUp, Power, Newspaper, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
@@ -70,7 +71,7 @@ export default function AdminCatalog({ enabled }: Props) {
         base_price: serviceForm.base_price ? parseInt(serviceForm.base_price) : null,
       });
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : t('Failed to save service', 'Gagal menyimpan layanan'));
+      toast.error(friendlyError(error, t, t('Failed to save service', 'Gagal menyimpan layanan')));
       return;
     }
     toast.success(t('Service created', 'Layanan dibuat'));
@@ -116,7 +117,7 @@ export default function AdminCatalog({ enabled }: Props) {
         await storeAdminCaseStudy.mutateAsync(data);
       }
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : t('Failed to save case study', 'Gagal menyimpan studi kasus'));
+      toast.error(friendlyError(error, t, t('Failed to save case study', 'Gagal menyimpan studi kasus')));
       return;
     }
     toast.success(editingCaseId ? t('Case study updated', 'Studi kasus diperbarui') : t('Case study created', 'Studi kasus dibuat'));
@@ -161,7 +162,7 @@ export default function AdminCatalog({ enabled }: Props) {
     try {
       await storeAdminArticle.mutateAsync({ ...articleForm, cover_image_url: articleForm.cover_image_url || null });
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : t('Failed to save article', 'Gagal menyimpan artikel'));
+      toast.error(friendlyError(error, t, t('Failed to save article', 'Gagal menyimpan artikel')));
       return;
     }
     toast.success(t('Article created', 'Artikel dibuat'));

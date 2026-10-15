@@ -5,6 +5,7 @@ import { Upload, Loader2, X, ImageIcon } from 'lucide-react';
 import { useAuth } from '@/components/auth-provider';
 import { useLang } from '@/components/language-provider';
 import { toast } from 'sonner';
+import { friendlyError } from '@/shared/lib/friendlyError';
 import { compressImage } from '@/shared/lib/image-compress';
 
 import { useUploadsControllers } from '@/features/uploads/controllers/uploadsControllers';
@@ -90,8 +91,7 @@ export function FileUpload({
       if (fileName) uploaded = { publicUrl: `${uploaded.publicUrl}?v=${Date.now()}` };
     } catch (error) {
       setUploading(false);
-      const message = error instanceof Error ? error.message : '';
-      toast.error(t('Upload failed', 'Upload gagal') + (message ? `: ${message}` : ''));
+      toast.error(friendlyError(error, t, t('Upload failed. Please try again.', 'Upload gagal. Silakan coba lagi.')));
       return;
     }
 

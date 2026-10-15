@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { toast } from 'sonner';
+import { friendlyError } from '@/shared/lib/friendlyError';
 
 export default function ForgotPasswordForm() {
   const { t } = useLang();
@@ -29,7 +30,7 @@ export default function ForgotPasswordForm() {
       });
     } catch (error) {
       setLoading(false);
-      toast.error(error instanceof Error ? error.message : 'Request failed');
+      toast.error(friendlyError(error, t, t('Could not send the reset link. Please try again.', 'Link reset gagal dikirim. Silakan coba lagi.')));
       return;
     }
     setLoading(false);

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { friendlyError } from '@/shared/lib/friendlyError';
 
 import { useAuth } from '@/components/auth-provider';
 import { useLang } from '@/components/language-provider';
@@ -159,8 +160,7 @@ function OnboardingPopupForm({ userId, profile }: { userId: string; profile: Use
         skills: skillTags,
       });
     } catch (error) {
-      const reason = error instanceof Error && error.message ? ` (${error.message})` : '';
-      toast.error(t('Failed to save, please try again', 'Gagal menyimpan, coba lagi') + reason);
+      toast.error(friendlyError(error, t, t('Failed to save, please try again', 'Gagal menyimpan, coba lagi')));
       return;
     }
     toast.success(t('Thanks! Your profile is set up.', 'Makasih! Profil kamu sudah siap.'));

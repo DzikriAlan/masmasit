@@ -18,6 +18,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
+import { friendlyError } from '@/shared/lib/friendlyError';
 import { loginHref } from '@/shared/lib/utils';
 import { ReviewForm, StarRating } from '@/components/review-form';
 
@@ -86,11 +87,7 @@ export default function ProjectDetail() {
     try {
       await storeProjectsBidAccepted.mutateAsync(bidId);
     } catch (error) {
-      toast.error(
-        error instanceof Error && error.message
-          ? error.message
-          : t('Failed to accept bid', 'Gagal menerima bid')
-      );
+      toast.error(friendlyError(error, t, t('Failed to accept bid', 'Gagal menerima bid')));
       return;
     }
     toast.success(t('Bid accepted! Project is now in progress.', 'Bid diterima! Proyek sekarang berjalan.'));

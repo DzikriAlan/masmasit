@@ -1,5 +1,6 @@
 'use client';
 
+import { friendlyError } from '@/shared/lib/friendlyError';
 import { useState } from 'react';
 import { Loader2, ShieldCheck, Search, Trash2, UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
@@ -56,7 +57,7 @@ export default function AdminRoles({ isSuperAdmin, currentUserId }: Props) {
         regionId: needsRegion ? regionId : null,
       });
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : t('Failed to grant role', 'Gagal memberi peran'));
+      toast.error(friendlyError(error, t, t('Failed to grant role', 'Gagal memberi peran')));
       return;
     }
     toast.success(t('Role granted', 'Peran diberikan'));
@@ -68,7 +69,7 @@ export default function AdminRoles({ isSuperAdmin, currentUserId }: Props) {
     try {
       await removeAdminUserRole.mutateAsync({ userId, role: roleName });
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : t('Failed to revoke role', 'Gagal mencabut peran'));
+      toast.error(friendlyError(error, t, t('Failed to revoke role', 'Gagal mencabut peran')));
       return;
     }
     toast.success(t('Role revoked', 'Peran dicabut'));

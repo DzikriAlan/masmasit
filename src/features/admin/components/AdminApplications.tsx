@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { FileText, Loader2, Search } from 'lucide-react';
 
 import { useLang } from '@/components/language-provider';
+import { friendlyError } from '@/shared/lib/friendlyError';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -72,7 +73,7 @@ export default function AdminApplications({ enabled }: Props) {
         {fetchAdminApplications.isPending ? (
           <div className="flex justify-center py-10"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
         ) : fetchAdminApplications.isError ? (
-          <p className="text-sm text-destructive">{fetchAdminApplications.error.message}</p>
+          <p className="text-sm text-destructive">{friendlyError(fetchAdminApplications.error, t)}</p>
         ) : rows.length === 0 ? (
           <p className="text-sm text-muted-foreground">{t('No applications found.', 'Tidak ada lamaran.')}</p>
         ) : (
