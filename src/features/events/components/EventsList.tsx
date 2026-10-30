@@ -306,7 +306,7 @@ export default function EventsList() {
                   </div>
 
                   <h2 className="mt-3 font-display text-2xl font-semibold text-balance sm:text-3xl">
-                    <Link href={`/events/${data.featured.id}`} className="hover:underline">{data.featured.title}</Link>
+                    <Link href={`/app/events/${data.featured.id}`} className="hover:underline">{data.featured.title}</Link>
                   </h2>
                   <p className="mt-2 max-w-2xl leading-relaxed text-muted-foreground text-pretty">
                     {data.featured.description}
@@ -370,7 +370,7 @@ export default function EventsList() {
                         <div key={event.id} className="rounded-xl border border-border/70 bg-card/50 p-5">
                           <Badge variant="outline" className="text-[11px]">{t('Ended', 'Selesai')}</Badge>
                           <h3 className="mt-2.5 line-clamp-2 font-medium leading-snug">
-                            <Link href={`/events/${event.id}`} className="hover:underline">{event.title}</Link>
+                            <Link href={`/app/events/${event.id}`} className="hover:underline">{event.title}</Link>
                           </h3>
                           <p className="mt-1 truncate text-sm text-muted-foreground">{event.location}</p>
                           <p className="mt-0.5 text-xs text-muted-foreground">

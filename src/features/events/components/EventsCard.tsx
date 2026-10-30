@@ -56,7 +56,7 @@ export function EventsCard({
       </div>
 
       <h3 className="mt-3 line-clamp-2 font-semibold leading-snug">
-        <Link href={`/events/${event.id}`} className="hover:underline">{event.title}</Link>
+        <Link href={`/app/events/${event.id}`} className="hover:underline">{event.title}</Link>
       </h3>
       <p className="mt-1.5 line-clamp-2 text-sm leading-relaxed text-muted-foreground text-pretty">{event.description}</p>
 

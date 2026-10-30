@@ -92,11 +92,11 @@ export default function AgencyList() {
           action={
             <div className="flex flex-wrap gap-2">
               {isAgencyOwner && (
-                <Link href="/agency/manage">
+                <Link href="/app/agency/manage">
                   <Button>{t('My Agency', 'Agency Saya')}</Button>
                 </Link>
               )}
-              <Link href="/agency/register">
+              <Link href="/app/agency/register">
                 <Button variant="outline">{t('Register an agency', 'Daftarkan agency')}</Button>
               </Link>
             </div>
@@ -119,8 +119,8 @@ export default function AgencyList() {
                 {paged.items.map((agency) => (
                   <Link
                     key={agency.id}
-                    href={`/agency/${agency.slug}`}
-                    className="group flex h-full min-w-0 flex-col rounded-xl border border-border bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-foreground/25 hover:shadow-[var(--shadow-card-hover)]"
+                    href={`/app/agency/${agency.slug}`}
+                    className="group flex h-full min-w-0 flex-col rounded-xl border border-border bg-card p-5 transition-all hover:border-foreground/25 hover:shadow-[var(--shadow-card-hover)]"
                   >
                     <div className="flex items-center gap-3">
                       <div className={cn('flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg', TONE_CHIP[toneOf('agency')])}>

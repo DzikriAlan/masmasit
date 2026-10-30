@@ -88,7 +88,7 @@ export default function AgencyManageProfile({ agency, isSaving, onEditAgencyMana
           <Badge variant="outline" className={statusTone[agency.approval_status]}>{statusLabel}</Badge>
         </div>
         {agency.approval_status === 'approved' && (
-          <Link href={`/agency/${agency.slug}`} className="text-sm font-medium underline underline-offset-4">
+          <Link href={`/app/agency/${agency.slug}`} className="text-sm font-medium underline underline-offset-4">
             {t('View public page', 'Lihat halaman publik')}
           </Link>
         )}

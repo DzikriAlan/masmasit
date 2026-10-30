@@ -227,7 +227,7 @@ export default function DiscussionsList() {
                 {paged.items.map((topic) => (
                   <Link
                     key={topic.id}
-                    href={`/discussions/${topic.id}`}
+                    href={`/app/discussions/${topic.id}`}
                     className="group flex items-start gap-3 rounded-xl border border-border bg-card p-4 transition-colors hover:border-foreground/25"
                   >
                     <Avatar className="h-10 w-10 shrink-0">

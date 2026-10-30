@@ -11,7 +11,7 @@ interface Props {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const path = `/projects/${params.id}`;
+  const path = `/app/projects/${params.id}`;
   const fallback = getFallbackMetadata(path, 'Project', 'Freelance IT projects on MasmasIT.');
   const supabase = getPublicSupabase();
   if (!supabase || !isUuid(params.id)) return fallback;

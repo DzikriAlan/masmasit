@@ -107,7 +107,7 @@ export default function DiscussionsDetail() {
       return;
     }
     toast.success(t('Topic deleted', 'Topik dihapus'));
-    router.push('/discussions');
+    router.push('/app/discussions');
   };
 
   const editDiscussionsFeatured = async () => {

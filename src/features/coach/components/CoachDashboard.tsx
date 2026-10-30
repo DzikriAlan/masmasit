@@ -787,7 +787,7 @@ export default function CoachDashboard() {
             ) : (
               <div className="space-y-3">
                 {pagedCourses.items.map((c) => (
-                  <Card key={c.id} className="glass group cursor-pointer transition-all hover:border-primary/40 hover:-translate-y-0.5" onClick={() => setSelectedCourseId(c.id)}>
+                  <Card key={c.id} className="glass group cursor-pointer transition-all hover:border-primary/40" onClick={() => setSelectedCourseId(c.id)}>
                     <CardContent className="flex items-center justify-between p-5">
                       <div>
                         <div className="flex items-center gap-2">

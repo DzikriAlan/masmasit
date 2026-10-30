@@ -56,22 +56,22 @@ export const getSearch = async (query: string) => {
 
     const results: DataSearch[] = [];
     (profiles.data ?? []).forEach((p: any) =>
-      results.push({ id: p.id, type: 'profile', title: p.full_name ?? 'Unknown', subtitle: p.location ?? p.bio?.slice(0, 50) ?? '', href: `/directory/${p.id}` })
+      results.push({ id: p.id, type: 'profile', title: p.full_name ?? 'Unknown', subtitle: p.location ?? p.bio?.slice(0, 50) ?? '', href: `/app/directory/${p.id}` })
     );
     (talents.data ?? []).forEach((p: any) =>
-      results.push({ id: p.id, type: 'talent', title: p.full_name ?? 'Unknown', subtitle: p.location ?? snippet(p.bio, 50), href: `/talents/${p.id}` })
+      results.push({ id: p.id, type: 'talent', title: p.full_name ?? 'Unknown', subtitle: p.location ?? snippet(p.bio, 50), href: `/app/talents/${p.id}` })
     );
     (jobs.data ?? []).forEach((j: any) =>
-      results.push({ id: j.id, type: 'job', title: j.title, subtitle: [j.companies?.name, j.location].filter(Boolean).join(' · '), href: `/jobs/${j.id}` })
+      results.push({ id: j.id, type: 'job', title: j.title, subtitle: [j.companies?.name, j.location].filter(Boolean).join(' · '), href: `/app/jobs/${j.id}` })
     );
     (courses.data ?? []).forEach((c: any) =>
-      results.push({ id: c.id, type: 'course', title: c.title, subtitle: `${c.level} · ${c.category ?? ''}`, href: `/courses/${c.id}` })
+      results.push({ id: c.id, type: 'course', title: c.title, subtitle: `${c.level} · ${c.category ?? ''}`, href: `/app/courses/${c.id}` })
     );
     (projects.data ?? []).forEach((p: any) =>
-      results.push({ id: p.id, type: 'project', title: p.title, subtitle: formatBudget(p.budget_min, p.budget_max), href: `/projects/${p.id}` })
+      results.push({ id: p.id, type: 'project', title: p.title, subtitle: formatBudget(p.budget_min, p.budget_max), href: `/app/projects/${p.id}` })
     );
     (agencies.data ?? []).forEach((a: any) =>
-      results.push({ id: a.id, type: 'agency', title: a.name, subtitle: snippet(a.description), href: `/agency/${a.slug}` })
+      results.push({ id: a.id, type: 'agency', title: a.name, subtitle: snippet(a.description), href: `/app/agency/${a.slug}` })
     );
     (services.data ?? []).forEach((sv: any) =>
       results.push({
@@ -79,7 +79,7 @@ export const getSearch = async (query: string) => {
         type: 'service',
         title: sv.title,
         subtitle: [sv.category, sv.agencies?.name].filter(Boolean).join(' · '),
-        href: sv.agencies?.slug ? `/agency/${sv.agencies.slug}` : '/services',
+        href: sv.agencies?.slug ? `/app/agency/${sv.agencies.slug}` : '/app/services',
       })
     );
     (events.data ?? []).forEach((e: any) =>
@@ -88,14 +88,14 @@ export const getSearch = async (query: string) => {
         type: 'event',
         title: e.title,
         subtitle: [new Date(e.event_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }), e.location].filter(Boolean).join(' · '),
-        href: `/events/${e.id}`,
+        href: `/app/events/${e.id}`,
       })
     );
     (discussions.data ?? []).forEach((d: any) =>
-      results.push({ id: d.id, type: 'discussion', title: d.title, subtitle: snippet(d.body), href: `/discussions/${d.id}` })
+      results.push({ id: d.id, type: 'discussion', title: d.title, subtitle: snippet(d.body), href: `/app/discussions/${d.id}` })
     );
     (builds.data ?? []).forEach((b: any) =>
-      results.push({ id: b.id, type: 'build', title: b.title, subtitle: snippet(b.description), href: '/builds' })
+      results.push({ id: b.id, type: 'build', title: b.title, subtitle: snippet(b.description), href: '/app/builds' })
     );
 
     return successResponse(results, 'Search results retrieved successfully');

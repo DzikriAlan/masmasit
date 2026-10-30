@@ -42,10 +42,10 @@ export default function CaseStudiesList() {
           <>
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {paged.items.map((cs) => (
-                <Card key={cs.id} className="glass group h-full overflow-hidden transition-all hover:border-primary/40 hover:-translate-y-0.5">
+                <Card key={cs.id} className="glass group h-full overflow-hidden transition-all hover:border-primary/40">
                   {cs.image_url && (
                     <div className="relative h-40 overflow-hidden">
-                      <img src={cs.image_url} alt={cs.title} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                      <img src={cs.image_url} alt={cs.title} className="h-full w-full object-cover" />
                       <div className="absolute inset-0 bg-gradient-to-t from-card via-card/30 to-transparent" />
                       {cs.category && <Badge variant="secondary" className="absolute top-3 left-3 backdrop-blur-md">{cs.category}</Badge>}
                     </div>

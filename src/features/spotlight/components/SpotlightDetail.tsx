@@ -46,7 +46,7 @@ export default function SpotlightDetail() {
           images: getImages(item),
           sourceLabel: getSourceLabel(item.source_type),
           maker: item.agencies?.name ?? item.profiles?.full_name ?? t('A member', 'Seorang member'),
-          makerHref: item.agencies?.slug ? `/agency/${item.agencies.slug}` : null,
+          makerHref: item.agencies?.slug ? `/app/agency/${item.agencies.slug}` : null,
           date: new Date(item.created_at).toLocaleDateString(lang === 'id' ? 'id-ID' : 'en-GB', {
             day: 'numeric',
             month: 'short',
@@ -80,11 +80,11 @@ export default function SpotlightDetail() {
     <AppShell>
       <div className="page-container mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-4 flex items-center justify-between gap-2">
-          <Button variant="ghost" onClick={() => router.push('/spotlight')} className="gap-2">
+          <Button variant="ghost" onClick={() => router.push('/app/spotlight')} className="gap-2">
             <ArrowLeft className="h-4 w-4" /> {t('Spotlight', 'Spotlight')}
           </Button>
           <ShareButton
-            url={`/spotlight/${item.id}`}
+            url={`/app/spotlight/${item.id}`}
             title={`${item.title} — ${item.maker}`}
             text={t('Spotted on MasmasIT Spotlight', 'Tampil di Spotlight MasmasIT')}
           />

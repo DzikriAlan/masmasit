@@ -278,9 +278,9 @@ function MyActivityContent() {
 
         {data.isEmpty && (
           <div className="mt-4 flex flex-wrap justify-center gap-2">
-            <Link href="/jobs"><Button variant="outline" size="sm">{t('Find Jobs', 'Cari Kerja')}</Button></Link>
-            <Link href="/courses"><Button variant="outline" size="sm">{t('Courses', 'Kursus')}</Button></Link>
-            <Link href="/projects"><Button variant="outline" size="sm">{t('Projects', 'Proyek')}</Button></Link>
+            <Link href="/app/jobs"><Button variant="outline" size="sm">{t('Find Jobs', 'Cari Kerja')}</Button></Link>
+            <Link href="/app/courses"><Button variant="outline" size="sm">{t('Courses', 'Kursus')}</Button></Link>
+            <Link href="/app/projects"><Button variant="outline" size="sm">{t('Projects', 'Proyek')}</Button></Link>
           </div>
         )}
       </div>

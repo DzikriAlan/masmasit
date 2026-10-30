@@ -202,7 +202,7 @@ export default function ProfileForm() {
           <h1 className="font-display text-3xl font-semibold">{t('Edit Profile', 'Edit Profil')}</h1>
           {user && (
             <ShareButton
-              url={`/directory/${user.id}`}
+              url={`/app/directory/${user.id}`}
               title={`${profile?.full_name ?? 'Member'} — MasmasIT`}
               text={t('My profile on MasmasIT', 'Profil saya di MasmasIT')}
             />
@@ -358,7 +358,7 @@ export default function ProfileForm() {
               company={fetchProfileCompany.data ?? null}
               agency={fetchProfileAgency.data ?? null}
               saving={saving}
-              onSubmitCoach={() => router.push('/coach')}
+              onSubmitCoach={() => router.push('/app/coach')}
               onSubmitTalent={saveTalentApplication}
               onClearRole={clearRole}
             />

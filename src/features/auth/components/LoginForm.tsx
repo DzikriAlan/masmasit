@@ -67,7 +67,7 @@ export default function LoginForm() {
     // only same-origin paths are honoured to avoid an open redirect.
     const target = new URLSearchParams(window.location.search).get('redirect');
     const safeTarget = target && target.startsWith('/') && !target.startsWith('//') ? target : null;
-    router.push(landing === '/onboarding' || !safeTarget ? landing : safeTarget);
+    router.push(landing === '/app/onboarding' || !safeTarget ? landing : safeTarget);
   };
 
   return (

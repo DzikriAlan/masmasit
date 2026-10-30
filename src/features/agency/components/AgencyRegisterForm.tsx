@@ -48,7 +48,7 @@ export default function AgencyRegisterForm() {
       toast.success(t('Agency submitted — pending admin approval', 'Agency dikirim — menunggu approval admin'));
       // A new agency is pending, so its public /agency/{slug} page would
       // read "not found" — land on the owner's own dashboard instead.
-      router.push(created ? '/agency/manage' : '/agency');
+      router.push(created ? '/app/agency/manage' : '/app/agency');
     } catch {
       toast.error(t('Failed to register agency', 'Gagal mendaftarkan agency'));
     }

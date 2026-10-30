@@ -86,7 +86,7 @@ export default function JobApplicants() {
           <p className="mt-2 text-muted-foreground">
             {t('Register a company before you can post jobs and review applicants.', 'Daftarkan perusahaan sebelum dapat memasang lowongan dan meninjau pelamar.')}
           </p>
-          <Button onClick={() => router.push('/jobs/post')} className="mt-6">
+          <Button onClick={() => router.push('/app/jobs/post')} className="mt-6">
             {t('Register Company', 'Daftarkan Perusahaan')}
           </Button>
         </div>
@@ -176,7 +176,7 @@ export default function JobApplicants() {
                           <div className="flex flex-wrap items-start justify-between gap-3">
                             <div>
                               <Link
-                                href={`/directory/${app.user_id}`}
+                                href={`/app/directory/${app.user_id}`}
                                 target="_blank"
                                 className="font-medium hover:text-primary hover:underline"
                                 title={t('View profile', 'Lihat profil')}

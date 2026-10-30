@@ -150,7 +150,7 @@ export default function JobsList() {
             'Lowongan dari perusahaan tech terverifikasi di Indonesia, plus peran remote dari seluruh web.'
           )}
           action={
-            <Link href="/jobs/post">
+            <Link href="/app/jobs/post">
               <Button variant="outline">{t('Register company', 'Daftar perusahaan')}</Button>
             </Link>
           }

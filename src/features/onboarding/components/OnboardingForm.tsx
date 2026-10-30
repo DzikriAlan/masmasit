@@ -264,7 +264,7 @@ export default function OnboardingForm() {
     try { window.localStorage.setItem(onboardingDoneKey(user.id), '1'); } catch { /* storage blocked */ }
     await refreshProfile();
     toast.success(t('Onboarding complete!', 'Onboarding selesai!'));
-    router.push('/dashboard');
+    router.push('/app/dashboard');
   };
 
   if (loading) {

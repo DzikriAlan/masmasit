@@ -67,17 +67,17 @@ const founderStory: Bilingual[] = [
    Collaboration & Growth, Talent & Expertise — so the flat list still reads
    in that sequence. */
 const areas: { href: string; name: Bilingual; desc: Bilingual }[] = [
-  { href: '/jobs', name: { en: 'Jobs', id: 'Jobs' }, desc: { en: 'Curated full-time and freelance openings.', id: 'Lowongan pekerjaan penuh waktu dan freelance yang terkurasi.' } },
-  { href: '/projects', name: { en: 'Projects', id: 'Projects' }, desc: { en: 'Client project briefs open for proposals.', id: 'Kumpulan ringkasan proyek dari klien yang terbuka untuk penawaran.' } },
-  { href: '/services', name: { en: 'Services', id: 'Services' }, desc: { en: 'Professional IT services, booked as you need them.', id: 'Layanan IT profesional yang dapat dipesan sesuai kebutuhan.' } },
-  { href: '/team-collabs', name: { en: 'Team Collabs', id: 'Team Collabs' }, desc: { en: 'Where practitioners form R&D teams or launch ventures together.', id: 'Ruang bagi praktisi untuk membentuk tim R&D atau meluncurkan proyek usaha bersama.' } },
-  { href: '/discussions', name: { en: 'Discussions', id: 'Discussions' }, desc: { en: 'A focused forum for industry insight, technical discussion and networking.', id: 'Forum terarah untuk wawasan industri, diskusi teknis, dan jejaring.' } },
-  { href: '/events', name: { en: 'Events', id: 'Events' }, desc: { en: 'Exclusive meetups, hackathons and community gatherings.', id: 'Meetup eksklusif, hackathon, dan sesi kumpul komunitas.' } },
-  { href: '/builds', name: { en: 'Builds', id: 'Builds' }, desc: { en: 'A showcase of the products, SaaS and projects members are building.', id: 'Etalase pameran untuk produk, SaaS, atau proyek yang sedang dibangun oleh member.' } },
-  { href: '/talents', name: { en: 'Talent', id: 'Talent' }, desc: { en: 'A directory of practitioners you can book directly for private sessions.', id: 'Direktori praktisi yang dapat dipesan langsung untuk sesi privat.' } },
-  { href: '/courses', name: { en: 'Courses', id: 'Courses' }, desc: { en: 'Practical learning taught by active practitioners.', id: 'Pembelajaran praktis yang diajarkan langsung oleh praktisi aktif.' } },
-  { href: '/agency', name: { en: 'Agency', id: 'Agency' }, desc: { en: 'Service catalogues from verified technology agencies.', id: 'Katalog layanan dari agensi teknologi terverifikasi.' } },
-  { href: '/directory', name: { en: 'Members', id: 'Members' }, desc: { en: 'Professional profiles of all the talent powering the platform.', id: 'Profil profesional dari seluruh talenta yang menggerakkan platform ini.' } },
+  { href: '/app/jobs', name: { en: 'Jobs', id: 'Jobs' }, desc: { en: 'Curated full-time and freelance openings.', id: 'Lowongan pekerjaan penuh waktu dan freelance yang terkurasi.' } },
+  { href: '/app/projects', name: { en: 'Projects', id: 'Projects' }, desc: { en: 'Client project briefs open for proposals.', id: 'Kumpulan ringkasan proyek dari klien yang terbuka untuk penawaran.' } },
+  { href: '/app/services', name: { en: 'Services', id: 'Services' }, desc: { en: 'Professional IT services, booked as you need them.', id: 'Layanan IT profesional yang dapat dipesan sesuai kebutuhan.' } },
+  { href: '/app/team-collabs', name: { en: 'Team Collabs', id: 'Team Collabs' }, desc: { en: 'Where practitioners form R&D teams or launch ventures together.', id: 'Ruang bagi praktisi untuk membentuk tim R&D atau meluncurkan proyek usaha bersama.' } },
+  { href: '/app/discussions', name: { en: 'Discussions', id: 'Discussions' }, desc: { en: 'A focused forum for industry insight, technical discussion and networking.', id: 'Forum terarah untuk wawasan industri, diskusi teknis, dan jejaring.' } },
+  { href: '/app/events', name: { en: 'Events', id: 'Events' }, desc: { en: 'Exclusive meetups, hackathons and community gatherings.', id: 'Meetup eksklusif, hackathon, dan sesi kumpul komunitas.' } },
+  { href: '/app/builds', name: { en: 'Builds', id: 'Builds' }, desc: { en: 'A showcase of the products, SaaS and projects members are building.', id: 'Etalase pameran untuk produk, SaaS, atau proyek yang sedang dibangun oleh member.' } },
+  { href: '/app/talents', name: { en: 'Talent', id: 'Talent' }, desc: { en: 'A directory of practitioners you can book directly for private sessions.', id: 'Direktori praktisi yang dapat dipesan langsung untuk sesi privat.' } },
+  { href: '/app/courses', name: { en: 'Courses', id: 'Courses' }, desc: { en: 'Practical learning taught by active practitioners.', id: 'Pembelajaran praktis yang diajarkan langsung oleh praktisi aktif.' } },
+  { href: '/app/agency', name: { en: 'Agency', id: 'Agency' }, desc: { en: 'Service catalogues from verified technology agencies.', id: 'Katalog layanan dari agensi teknologi terverifikasi.' } },
+  { href: '/app/directory', name: { en: 'Members', id: 'Members' }, desc: { en: 'Professional profiles of all the talent powering the platform.', id: 'Profil profesional dari seluruh talenta yang menggerakkan platform ini.' } },
 ];
 
 /* The four collaboration routes. They differ in where the supply comes from
@@ -279,7 +279,7 @@ export default function AboutOverview() {
                 {t('Get Started', 'Daftar')}
               </Button>
             </Link>
-            <Link href="/discover" className="w-full sm:w-auto">
+            <Link href="/app/discover" className="w-full sm:w-auto">
               <Button size="lg" variant="outline" className="h-11 w-full rounded-full px-6 text-base font-semibold sm:w-auto">
                 {t('Read Discover', 'Baca Discover')}
               </Button>

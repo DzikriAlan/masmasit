@@ -54,7 +54,7 @@ export default function PostJob() {
       await storeJobsUserRole.mutateAsync({ user_id: user.id, role: 'company' });
     }
     toast.success(t('Company registered! Waiting for admin approval.', 'Perusahaan terdaftar! Menunggu persetujuan admin.'));
-    router.push('/dashboard');
+    router.push('/app/dashboard');
   };
 
   const savePosting = async () => {
@@ -76,7 +76,7 @@ export default function PostJob() {
       return;
     }
     toast.success(t('Job posted!', 'Lowangan terposting!'));
-    router.push('/jobs');
+    router.push('/app/jobs');
   };
 
   if (loading) return <AppShell><div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div></AppShell>;

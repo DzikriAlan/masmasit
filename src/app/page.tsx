@@ -42,13 +42,13 @@ const initials = (name: string) => name.split(' ').slice(0, 2).map((w) => w[0]).
 /* ---------------------------------------------------------------- content */
 
 const ecosystem = [
-  { key: 'jobs', tone: 'blue' as Tone, href: '/jobs', en: 'Jobs', id: 'Lowongan', leadEn: 'Find your next role,', leadId: 'Temukan peran berikutnya,', boldEn: 'full-time or freelance.', boldId: 'full-time atau freelance.' },
-  { key: 'projects', tone: 'violet' as Tone, href: '/projects', en: 'Projects', id: 'Proyek', leadEn: 'Real projects,', leadId: 'Proyek nyata,', boldEn: 'posted by real companies.', boldId: 'dari perusahaan sungguhan.' },
-  { key: 'talents', tone: 'orange' as Tone, href: '/talents', en: 'Talents', id: 'Talent', leadEn: 'Discover IT professionals,', leadId: 'Temukan praktisi IT,', boldEn: 'vetted and ready.', boldId: 'terverifikasi dan siap.' },
-  { key: 'learn', tone: 'teal' as Tone, href: '/courses', en: 'Learn', id: 'Belajar', leadEn: 'Courses and workshops,', leadId: 'Kursus dan workshop,', boldEn: 'built by practitioners.', boldId: 'dibuat oleh praktisi.' },
-  { key: 'events', tone: 'pink' as Tone, href: '/events', en: 'Events', id: 'Event', leadEn: 'Meetups and hackathons,', leadId: 'Meetup dan hackathon,', boldEn: 'happening near you.', boldId: 'di dekatmu.' },
-  { key: 'services', tone: 'amber' as Tone, href: '/services', en: 'Services', id: 'Layanan', leadEn: 'Professional IT services,', leadId: 'Layanan IT profesional,', boldEn: 'from trusted agencies.', boldId: 'dari agency terpercaya.' },
-  { key: 'community', tone: 'green' as Tone, href: '/directory', en: 'Community', id: 'Komunitas', leadEn: 'Discussions and networking,', leadId: 'Diskusi dan networking,', boldEn: 'all in one place.', boldId: 'dalam satu tempat.' },
+  { key: 'jobs', tone: 'blue' as Tone, href: '/app/jobs', en: 'Jobs', id: 'Lowongan', leadEn: 'Find your next role,', leadId: 'Temukan peran berikutnya,', boldEn: 'full-time or freelance.', boldId: 'full-time atau freelance.' },
+  { key: 'projects', tone: 'violet' as Tone, href: '/app/projects', en: 'Projects', id: 'Proyek', leadEn: 'Real projects,', leadId: 'Proyek nyata,', boldEn: 'posted by real companies.', boldId: 'dari perusahaan sungguhan.' },
+  { key: 'talents', tone: 'orange' as Tone, href: '/app/talents', en: 'Talents', id: 'Talent', leadEn: 'Discover IT professionals,', leadId: 'Temukan praktisi IT,', boldEn: 'vetted and ready.', boldId: 'terverifikasi dan siap.' },
+  { key: 'learn', tone: 'teal' as Tone, href: '/app/courses', en: 'Learn', id: 'Belajar', leadEn: 'Courses and workshops,', leadId: 'Kursus dan workshop,', boldEn: 'built by practitioners.', boldId: 'dibuat oleh praktisi.' },
+  { key: 'events', tone: 'pink' as Tone, href: '/app/events', en: 'Events', id: 'Event', leadEn: 'Meetups and hackathons,', leadId: 'Meetup dan hackathon,', boldEn: 'happening near you.', boldId: 'di dekatmu.' },
+  { key: 'services', tone: 'amber' as Tone, href: '/app/services', en: 'Services', id: 'Layanan', leadEn: 'Professional IT services,', leadId: 'Layanan IT profesional,', boldEn: 'from trusted agencies.', boldId: 'dari agency terpercaya.' },
+  { key: 'community', tone: 'green' as Tone, href: '/app/directory', en: 'Community', id: 'Komunitas', leadEn: 'Discussions and networking,', leadId: 'Diskusi dan networking,', boldEn: 'all in one place.', boldId: 'dalam satu tempat.' },
 ];
 
 const opportunityTabs = ['jobs', 'projects', 'freelance', 'internships'] as const;
@@ -117,8 +117,8 @@ const liveActivityLabels = [
 
 /* Turns the activity FOMO into a next step, one per audience. */
 const joinActions = [
-  { href: '/jobs/post', tone: 'blue' as Tone, forEn: 'For companies', forId: 'Untuk perusahaan', en: 'Post a job', id: 'Pasang lowongan', subEn: 'Reach vetted IT talent in days.', subId: 'Jangkau talent IT terverifikasi dalam hitungan hari.' },
-  { href: '/services', tone: 'amber' as Tone, forEn: 'For agencies & freelancers', forId: 'Untuk agency & freelancer', en: 'Offer your services', id: 'Tawarkan layanan', subEn: 'Get discovered by companies that need you.', subId: 'Ditemukan perusahaan yang butuh keahlianmu.' },
+  { href: '/app/jobs/post', tone: 'blue' as Tone, forEn: 'For companies', forId: 'Untuk perusahaan', en: 'Post a job', id: 'Pasang lowongan', subEn: 'Reach vetted IT talent in days.', subId: 'Jangkau talent IT terverifikasi dalam hitungan hari.' },
+  { href: '/app/services', tone: 'amber' as Tone, forEn: 'For agencies & freelancers', forId: 'Untuk agency & freelancer', en: 'Offer your services', id: 'Tawarkan layanan', subEn: 'Get discovered by companies that need you.', subId: 'Ditemukan perusahaan yang butuh keahlianmu.' },
   { href: '/register', tone: 'orange' as Tone, forEn: 'For IT professionals', forId: 'Untuk praktisi IT', en: 'Build your profile', id: 'Buat profil', subEn: 'Show real work, get booked.', subId: 'Tunjukkan karya nyata, dapatkan booking.' },
 ];
 
@@ -784,7 +784,7 @@ export default function HomePage() {
                   {t('Start free', 'Mulai gratis')}
                 </Button>
               </Link>
-              <Link href="/talents" className="w-full sm:w-auto">
+              <Link href="/app/talents" className="w-full sm:w-auto">
                 <Button size="lg" className="h-14 w-full gap-1.5 rounded-full bg-foreground px-7 text-base text-background hover:bg-foreground/90 sm:h-11 sm:w-auto sm:text-sm">
                   {t('Find Talent', 'Cari Talent')}
                 </Button>
@@ -959,7 +959,7 @@ export default function HomePage() {
               eyebrow={t('Live activity', 'Aktivitas terkini')}
               title={t('Happening on MasmasIT right now', 'Yang sedang terjadi di MasmasIT')}
               desc={t('Jobs, projects, builds and events — as they happen.', 'Lowongan, proyek, build, dan event — saat itu juga.')}
-              href="/feed"
+              href="/app/feed"
               cta={t('See all activity', 'Lihat semua aktivitas')}
             />
 

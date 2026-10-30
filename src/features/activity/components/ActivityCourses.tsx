@@ -42,7 +42,7 @@ export function ActivityCourses({ courses, isLoading, isError }: Props) {
         return (
           <div key={en.id} className="rounded-lg border border-border/60 p-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <Link href={en.courses ? `/courses/${en.courses.id}` : '/courses'} className="font-medium hover:underline">
+              <Link href={en.courses ? `/app/courses/${en.courses.id}` : '/app/courses'} className="font-medium hover:underline">
                 {en.courses?.title ?? t('Course removed', 'Kursus dihapus')}
               </Link>
               <div className="flex items-center gap-2">

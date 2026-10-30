@@ -11,7 +11,26 @@ const supabaseAnonKey =
   process.env.SUPABASE_ANON_KEY ||
   '';
 
+// Internal pages moved under /app. Old paths keep working (shared links,
+// bookmarks, and the notification links database triggers still write).
+const INTERNAL_SEGMENTS = [
+  'activity', 'admin', 'agency', 'articles', 'builds', 'case-studies', 'coach',
+  'courses', 'dashboard', 'directory', 'discover', 'discussions', 'events', 'feed',
+  'jobs', 'onboarding', 'pesan', 'profile', 'projects', 'services', 'spotlight',
+  'talents', 'team-builder', 'team-collabs',
+];
+
 const nextConfig = {
+  async redirects() {
+    return [
+      // The bare prefix opens the dashboard.
+      { source: '/app', destination: '/app/dashboard', permanent: false },
+      ...INTERNAL_SEGMENTS.flatMap((segment) => [
+        { source: `/${segment}`, destination: `/app/${segment}`, permanent: true },
+        { source: `/${segment}/:path*`, destination: `/app/${segment}/:path*`, permanent: true },
+      ]),
+    ];
+  },
   eslint: {
     ignoreDuringBuilds: true,
   },

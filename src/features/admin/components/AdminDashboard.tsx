@@ -51,7 +51,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (!loading) {
       if (!user || (!roles.includes('super_admin') && !roles.includes('regional_admin'))) {
-        router.push('/dashboard');
+        router.push('/app/dashboard');
       } else {
         setAuthChecked(true);
       }

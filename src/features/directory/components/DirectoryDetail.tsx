@@ -66,7 +66,7 @@ export default function DirectoryDetail() {
                     <Badge variant="secondary" className="gap-1"><GraduationCap className="h-3 w-3" /> Coach</Badge>
                   )}
                   <ShareButton
-                    url={`/directory/${profile.id}`}
+                    url={`/app/directory/${profile.id}`}
                     title={`${profile.full_name ?? 'Member'} — MasmasIT`}
                     text={t('IT practitioner on MasmasIT', 'Praktisi IT di MasmasIT')}
                     className="ml-auto"
@@ -94,12 +94,12 @@ export default function DirectoryDetail() {
                     </a>
                   )}
                   {isTalent && (
-                    <Link href={`/talents/${profile.id}`}>
+                    <Link href={`/app/talents/${profile.id}`}>
                       <Button size="sm" className="gap-2"><CalendarClock className="h-3.5 w-3.5" /> {t('Book Session', 'Pesan Sesi')}</Button>
                     </Link>
                   )}
                   {user && user.id !== profile.id && (
-                    <Link href={`/pesan?to=${profile.id}`}>
+                    <Link href={`/app/pesan?to=${profile.id}`}>
                       <Button variant="outline" size="sm" className="gap-2"><MessageCircle className="h-3.5 w-3.5" /> {t('Chat', 'Chat')}</Button>
                     </Link>
                   )}

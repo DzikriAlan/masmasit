@@ -119,7 +119,7 @@ export default function TalentBooking() {
         <div className="mb-4 flex items-center justify-between gap-2">
           <Button variant="ghost" onClick={() => router.back()} className="gap-2"><ArrowLeft className="h-4 w-4" /> {t('Back', 'Kembali')}</Button>
           <ShareButton
-            url={`/talents/${talent.id}`}
+            url={`/app/talents/${talent.id}`}
             title={`${talent.full_name ?? 'Talent'} — MasmasIT`}
             text={t('Book a 1-on-1 session', 'Pesan sesi 1-on-1')}
           />
@@ -144,7 +144,7 @@ export default function TalentBooking() {
                   {talent.whatsapp && <a href={`https://wa.me/${talent.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noreferrer"><Button variant="outline" size="sm" className="gap-2"><MessageCircle className="h-3.5 w-3.5" /> WhatsApp</Button></a>}
                   {talent.calendly_url && <a href={talent.calendly_url} target="_blank" rel="noreferrer"><Button variant="outline" size="sm" className="gap-2"><CalendarClock className="h-3.5 w-3.5" /> Calendly</Button></a>}
                   {user && (
-                    <Link href={`/pesan?to=${talent.id}`}>
+                    <Link href={`/app/pesan?to=${talent.id}`}>
                       <Button variant="outline" size="sm" className="gap-2"><Send className="h-3.5 w-3.5" /> {t('Chat', 'Chat')}</Button>
                     </Link>
                   )}
@@ -186,7 +186,7 @@ export default function TalentBooking() {
                   fallbackUrl={goakalUrl}
                   onStatusChange={setPaymentStatus}
                 />
-                <Link href="/dashboard"><Button className="w-full">{t('Back to Dashboard', 'Kembali ke Dashboard')}</Button></Link>
+                <Link href="/app/dashboard"><Button className="w-full">{t('Back to Dashboard', 'Kembali ke Dashboard')}</Button></Link>
               </>
             ) : (
               <GuestBookingNext email={booking.external_email} payUrl={goakalUrl} />

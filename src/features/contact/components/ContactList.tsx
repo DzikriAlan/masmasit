@@ -113,10 +113,10 @@ export default function ContactList() {
             )}
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
-            <Link href="/jobs/post">
+            <Link href="/app/jobs/post">
               <Button variant="outline" size="sm">{t('Post a job', 'Pasang lowongan')}</Button>
             </Link>
-            <Link href="/services">
+            <Link href="/app/services">
               <Button variant="outline" size="sm">{t('Request a project', 'Minta proyek')}</Button>
             </Link>
             <Link href="/register">

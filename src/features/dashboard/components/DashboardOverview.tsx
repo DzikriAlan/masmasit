@@ -115,22 +115,22 @@ export default function DashboardOverview() {
   ];
 
   const quickLinks = [
-    { href: '/directory', icon: Users, label: t('Browse Members', 'Jelajahi Member'), desc: t('Connect with IT practitioners', 'Terhubung dengan praktisi IT') },
-    { href: '/jobs', icon: Briefcase, label: t('Find Jobs', 'Cari Kerja'), desc: t('Browse open positions', 'Jelajahi lowongan') },
-    { href: '/projects', icon: Code2, label: t('Projects', 'Proyek'), desc: t('Post or bid on projects', 'Pasang atau tawar proyek') },
-    { href: '/courses', icon: GraduationCap, label: t('Learn', 'Belajar'), desc: t('Enroll in courses', 'Ikuti kursus') },
-    { href: '/events', icon: Calendar, label: t('Events', 'Event'), desc: t('Join community events', 'Ikuti event komunitas') },
-    { href: '/talents', icon: Star, label: t('Book Talent', 'Pesan Talent'), desc: t('Hire expert consultants', 'Sewa konsultan ahli') },
-    { href: '/pesan', icon: MessageCircle, label: t('Messages', 'Pesan'), desc: t('Chat with the community', 'Chat dengan komunitas') },
+    { href: '/app/directory', icon: Users, label: t('Browse Members', 'Jelajahi Member'), desc: t('Connect with IT practitioners', 'Terhubung dengan praktisi IT') },
+    { href: '/app/jobs', icon: Briefcase, label: t('Find Jobs', 'Cari Kerja'), desc: t('Browse open positions', 'Jelajahi lowongan') },
+    { href: '/app/projects', icon: Code2, label: t('Projects', 'Proyek'), desc: t('Post or bid on projects', 'Pasang atau tawar proyek') },
+    { href: '/app/courses', icon: GraduationCap, label: t('Learn', 'Belajar'), desc: t('Enroll in courses', 'Ikuti kursus') },
+    { href: '/app/events', icon: Calendar, label: t('Events', 'Event'), desc: t('Join community events', 'Ikuti event komunitas') },
+    { href: '/app/talents', icon: Star, label: t('Book Talent', 'Pesan Talent'), desc: t('Hire expert consultants', 'Sewa konsultan ahli') },
+    { href: '/app/pesan', icon: MessageCircle, label: t('Messages', 'Pesan'), desc: t('Chat with the community', 'Chat dengan komunitas') },
   ];
 
   const roleShortcuts = [
-    { show: isAdmin, href: '/admin', icon: ShieldCheck, label: t('Admin Panel', 'Panel Admin') },
-    { show: isCoach, href: '/coach', icon: GraduationCap, label: t('Coach Dashboard', 'Dashboard Coach') },
-    { show: isTalent, href: '/activity?tab=bookings', icon: Star, label: t('Talent Bookings', 'Booking Talent') },
-    { show: roles.includes('company'), href: '/jobs/applicants', icon: Briefcase, label: t('Job Applicants', 'Pelamar Lowongan') },
-    { show: roles.includes('agency_owner'), href: '/agency/manage', icon: Building2, label: t('Manage Agency', 'Kelola Agency') },
-    { show: roles.includes('client'), href: '/activity?tab=requests', icon: ClipboardList, label: t('My Requests', 'Permintaan Saya') },
+    { show: isAdmin, href: '/app/admin', icon: ShieldCheck, label: t('Admin Panel', 'Panel Admin') },
+    { show: isCoach, href: '/app/coach', icon: GraduationCap, label: t('Coach Dashboard', 'Dashboard Coach') },
+    { show: isTalent, href: '/app/activity?tab=bookings', icon: Star, label: t('Talent Bookings', 'Booking Talent') },
+    { show: roles.includes('company'), href: '/app/jobs/applicants', icon: Briefcase, label: t('Job Applicants', 'Pelamar Lowongan') },
+    { show: roles.includes('agency_owner'), href: '/app/agency/manage', icon: Building2, label: t('Manage Agency', 'Kelola Agency') },
+    { show: roles.includes('client'), href: '/app/activity?tab=requests', icon: ClipboardList, label: t('My Requests', 'Permintaan Saya') },
   ].filter((shortcut) => shortcut.show);
 
   return (
@@ -189,7 +189,7 @@ export default function DashboardOverview() {
           {statCards.map((s, i) => (
             <Card key={s.label} className={`glass glass-hover stagger-${i + 1} overflow-hidden`}>
               <CardContent className="flex items-center gap-4 p-5">
-                <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${s.bg} transition-transform group-hover:scale-110`}>
+                <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${s.bg}`}>
                   <s.icon className={`h-6 w-6 ${s.color}`} />
                 </div>
                 <div>
@@ -442,7 +442,7 @@ export default function DashboardOverview() {
                       : (
                         <>
                           <p>{t('No skills added yet', 'Belum ada skill ditambahkan')}</p>
-                          <Link href="/profile">
+                          <Link href="/app/profile">
                             <Button variant="outline" size="sm" className="gap-1.5">
                               <Settings className="h-3.5 w-3.5" />
                               {t('Add skills', 'Tambah skill')}
@@ -524,7 +524,7 @@ export default function DashboardOverview() {
             <Link key={link.href} href={link.href}>
               <Card className={`group glass glass-hover h-full stagger-${(i % 6) + 1}`}>
                 <CardContent className="flex items-center gap-4 p-5">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 transition-all duration-300 group-hover:bg-primary/20 group-hover:scale-110">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 transition-all duration-300 group-hover:bg-primary/20">
                     <link.icon className="h-5 w-5 text-primary" />
                   </div>
                   <div>
@@ -546,17 +546,17 @@ export default function DashboardOverview() {
               </Button>
             </Link>
           ))}
-          <Link href="/activity">
+          <Link href="/app/activity">
             <Button variant="outline" className="gap-2">
               <Activity className="h-4 w-4" /> {t('My Activity', 'Aktivitas Saya')}
             </Button>
           </Link>
-          <Link href="/profile">
+          <Link href="/app/profile">
             <Button variant="outline" className="gap-2">
               <Settings className="h-4 w-4" /> {t('Edit Profile', 'Edit Profil')}
             </Button>
           </Link>
-          <Link href="/case-studies">
+          <Link href="/app/case-studies">
             <Button variant="outline" className="gap-2">
               <FileText className="h-4 w-4" /> {t('Case Studies', 'Studi Kasus')}
             </Button>

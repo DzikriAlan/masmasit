@@ -88,7 +88,7 @@ export default function TeamCollabsList() {
             'Tim mencari tim, untuk bangun R&D bareng. Match diteruskan lewat WhatsApp dalam 1×24 jam.'
           )}
           action={
-            <Link href="/team-builder">
+            <Link href="/app/team-builder">
               <Button variant="outline">{t('Build a team first', 'Bentuk tim dulu')}</Button>
             </Link>
           }

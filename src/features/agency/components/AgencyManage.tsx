@@ -157,7 +157,7 @@ export default function AgencyManage() {
             'Status approval, profil publik, dan katalog layananmu di satu tempat.'
           )}
           action={
-            <Link href="/agency/register">
+            <Link href="/app/agency/register">
               <Button variant="outline">{t('Register another', 'Daftarkan lagi')}</Button>
             </Link>
           }

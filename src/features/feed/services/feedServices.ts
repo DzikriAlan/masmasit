@@ -47,19 +47,19 @@ export const getFeed = async (payload: PayloadGetFeed) => {
     const items: DataFeed[] = [
       ...(jobs.data ?? []).map((j: any) => ({
         id: `job-${j.id}`, kind: 'job' as const, actor: j.companies?.name ?? null, avatarUrl: j.companies?.logo_url ?? null,
-        title: j.title, href: `/jobs/${j.id}`, created_at: j.created_at,
+        title: j.title, href: `/app/jobs/${j.id}`, created_at: j.created_at,
       })),
       ...(projects.data ?? []).map((p: any) => ({
         id: `project-${p.id}`, kind: 'project' as const, actor: p.profiles?.full_name ?? null, avatarUrl: p.profiles?.avatar_url ?? null,
-        title: p.title, href: `/projects/${p.id}`, created_at: p.created_at,
+        title: p.title, href: `/app/projects/${p.id}`, created_at: p.created_at,
       })),
       ...(builds.data ?? []).map((b: any) => ({
         id: `build-${b.id}`, kind: 'build' as const, actor: b.profiles?.full_name ?? null, avatarUrl: b.profiles?.avatar_url ?? null,
-        title: b.title, href: '/builds', created_at: b.created_at,
+        title: b.title, href: '/app/builds', created_at: b.created_at,
       })),
       ...(events.data ?? []).map((e: any) => ({
         id: `event-${e.id}`, kind: 'event' as const, actor: e.regions?.name ?? null, avatarUrl: null,
-        title: e.title, href: `/events/${e.id}`, created_at: e.created_at,
+        title: e.title, href: `/app/events/${e.id}`, created_at: e.created_at,
       })),
     ];
 

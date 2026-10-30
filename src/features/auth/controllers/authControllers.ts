@@ -19,7 +19,7 @@ export const useAuthControllers = () => {
       unwrapApiResponse(await updateAuthPassword(payload)),
   });
 
-  const fetchAuthLandingRoute = async () => '/dashboard';
+  const fetchAuthLandingRoute = async () => '/app/dashboard';
 
   return { storeAuthPasswordReset, changeAuthPassword, fetchAuthLandingRoute };
 };

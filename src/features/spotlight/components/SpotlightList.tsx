@@ -78,7 +78,7 @@ export default function SpotlightList() {
       isLiked: likedIds.has(item.id),
       isOwner: item.user_id === user?.id,
       isFromBuilds: item.source_type === 'build',
-      href: `/spotlight/${item.id}`,
+      href: `/app/spotlight/${item.id}`,
     });
 
     const list = (fetchSpotlight.data ?? []).map(getMappedItem);

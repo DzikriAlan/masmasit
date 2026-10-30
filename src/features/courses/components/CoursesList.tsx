@@ -129,7 +129,7 @@ export default function CoursesList() {
             'Kursus dari praktisi IT Indonesia terverifikasi, dengan sertifikat setelah selesai.'
           )}
           action={
-            <Link href="/coach">
+            <Link href="/app/coach">
               <Button variant="outline">{t('Become a coach', 'Jadi coach')}</Button>
             </Link>
           }
@@ -153,8 +153,8 @@ export default function CoursesList() {
                 {paged.items.map((course) => (
                   <Link
                     key={course.id}
-                    href={`/courses/${course.id}`}
-                    className="group flex h-full min-w-0 flex-col rounded-xl border border-border bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-foreground/25 hover:shadow-[var(--shadow-card-hover)]"
+                    href={`/app/courses/${course.id}`}
+                    className="group flex h-full min-w-0 flex-col rounded-xl border border-border bg-card p-5 transition-all hover:border-foreground/25 hover:shadow-[var(--shadow-card-hover)]"
                   >
                     <div className="flex flex-wrap items-center gap-2">
                       <Badge variant="outline" className={cn('text-[11px] capitalize', TONE_CHIP[toneOf('courses')])}>

@@ -59,7 +59,7 @@ export default function TeamCollabsRegisterForm() {
       return;
     }
     toast.success(t('Registered for Team Collabs', 'Terdaftar di Team Collabs'));
-    router.push('/team-collabs');
+    router.push('/app/team-collabs');
   };
 
   if (loading || !user) {
@@ -88,7 +88,7 @@ export default function TeamCollabsRegisterForm() {
               ) : teams.length === 0 ? (
                 <p className="text-sm text-muted-foreground">
                   {t('No teams yet — ', 'Belum punya tim — ')}
-                  <a href="/team-builder" className="font-medium text-foreground underline underline-offset-4">{t('build one first', 'bentuk dulu')}</a>.
+                  <a href="/app/team-builder" className="font-medium text-foreground underline underline-offset-4">{t('build one first', 'bentuk dulu')}</a>.
                 </p>
               ) : (
                 <Select value={teamId} onValueChange={setTeamId}>

@@ -33,7 +33,7 @@ export function ActivityProjects({ projects, isLoading, isError }: Props) {
         {pagedPosted.items.map((p) => (
           <ActivityRow key={p.id}>
             <div className="min-w-0">
-              <Link href={`/projects/${p.id}`} className="font-medium hover:underline">{p.title}</Link>
+              <Link href={`/app/projects/${p.id}`} className="font-medium hover:underline">{p.title}</Link>
               <p className="text-xs text-muted-foreground">
                 {(p.project_bids ?? []).length} {t('bids', 'bid')} · {new Date(p.created_at).toLocaleDateString('id-ID')}
               </p>
@@ -54,7 +54,7 @@ export function ActivityProjects({ projects, isLoading, isError }: Props) {
         {pagedBids.items.map((b) => (
           <ActivityRow key={b.id}>
             <div className="min-w-0">
-              <Link href={b.projects ? `/projects/${b.projects.id}` : '/projects'} className="font-medium hover:underline">
+              <Link href={b.projects ? `/app/projects/${b.projects.id}` : '/app/projects'} className="font-medium hover:underline">
                 {b.projects?.title ?? t('Project removed', 'Proyek dihapus')}
               </Link>
               <p className="text-xs text-muted-foreground">

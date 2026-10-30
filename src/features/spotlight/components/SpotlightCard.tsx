@@ -58,7 +58,7 @@ export function SpotlightCard({
   const canManage = Boolean(item.isOwner && labels && (onEditItem || onClearItem));
 
   return (
-    <div className="group flex h-full min-w-0 flex-col rounded-xl border border-border bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-foreground/25 hover:shadow-[var(--shadow-card-hover)]">
+    <div className="group flex h-full min-w-0 flex-col rounded-xl border border-border bg-card p-5 transition-all hover:border-foreground/25 hover:shadow-[var(--shadow-card-hover)]">
       <div className="flex flex-wrap items-center gap-2">
         <Badge variant="outline" className={cn('text-[11px]', TONE_CHIP[toneOf('spotlight')])}>
           {item.sourceLabel}
@@ -118,7 +118,7 @@ export function SpotlightCard({
               {labels.delete}
             </DeleteConfirmButton>
           )}
-          <ShareButton compact url={`/spotlight/${item.id}`} title={`${item.title} — MasmasIT Spotlight`} />
+          <ShareButton compact url={`/app/spotlight/${item.id}`} title={`${item.title} — MasmasIT Spotlight`} />
           {item.linkUrl && (
             <a
               href={item.linkUrl}

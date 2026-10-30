@@ -187,8 +187,8 @@ export default function DirectoryList() {
               {data.data.map((member) => (
                 <Link
                   key={member.id}
-                  href={`/directory/${member.id}`}
-                  className="group flex h-full min-w-0 flex-col rounded-xl border border-border bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-foreground/25 hover:shadow-[var(--shadow-card-hover)]"
+                  href={`/app/directory/${member.id}`}
+                  className="group flex h-full min-w-0 flex-col rounded-xl border border-border bg-card p-5 transition-all hover:border-foreground/25 hover:shadow-[var(--shadow-card-hover)]"
                 >
                   <div className="flex items-start gap-3">
                     <Avatar className="h-12 w-12 shrink-0">
@@ -203,7 +203,7 @@ export default function DirectoryList() {
                             {t('Talent', 'Talent')}
                           </Badge>
                         )}
-                        <ShareButton compact url={`/directory/${member.id}`} title={`${member.name} — MasmasIT`} className="-my-1.5 -mr-2" />
+                        <ShareButton compact url={`/app/directory/${member.id}`} title={`${member.name} — MasmasIT`} className="-my-1.5 -mr-2" />
                       </div>
                       {member.location && (
                         <p className="mt-0.5 flex items-center gap-1 truncate text-sm text-muted-foreground">

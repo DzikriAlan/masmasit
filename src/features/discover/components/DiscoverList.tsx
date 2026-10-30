@@ -38,19 +38,19 @@ import { getJobs } from '@/features/jobs/services/jobsServices';
  */
 
 const QUICK_LINKS: { href: string; en: string; id: string; area: string }[] = [
-  { href: '/jobs', en: 'Jobs', id: 'Lowongan', area: 'jobs' },
-  { href: '/projects', en: 'Projects', id: 'Proyek', area: 'projects' },
-  { href: '/team-builder', en: 'Team Builder', id: 'Team Builder', area: 'team-builder' },
-  { href: '/team-collabs', en: 'Team Collabs', id: 'Team Collabs', area: 'team-collabs' },
-  { href: '/talents', en: 'Talent', id: 'Talent', area: 'talents' },
-  { href: '/courses', en: 'Courses', id: 'Kursus', area: 'courses' },
-  { href: '/events', en: 'Events', id: 'Event', area: 'events' },
-  { href: '/agency', en: 'Agency', id: 'Agency', area: 'agency' },
-  { href: '/services', en: 'Services', id: 'Layanan', area: 'services' },
-  { href: '/discussions', en: 'Discussions', id: 'Diskusi', area: 'discussions' },
-  { href: '/directory', en: 'Members', id: 'Member', area: 'directory' },
-  { href: '/builds', en: 'Builds', id: 'Builds', area: 'builds' },
-  { href: '/spotlight', en: 'Spotlight', id: 'Spotlight', area: 'spotlight' },
+  { href: '/app/jobs', en: 'Jobs', id: 'Lowongan', area: 'jobs' },
+  { href: '/app/projects', en: 'Projects', id: 'Proyek', area: 'projects' },
+  { href: '/app/team-builder', en: 'Team Builder', id: 'Team Builder', area: 'team-builder' },
+  { href: '/app/team-collabs', en: 'Team Collabs', id: 'Team Collabs', area: 'team-collabs' },
+  { href: '/app/talents', en: 'Talent', id: 'Talent', area: 'talents' },
+  { href: '/app/courses', en: 'Courses', id: 'Kursus', area: 'courses' },
+  { href: '/app/events', en: 'Events', id: 'Event', area: 'events' },
+  { href: '/app/agency', en: 'Agency', id: 'Agency', area: 'agency' },
+  { href: '/app/services', en: 'Services', id: 'Layanan', area: 'services' },
+  { href: '/app/discussions', en: 'Discussions', id: 'Diskusi', area: 'discussions' },
+  { href: '/app/directory', en: 'Members', id: 'Member', area: 'directory' },
+  { href: '/app/builds', en: 'Builds', id: 'Builds', area: 'builds' },
+  { href: '/app/spotlight', en: 'Spotlight', id: 'Spotlight', area: 'spotlight' },
 ];
 
 type LatestKind = 'article' | 'case-study' | 'member';
@@ -121,7 +121,7 @@ export default function DiscoverList() {
       ...articles.map((a) => ({
         id: `article-${a.id}`, kind: 'article' as const, title: a.title, excerpt: a.excerpt,
         image: a.cover_image_url, created_at: a.created_at,
-        href: a.slug ? `/articles/${a.slug}` : undefined,
+        href: a.slug ? `/app/articles/${a.slug}` : undefined,
       })),
       ...studies.map((cs) => ({
         id: `case-study-${cs.id}`, kind: 'case-study' as const, title: cs.title, excerpt: cs.result,
@@ -129,7 +129,7 @@ export default function DiscoverList() {
       })),
       ...featured.map((d) => ({
         id: `member-${d.id}`, kind: 'member' as const, title: d.title, excerpt: d.body,
-        image: null, created_at: d.created_at, href: `/discussions/${d.id}`,
+        image: null, created_at: d.created_at, href: `/app/discussions/${d.id}`,
         meta: d.profiles?.full_name ?? t('Anonymous', 'Anonim'),
       })),
     ];
@@ -262,10 +262,10 @@ export default function DiscoverList() {
               {latest.map((item) => {
                 const tone = item.kind === 'case-study' ? toneOf('case-studies') : item.kind === 'member' ? toneOf('discussions') : toneOf('discover');
                 const body = (
-                  <Card className="glass group h-full overflow-hidden transition-all hover:border-primary/40 hover:-translate-y-0.5">
+                  <Card className="glass group h-full overflow-hidden transition-all hover:border-primary/40">
                     {item.image && (
                       <div className="relative h-36 overflow-hidden">
-                        <img src={item.image} alt={item.title} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                        <img src={item.image} alt={item.title} className="h-full w-full object-cover" />
                       </div>
                     )}
                     <CardContent className="p-5">
@@ -292,7 +292,7 @@ export default function DiscoverList() {
               <h2 className="font-display text-2xl font-semibold">{t('Featured practitioners', 'Praktisi Pilihan')}</h2>
               <p className="mt-1 text-sm text-muted-foreground">{t('IT practitioners open to 1-on-1 bookings.', 'Praktisi IT yang bisa di-booking 1-on-1.')}</p>
             </div>
-            <Link href="/talents" className="shrink-0 text-sm font-medium text-primary hover:underline">
+            <Link href="/app/talents" className="shrink-0 text-sm font-medium text-primary hover:underline">
               {t('See all', 'Lihat semua')}
             </Link>
           </div>
@@ -309,7 +309,7 @@ export default function DiscoverList() {
               {talents.slice(0, 8).map((talent) => (
                 <Link
                   key={talent.id}
-                  href={`/talents/${talent.id}`}
+                  href={`/app/talents/${talent.id}`}
                   className="w-40 shrink-0 rounded-xl border border-border p-4 text-center transition-colors hover:border-primary/40"
                 >
                   <Avatar className="mx-auto h-16 w-16">
@@ -336,7 +336,7 @@ export default function DiscoverList() {
             <p className="max-w-md text-sm text-muted-foreground">
               {t('Products and services members are shipping, ranked by Hot Rank.', 'Produk dan jasa yang dirilis member, diurut berdasarkan Hot Rank.')}
             </p>
-            <Link href="/spotlight">
+            <Link href="/app/spotlight">
               <Button size="lg" className="rounded-full px-8">
                 {t('Go to Spotlight', 'Ke Spotlight')}
               </Button>
@@ -349,7 +349,7 @@ export default function DiscoverList() {
           <section>
             <div className="mb-5 flex items-end justify-between gap-4">
               <h2 className={cn('font-display text-xl font-semibold', TONE_TEXT[toneOf('jobs')])}>{t('Open roles', 'Lowongan Terbuka')}</h2>
-              <Link href="/jobs" className="shrink-0 text-sm font-medium text-primary hover:underline">{t('See all', 'Lihat semua')}</Link>
+              <Link href="/app/jobs" className="shrink-0 text-sm font-medium text-primary hover:underline">{t('See all', 'Lihat semua')}</Link>
             </div>
             <LoadData
               hideIcon
@@ -361,7 +361,7 @@ export default function DiscoverList() {
             >
               <div className="flex flex-col gap-3">
                 {openRoles.slice(0, 4).map((job) => (
-                  <Link key={job.id} href={`/jobs/${job.id}`} className="flex items-center gap-3 rounded-lg border border-border p-3.5 transition-colors hover:border-primary/40">
+                  <Link key={job.id} href={`/app/jobs/${job.id}`} className="flex items-center gap-3 rounded-lg border border-border p-3.5 transition-colors hover:border-primary/40">
                     <div className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-lg', TONE_CHIP[toneOf('jobs')])}>
                       {job.companies?.logo_url ? (
                         <img src={job.companies.logo_url} alt="" className="h-10 w-10 rounded-lg object-cover" />
@@ -383,7 +383,7 @@ export default function DiscoverList() {
           <section>
             <div className="mb-5 flex items-end justify-between gap-4">
               <h2 className={cn('font-display text-xl font-semibold', TONE_TEXT[toneOf('events')])}>{t('Upcoming events', 'Event Mendatang')}</h2>
-              <Link href="/events" className="shrink-0 text-sm font-medium text-primary hover:underline">{t('See all', 'Lihat semua')}</Link>
+              <Link href="/app/events" className="shrink-0 text-sm font-medium text-primary hover:underline">{t('See all', 'Lihat semua')}</Link>
             </div>
             <LoadData
               hideIcon
@@ -395,7 +395,7 @@ export default function DiscoverList() {
             >
               <div className="flex flex-col gap-3">
                 {upcomingEvents.map((e) => (
-                  <Link key={e.id} href={`/events/${e.id}`} className="flex items-center gap-3 rounded-lg border border-border p-3.5 transition-colors hover:border-primary/40">
+                  <Link key={e.id} href={`/app/events/${e.id}`} className="flex items-center gap-3 rounded-lg border border-border p-3.5 transition-colors hover:border-primary/40">
                     <div className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-lg', TONE_CHIP[toneOf('events')])}>
                       <Calendar className="h-4.5 w-4.5" />
                     </div>
@@ -449,11 +449,11 @@ export default function DiscoverList() {
               >
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
                   {articles.map((a) => (
-                    <Link key={a.id} href={a.slug ? `/articles/${a.slug}` : '/discover'}>
-                    <Card className="glass group h-full overflow-hidden transition-all hover:border-primary/40 hover:-translate-y-0.5">
+                    <Link key={a.id} href={a.slug ? `/app/articles/${a.slug}` : '/app/discover'}>
+                    <Card className="glass group h-full overflow-hidden transition-all hover:border-primary/40">
                       {a.cover_image_url && (
                         <div className="relative h-40 overflow-hidden">
-                          <img src={a.cover_image_url} alt={a.title} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                          <img src={a.cover_image_url} alt={a.title} className="h-full w-full object-cover" />
                         </div>
                       )}
                       <CardContent className="p-6">
@@ -482,10 +482,10 @@ export default function DiscoverList() {
               >
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
                   {studies.map((cs) => (
-                    <Card key={cs.id} className="glass group h-full overflow-hidden transition-all hover:border-primary/40 hover:-translate-y-0.5">
+                    <Card key={cs.id} className="glass group h-full overflow-hidden transition-all hover:border-primary/40">
                       {cs.image_url && (
                         <div className="relative h-40 overflow-hidden">
-                          <img src={cs.image_url} alt={cs.title} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                          <img src={cs.image_url} alt={cs.title} className="h-full w-full object-cover" />
                           <div className="absolute inset-0 bg-gradient-to-t from-card via-card/30 to-transparent" />
                           {cs.category && <Badge variant="secondary" className="absolute left-3 top-3 backdrop-blur-md">{cs.category}</Badge>}
                         </div>
@@ -531,8 +531,8 @@ export default function DiscoverList() {
               >
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
                   {featured.map((d) => (
-                    <Link key={d.id} href={`/discussions/${d.id}`}>
-                      <Card className="glass group h-full transition-all hover:border-primary/40 hover:-translate-y-0.5">
+                    <Link key={d.id} href={`/app/discussions/${d.id}`}>
+                      <Card className="glass group h-full transition-all hover:border-primary/40">
                         <CardContent className="p-6">
                           <div className={`text-xs font-semibold ${TONE_TEXT[toneOf('discover')]}`}>
                             {t('Member writing', 'Tulisan Member')}

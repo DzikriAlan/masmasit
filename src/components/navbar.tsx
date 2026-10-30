@@ -42,21 +42,21 @@ const productColumns: MenuColumn[] = [
   {
     eyebrowEn: 'Build', eyebrowId: 'Bangun',
     items: [
-      { href: '/team-builder', en: 'Team Builder', id: 'Team Builder', descEn: 'Assemble a team, roles graded automatically', descId: 'Susun tim, grade tiap role otomatis' },
-      { href: '/team-collabs', en: 'Team Collabs', id: 'Team Collabs', descEn: 'Teams building R&D together', descId: 'Tim yang bangun R&D bareng' },
+      { href: '/app/team-builder', en: 'Team Builder', id: 'Team Builder', descEn: 'Assemble a team, roles graded automatically', descId: 'Susun tim, grade tiap role otomatis' },
+      { href: '/app/team-collabs', en: 'Team Collabs', id: 'Team Collabs', descEn: 'Teams building R&D together', descId: 'Tim yang bangun R&D bareng' },
     ],
   },
   {
     eyebrowEn: 'Work', eyebrowId: 'Kerja',
     items: [
-      { href: '/jobs', en: 'Jobs', id: 'Lowongan', descEn: 'Full-time & freelance roles', descId: 'Peran full-time & freelance' },
-      { href: '/projects', en: 'Projects', id: 'Proyek', descEn: 'Client projects open for bids', descId: 'Proyek klien yang dibuka' },
+      { href: '/app/jobs', en: 'Jobs', id: 'Lowongan', descEn: 'Full-time & freelance roles', descId: 'Peran full-time & freelance' },
+      { href: '/app/projects', en: 'Projects', id: 'Proyek', descEn: 'Client projects open for bids', descId: 'Proyek klien yang dibuka' },
     ],
   },
   {
     eyebrowEn: 'Showcase', eyebrowId: 'Etalase',
     items: [
-      { href: '/spotlight', en: 'Spotlight', id: 'Spotlight', descEn: 'Products and services members are shipping', descId: 'Produk dan jasa yang dirilis member' },
+      { href: '/app/spotlight', en: 'Spotlight', id: 'Spotlight', descEn: 'Products and services members are shipping', descId: 'Produk dan jasa yang dirilis member' },
     ],
   },
 ];
@@ -65,24 +65,24 @@ const ecosystemColumns: MenuColumn[] = [
   {
     eyebrowEn: 'Talent', eyebrowId: 'Talent',
     items: [
-      { href: '/talents', en: 'Talent', id: 'Talent', descEn: 'Book IT practitioners 1-on-1', descId: 'Booking praktisi IT 1-on-1' },
-      { href: '/courses', en: 'Courses', id: 'Kursus', descEn: 'Courses by practitioners', descId: 'Kursus dari para praktisi' },
+      { href: '/app/talents', en: 'Talent', id: 'Talent', descEn: 'Book IT practitioners 1-on-1', descId: 'Booking praktisi IT 1-on-1' },
+      { href: '/app/courses', en: 'Courses', id: 'Kursus', descEn: 'Courses by practitioners', descId: 'Kursus dari para praktisi' },
     ],
   },
   {
     eyebrowEn: 'Business', eyebrowId: 'Bisnis',
     items: [
-      { href: '/agency', en: 'Agency', id: 'Agency', descEn: 'Approved agencies and their catalogues', descId: 'Agency terverifikasi & katalognya' },
-      { href: '/services', en: 'Services', id: 'Layanan', descEn: 'Professional IT services', descId: 'Layanan IT profesional' },
+      { href: '/app/agency', en: 'Agency', id: 'Agency', descEn: 'Approved agencies and their catalogues', descId: 'Agency terverifikasi & katalognya' },
+      { href: '/app/services', en: 'Services', id: 'Layanan', descEn: 'Professional IT services', descId: 'Layanan IT profesional' },
     ],
   },
   {
     eyebrowEn: 'Community', eyebrowId: 'Komunitas',
     items: [
-      { href: '/discussions', en: 'Discussions', id: 'Diskusi', descEn: 'Ask, answer, argue well', descId: 'Tanya, jawab, berdebat sehat' },
-      { href: '/directory', en: 'Members', id: 'Member', descEn: 'Who is on the platform', descId: 'Siapa saja yang ada di sini' },
-      { href: '/builds', en: 'Builds', id: 'Builds', descEn: 'What members are building now', descId: 'Yang lagi dibangun member' },
-      { href: '/events', en: 'Events', id: 'Event', descEn: 'Meetups & hackathons', descId: 'Meetup & hackathon' },
+      { href: '/app/discussions', en: 'Discussions', id: 'Diskusi', descEn: 'Ask, answer, argue well', descId: 'Tanya, jawab, berdebat sehat' },
+      { href: '/app/directory', en: 'Members', id: 'Member', descEn: 'Who is on the platform', descId: 'Siapa saja yang ada di sini' },
+      { href: '/app/builds', en: 'Builds', id: 'Builds', descEn: 'What members are building now', descId: 'Yang lagi dibangun member' },
+      { href: '/app/events', en: 'Events', id: 'Event', descEn: 'Meetups & hackathons', descId: 'Meetup & hackathon' },
       { href: '/about', en: 'About', id: 'Tentang', descEn: 'Why MasmasIT exists, and who started it', descId: 'Kenapa MasmasIT ada, dan siapa yang memulai' },
     ],
   },
@@ -291,9 +291,9 @@ export function Navbar() {
               )}
             </div>
 
-            <Link href="/discover" className={linkClass(pathname === '/discover')}>
+            <Link href="/app/discover" className={linkClass(pathname === '/app/discover')}>
               <StableLabel en="Discover" id="Discover" />
-              {pathname === '/discover' && (
+              {pathname === '/app/discover' && (
                 <span className="absolute -bottom-px left-3.5 right-3.5 h-0.5 rounded-full bg-foreground" />
               )}
             </Link>
@@ -313,7 +313,7 @@ export function Navbar() {
             {user && <GlobalSearch />}
             {user && (
               <Link
-                href="/pesan"
+                href="/app/pesan"
                 aria-label={t('Messages', 'Pesan')}
                 className="relative flex h-10 w-10 items-center justify-center rounded-md text-foreground/70 transition-colors hover:bg-muted hover:text-foreground"
               >
@@ -349,27 +349,27 @@ export function Navbar() {
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
-                    <Link href="/dashboard">{t('Dashboard', 'Dashboard')}</Link>
+                    <Link href="/app/dashboard">{t('Dashboard', 'Dashboard')}</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href="/profile">{t('Profile', 'Profil')}</Link>
+                    <Link href="/app/profile">{t('Profile', 'Profil')}</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href="/activity">{t('My Activity', 'Aktivitas Saya')}</Link>
+                    <Link href="/app/activity">{t('My Activity', 'Aktivitas Saya')}</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href="/pesan">{t('Messages', 'Pesan')}</Link>
+                    <Link href="/app/pesan">{t('Messages', 'Pesan')}</Link>
                   </DropdownMenuItem>
                   {isCompany && (
                     <DropdownMenuItem asChild>
-                      <Link href="/jobs/applicants">{t('Job Applicants', 'Pelamar Lowongan')}</Link>
+                      <Link href="/app/jobs/applicants">{t('Job Applicants', 'Pelamar Lowongan')}</Link>
                     </DropdownMenuItem>
                   )}
                   {isAdmin && (
                     <>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem asChild>
-                        <Link href="/admin">{t('Admin Panel', 'Panel Admin')}</Link>
+                        <Link href="/app/admin">{t('Admin Panel', 'Panel Admin')}</Link>
                       </DropdownMenuItem>
                     </>
                   )}
@@ -434,11 +434,11 @@ export function Navbar() {
 
               <div className="mt-3 flex flex-col gap-0.5 border-t border-border/40 pt-3">
                 <Link
-                  href="/discover"
+                  href="/app/discover"
                   onClick={() => setOpen(false)}
                   className={cn(
                     'rounded-md px-3 py-2.5 text-base font-medium transition-colors hover:bg-muted',
-                    pathname === '/discover' ? 'bg-primary/5 text-primary' : 'text-foreground'
+                    pathname === '/app/discover' ? 'bg-primary/5 text-primary' : 'text-foreground'
                   )}
                 >
                   {t('Discover', 'Discover')}
@@ -455,11 +455,11 @@ export function Navbar() {
                 </Link>
                 {user && (
                   <Link
-                    href="/pesan"
+                    href="/app/pesan"
                     onClick={() => setOpen(false)}
                     className={cn(
                       'flex items-center justify-between rounded-md px-3 py-2.5 text-base font-medium transition-colors hover:bg-muted',
-                      pathname === '/pesan' ? 'bg-primary/5 text-primary' : 'text-muted-foreground'
+                      pathname === '/app/pesan' ? 'bg-primary/5 text-primary' : 'text-muted-foreground'
                     )}
                   >
                     {t('Messages', 'Pesan')}
@@ -468,11 +468,11 @@ export function Navbar() {
                 )}
                 {user && (
                   <Link
-                    href="/profile"
+                    href="/app/profile"
                     onClick={() => setOpen(false)}
                     className={cn(
                       'rounded-md px-3 py-2.5 text-base font-medium transition-colors hover:bg-muted',
-                      pathname === '/profile' ? 'bg-primary/5 text-primary' : 'text-muted-foreground'
+                      pathname === '/app/profile' ? 'bg-primary/5 text-primary' : 'text-muted-foreground'
                     )}
                   >
                     {t('Profile', 'Profil')}
@@ -480,11 +480,11 @@ export function Navbar() {
                 )}
                 {user && isCompany && (
                   <Link
-                    href="/jobs/applicants"
+                    href="/app/jobs/applicants"
                     onClick={() => setOpen(false)}
                     className={cn(
                       'rounded-md px-3 py-2.5 text-base font-medium transition-colors hover:bg-muted',
-                      pathname === '/jobs/applicants' ? 'bg-primary/5 text-primary' : 'text-muted-foreground'
+                      pathname === '/app/jobs/applicants' ? 'bg-primary/5 text-primary' : 'text-muted-foreground'
                     )}
                   >
                     {t('Job Applicants', 'Pelamar Lowongan')}
@@ -526,7 +526,7 @@ export function Navbar() {
               </div>
               <div className="mt-2 flex items-center gap-2">
                 {user ? (
-                  <Link href="/dashboard" onClick={() => setOpen(false)} className="flex-1">
+                  <Link href="/app/dashboard" onClick={() => setOpen(false)} className="flex-1">
                     <Button size="sm" className="w-full">
                       {t('Dashboard', 'Dashboard')}
                     </Button>

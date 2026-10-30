@@ -66,7 +66,7 @@ export default function JobDetail() {
       description: t('Track its status in My Activity.', 'Pantau statusnya di Aktivitas Saya.'),
       action: {
         label: t('View applications', 'Lihat lamaran'),
-        onClick: () => router.push('/activity?tab=applications'),
+        onClick: () => router.push('/app/activity?tab=applications'),
       },
       duration: 8000,
     });
@@ -101,7 +101,7 @@ export default function JobDetail() {
         <div className="mb-4 flex items-center justify-between gap-2">
           <Button variant="ghost" onClick={() => router.back()} className="gap-2"><ArrowLeft className="h-4 w-4" /> {t('Back', 'Kembali')}</Button>
           <ShareButton
-            url={`/jobs/${job.id}`}
+            url={`/app/jobs/${job.id}`}
             title={job.companies?.name ? `${job.title} — ${job.companies.name}` : job.title}
             text={t('Job opening on MasmasIT', 'Lowongan di MasmasIT')}
           />
@@ -151,7 +151,7 @@ export default function JobDetail() {
             {isOwner ? (
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <p className="text-sm text-muted-foreground">{t('You posted this job.', 'Anda memasang lowongan ini.')}</p>
-                <Link href="/jobs/applicants">
+                <Link href="/app/jobs/applicants">
                   <Button className="w-full gap-2 sm:w-auto">
                     <Users className="h-4 w-4" /> {t('View Applicants', 'Lihat Pelamar')}
                   </Button>
@@ -163,7 +163,7 @@ export default function JobDetail() {
                 <div>
                   <p className="font-medium">{t('Application submitted', 'Lamaran terkirim')}</p>
                   <p className="text-sm text-muted-foreground">{t("You'll be notified when the company responds.", 'Anda akan diberi tahu ketika perusahaan merespons.')}</p>
-                  <Link href="/activity?tab=applications" className="text-sm font-medium text-primary hover:underline">
+                  <Link href="/app/activity?tab=applications" className="text-sm font-medium text-primary hover:underline">
                     {t('View my applications', 'Lihat lamaran saya')}
                   </Link>
                 </div>

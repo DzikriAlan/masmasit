@@ -92,7 +92,7 @@ export default function TeamBuilderList() {
         name: form.name,
         description: form.description,
       });
-      if (created) router.push(`/team-builder/${created.id}`);
+      if (created) router.push(`/app/team-builder/${created.id}`);
     } catch {
       toast.error(t('Failed to create team', 'Gagal membuat tim'));
     }
@@ -169,7 +169,7 @@ export default function TeamBuilderList() {
                 {paged.items.map((team) => (
                   <Link
                     key={team.id}
-                    href={`/team-builder/${team.id}`}
+                    href={`/app/team-builder/${team.id}`}
                     className="group flex items-center gap-4 rounded-xl border border-border bg-card p-4 transition-colors hover:border-foreground/25"
                   >
                     <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg font-semibold ${TONE_CHIP[toneOf('team-builder')]}`}>
@@ -182,7 +182,7 @@ export default function TeamBuilderList() {
                       </p>
                     </div>
                     <span className="hidden shrink-0 text-xs text-muted-foreground sm:block">{team.createdAt}</span>
-                    <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+                    <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
                   </Link>
                 ))}
               </div>

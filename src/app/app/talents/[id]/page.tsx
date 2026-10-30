@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 
-import DirectoryDetail from '@/features/directory/components/DirectoryDetail';
+import TalentBooking from '@/features/talents/components/TalentBooking';
 import { getDetailMetadata, getFallbackMetadata, getPublicSupabase, isUuid } from '@/shared/lib/public-metadata';
 
 // Rendered on first visit, then cached; OG tags refresh every 5 minutes.
@@ -11,8 +11,8 @@ interface Props {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const path = `/directory/${params.id}`;
-  const fallback = getFallbackMetadata(path, 'Member', 'IT practitioners across Indonesia on MasmasIT.');
+  const path = `/app/talents/${params.id}`;
+  const fallback = getFallbackMetadata(path, 'Talent', 'Book 1-on-1 sessions with Indonesian IT practitioners.');
   const supabase = getPublicSupabase();
   if (!supabase || !isUuid(params.id)) return fallback;
 
@@ -22,14 +22,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       .from('profiles')
       .select('full_name, bio, avatar_url, location')
       .eq('id', params.id)
-      .eq('is_suspended', false)
       .maybeSingle();
     if (!data) return fallback;
-    const name = data.full_name || 'Member';
+    const name = data.full_name || 'Talent';
     return getDetailMetadata({
       path,
-      title: name,
-      description: [data.location, data.bio].filter(Boolean).join(' · ') || `${name} is an IT practitioner on MasmasIT.`,
+      title: `${name} — Book a session`,
+      description: [data.location, data.bio].filter(Boolean).join(' · ') || `Book a 1-on-1 session with ${name}.`,
       image: data.avatar_url,
       type: 'profile',
     });
@@ -38,6 +37,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-export default function DirectoryDetailPage() {
-  return <DirectoryDetail />;
+export default function TalentDetailPage() {
+  return <TalentBooking />;
 }

@@ -34,7 +34,7 @@ export function ActivityEvents({ rsvps, isLoading, isError }: Props) {
         return (
           <ActivityRow key={r.id}>
             <div className="min-w-0">
-              <Link href={r.events?.id ? `/events/${r.events.id}` : '/events'} className="font-medium hover:underline">
+              <Link href={r.events?.id ? `/app/events/${r.events.id}` : '/app/events'} className="font-medium hover:underline">
                 {r.events?.title ?? t('Event removed', 'Event dihapus')}
               </Link>
               <p className="text-xs text-muted-foreground">

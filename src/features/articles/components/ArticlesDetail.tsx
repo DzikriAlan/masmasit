@@ -43,7 +43,7 @@ export default function ArticlesDetail({ slug }: Props) {
       <LoadData minHeight="60vh" className="page-container mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8" hideIcon response={data}>
         {data.data && (
           <article>
-            <Link href="/discover" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
+            <Link href="/app/discover" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
               <ArrowLeft className="h-4 w-4" />
               {t('Back to Discover', 'Kembali ke Discover')}
             </Link>

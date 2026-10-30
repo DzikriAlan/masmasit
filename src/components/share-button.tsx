@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 interface Props {
-  /** Absolute URL, or a path such as `/jobs/123` (resolved against the site origin). */
+  /** Absolute URL, or a path such as `/app/jobs/123` (resolved against the site origin). */
   url: string;
   title: string;
   text?: string;

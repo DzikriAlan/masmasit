@@ -28,8 +28,8 @@ export interface JobsCardItem {
 export function JobsCard({ job }: Readonly<{ job: JobsCardItem }>) {
   return (
     <Link
-      href={`/jobs/${job.id}`}
-      className="group flex h-full min-w-0 flex-col rounded-xl border border-border bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-foreground/25 hover:shadow-[var(--shadow-card-hover)]"
+      href={`/app/jobs/${job.id}`}
+      className="group flex h-full min-w-0 flex-col rounded-xl border border-border bg-card p-5 transition-all hover:border-foreground/25 hover:shadow-[var(--shadow-card-hover)]"
     >
       <div className="flex items-start gap-3">
         <div className={`flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-lg ${TONE_CHIP[toneOf('jobs')]}`}>
@@ -64,7 +64,7 @@ export function JobsCard({ job }: Readonly<{ job: JobsCardItem }>) {
         <p className="text-sm font-semibold text-success">{job.salary}</p>
         <div className="flex shrink-0 items-center gap-1">
           {job.deadline && <p className="text-xs text-muted-foreground">{job.deadline}</p>}
-          <ShareButton compact url={`/jobs/${job.id}`} title={`${job.title} — ${job.companyName}`} />
+          <ShareButton compact url={`/app/jobs/${job.id}`} title={`${job.title} — ${job.companyName}`} />
         </div>
       </div>
     </Link>

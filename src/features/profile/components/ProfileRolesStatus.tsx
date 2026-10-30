@@ -109,7 +109,7 @@ export function ProfileRolesStatus({
         status: company ? getStatusLabel(company.approval_status) : t('No company registered yet', 'Belum mendaftarkan perusahaan'),
         withdraw: null,
         apply: null,
-        manageHref: company?.approval_status === 'approved' ? '/jobs/applicants' : '/jobs/post',
+        manageHref: company?.approval_status === 'approved' ? '/app/jobs/applicants' : '/app/jobs/post',
       });
     }
     if (roles.includes('client')) {
@@ -121,7 +121,7 @@ export function ProfileRolesStatus({
         status: t('Active', 'Aktif'),
         withdraw: null,
         apply: null,
-        manageHref: '/activity?tab=requests',
+        manageHref: '/app/activity?tab=requests',
       });
     }
     if (agency || roles.includes('agency_owner')) {
@@ -133,7 +133,7 @@ export function ProfileRolesStatus({
         status: agency ? getStatusLabel(agency.approval_status) : t('No agency registered yet', 'Belum mendaftarkan agency'),
         withdraw: null,
         apply: null,
-        manageHref: agency ? '/agency/manage' : '/agency/register',
+        manageHref: agency ? '/app/agency/manage' : '/app/agency/register',
       });
     }
 

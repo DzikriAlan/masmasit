@@ -36,7 +36,7 @@ export function ActivityApplications({ applications, isLoading }: Props) {
       {paged.items.map((app) => (
         <ActivityRow key={app.id}>
           <div className="min-w-0">
-            <Link href={app.jobs ? `/jobs/${app.jobs.id}` : '/jobs'} className="font-medium hover:underline">
+            <Link href={app.jobs ? `/app/jobs/${app.jobs.id}` : '/app/jobs'} className="font-medium hover:underline">
               {app.jobs?.title ?? t('Job removed', 'Lowongan dihapus')}
             </Link>
             <p className="text-xs text-muted-foreground">

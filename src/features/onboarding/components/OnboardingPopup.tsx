@@ -28,7 +28,7 @@ import {
 
 // Pages where a modal would be in the way: signing in, and the full
 // onboarding page, which asks for the same things and more.
-const HIDDEN_ON = ['/login', '/register', '/auth', '/forgot-password', '/reset-password', '/onboarding'];
+const HIDDEN_ON = ['/login', '/register', '/auth', '/forgot-password', '/reset-password', '/app/onboarding'];
 const SNOOZE_DAYS = 3;
 // Admins fill these in from their profile page if they want to; no popup.
 const ADMIN_ROLES = ['super_admin', 'regional_admin'];

@@ -34,14 +34,14 @@ export function ActivityTeams({ teams, isLoading, isError }: Props) {
       >
         {pagedOwned.items.map((team) => (
           <ActivityRow key={`own-${team.id}`}>
-            <Link href={`/team-builder/${team.id}`} className="font-medium hover:underline">{team.name}</Link>
+            <Link href={`/app/team-builder/${team.id}`} className="font-medium hover:underline">{team.name}</Link>
             <Badge variant="default">{t('Owner', 'Pemilik')}</Badge>
           </ActivityRow>
         ))}
         <Pager className="mt-4" {...pagedOwned.pager} />
         {pagedJoined.items.map((m) => (
           <ActivityRow key={`member-${m.id}`}>
-            <Link href={m.teams ? `/team-builder/${m.teams.id}` : '/team-builder'} className="font-medium hover:underline">
+            <Link href={m.teams ? `/app/team-builder/${m.teams.id}` : '/app/team-builder'} className="font-medium hover:underline">
               {m.teams?.name ?? t('Team removed', 'Tim dihapus')}
             </Link>
             <Badge variant="secondary">{m.role_title}</Badge>
@@ -60,7 +60,7 @@ export function ActivityTeams({ teams, isLoading, isError }: Props) {
           {pagedCollabs.items.map((c) => (
             <ActivityRow key={c.id}>
               <div className="min-w-0">
-                <Link href="/team-collabs" className="font-medium hover:underline">{c.focus}</Link>
+                <Link href="/app/team-collabs" className="font-medium hover:underline">{c.focus}</Link>
                 <p className="text-xs text-muted-foreground">
                   {c.teams?.name ?? '—'} · {new Date(c.created_at).toLocaleDateString('id-ID')}
                 </p>

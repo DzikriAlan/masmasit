@@ -316,7 +316,7 @@ export default function BuildsList() {
                           )}
 
                           {build.isOnSpotlight && (
-                            <Link href="/spotlight" className="text-xs font-medium text-foreground hover:underline">
+                            <Link href="/app/spotlight" className="text-xs font-medium text-foreground hover:underline">
                               {t('On Spotlight', 'Di Spotlight')}
                             </Link>
                           )}

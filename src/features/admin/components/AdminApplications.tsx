@@ -81,11 +81,11 @@ export default function AdminApplications({ enabled }: Props) {
             {rows.map((row) => (
               <div key={row.id} className="flex flex-col gap-2 rounded-lg border border-border/60 p-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="min-w-0 flex-1">
-                  <Link href={`/directory/${row.applicant_id}`} className="font-medium hover:underline">
+                  <Link href={`/app/directory/${row.applicant_id}`} className="font-medium hover:underline">
                     {row.applicant_name ?? row.applicant_email ?? t('Unknown applicant', 'Pelamar tidak diketahui')}
                   </Link>
                   <p className="truncate text-sm text-muted-foreground">
-                    <Link href={`/jobs/${row.job_id}`} className="hover:underline">{row.job_title ?? t('Deleted job', 'Lowongan dihapus')}</Link>
+                    <Link href={`/app/jobs/${row.job_id}`} className="hover:underline">{row.job_title ?? t('Deleted job', 'Lowongan dihapus')}</Link>
                     {row.company_name ? ` · ${row.company_name}` : ''}
                   </p>
                 </div>

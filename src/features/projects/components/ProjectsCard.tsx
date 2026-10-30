@@ -27,8 +27,8 @@ export function ProjectsCard({ project }: Readonly<{ project: ProjectsCardItem }
 
   return (
     <Link
-      href={`/projects/${project.id}`}
-      className="group flex h-full min-w-0 flex-col rounded-xl border border-border bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-foreground/25 hover:shadow-[var(--shadow-card-hover)]"
+      href={`/app/projects/${project.id}`}
+      className="group flex h-full min-w-0 flex-col rounded-xl border border-border bg-card p-5 transition-all hover:border-foreground/25 hover:shadow-[var(--shadow-card-hover)]"
     >
       <div className="flex items-start justify-between gap-3">
         <h3 className="line-clamp-2 font-semibold leading-snug group-hover:underline">{project.title}</h3>
@@ -50,7 +50,7 @@ export function ProjectsCard({ project }: Readonly<{ project: ProjectsCardItem }
                 {project.deadline}
               </>
             )}
-            <ShareButton compact url={`/projects/${project.id}`} title={project.title} />
+            <ShareButton compact url={`/app/projects/${project.id}`} title={project.title} />
           </span>
         </div>
       </div>

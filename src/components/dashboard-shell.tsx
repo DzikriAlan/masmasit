@@ -74,10 +74,10 @@ const SECTIONS: NavGroup[] = [
     labelEn: 'Main',
     labelId: 'Utama',
     items: [
-      { href: '/dashboard', labelEn: 'Dashboard', labelId: 'Dashboard', icon: LayoutDashboard, exact: true },
-      { href: '/activity', labelEn: 'My Activity', labelId: 'Aktivitas Saya', icon: Star },
-      { href: '/profile', labelEn: 'Profile', labelId: 'Profil', icon: User },
-      { href: '/pesan', labelEn: 'Messages', labelId: 'Pesan', icon: MessageCircle },
+      { href: '/app/dashboard', labelEn: 'Dashboard', labelId: 'Dashboard', icon: LayoutDashboard, exact: true },
+      { href: '/app/activity', labelEn: 'My Activity', labelId: 'Aktivitas Saya', icon: Star },
+      { href: '/app/profile', labelEn: 'Profile', labelId: 'Profil', icon: User },
+      { href: '/app/pesan', labelEn: 'Messages', labelId: 'Pesan', icon: MessageCircle },
     ],
   },
   {
@@ -85,11 +85,11 @@ const SECTIONS: NavGroup[] = [
     labelEn: 'Product',
     labelId: 'Produk',
     items: [
-      { href: '/team-builder', labelEn: 'Team Builder', labelId: 'Team Builder', icon: Users },
-      { href: '/team-collabs', labelEn: 'Team Collabs', labelId: 'Team Collabs', icon: FolderKanban },
-      { href: '/jobs', labelEn: 'Jobs', labelId: 'Lowongan', icon: Briefcase },
-      { href: '/projects', labelEn: 'Projects', labelId: 'Proyek', icon: FolderKanban },
-      { href: '/spotlight', labelEn: 'Spotlight', labelId: 'Spotlight', icon: Sparkles },
+      { href: '/app/team-builder', labelEn: 'Team Builder', labelId: 'Team Builder', icon: Users },
+      { href: '/app/team-collabs', labelEn: 'Team Collabs', labelId: 'Team Collabs', icon: FolderKanban },
+      { href: '/app/jobs', labelEn: 'Jobs', labelId: 'Lowongan', icon: Briefcase },
+      { href: '/app/projects', labelEn: 'Projects', labelId: 'Proyek', icon: FolderKanban },
+      { href: '/app/spotlight', labelEn: 'Spotlight', labelId: 'Spotlight', icon: Sparkles },
     ],
   },
   {
@@ -97,10 +97,10 @@ const SECTIONS: NavGroup[] = [
     labelEn: 'Ecosystem',
     labelId: 'Ekosistem',
     items: [
-      { href: '/talents', labelEn: 'Talent', labelId: 'Talent', icon: GraduationCap },
-      { href: '/courses', labelEn: 'Courses', labelId: 'Kursus', icon: GraduationCap },
-      { href: '/agency', labelEn: 'Agency', labelId: 'Agency', icon: Building2 },
-      { href: '/services', labelEn: 'Services', labelId: 'Layanan', icon: Wrench },
+      { href: '/app/talents', labelEn: 'Talent', labelId: 'Talent', icon: GraduationCap },
+      { href: '/app/courses', labelEn: 'Courses', labelId: 'Kursus', icon: GraduationCap },
+      { href: '/app/agency', labelEn: 'Agency', labelId: 'Agency', icon: Building2 },
+      { href: '/app/services', labelEn: 'Services', labelId: 'Layanan', icon: Wrench },
     ],
   },
   {
@@ -108,11 +108,11 @@ const SECTIONS: NavGroup[] = [
     labelEn: 'Community',
     labelId: 'Komunitas',
     items: [
-      { href: '/discussions', labelEn: 'Discussions', labelId: 'Diskusi', icon: MessagesSquare },
-      { href: '/directory', labelEn: 'Members', labelId: 'Member', icon: Users },
-      { href: '/builds', labelEn: 'Builds', labelId: 'Builds', icon: FolderKanban },
-      { href: '/events', labelEn: 'Events', labelId: 'Event', icon: Calendar },
-      { href: '/discover', labelEn: 'Discover', labelId: 'Discover', icon: Search },
+      { href: '/app/discussions', labelEn: 'Discussions', labelId: 'Diskusi', icon: MessagesSquare },
+      { href: '/app/directory', labelEn: 'Members', labelId: 'Member', icon: Users },
+      { href: '/app/builds', labelEn: 'Builds', labelId: 'Builds', icon: FolderKanban },
+      { href: '/app/events', labelEn: 'Events', labelId: 'Event', icon: Calendar },
+      { href: '/app/discover', labelEn: 'Discover', labelId: 'Discover', icon: Search },
     ],
   },
   {
@@ -120,8 +120,8 @@ const SECTIONS: NavGroup[] = [
     labelEn: 'Manage',
     labelId: 'Kelola',
     items: [
-      { href: '/jobs/applicants', labelEn: 'Job Applicants', labelId: 'Pelamar Lowongan', icon: Briefcase, companyOnly: true },
-      { href: '/admin', labelEn: 'Admin Panel', labelId: 'Panel Admin', icon: Settings, adminOnly: true },
+      { href: '/app/jobs/applicants', labelEn: 'Job Applicants', labelId: 'Pelamar Lowongan', icon: Briefcase, companyOnly: true },
+      { href: '/app/admin', labelEn: 'Admin Panel', labelId: 'Panel Admin', icon: Settings, adminOnly: true },
     ],
   },
 ];
@@ -254,7 +254,7 @@ function SidebarBody({
       >
         <Icon className="size-4 shrink-0" />
         {label}
-        {item.href === '/pesan' && <MessagesUnreadBadge className="ml-auto" />}
+        {item.href === '/app/pesan' && <MessagesUnreadBadge className="ml-auto" />}
       </Link>
     );
   };
@@ -321,7 +321,7 @@ function SidebarBody({
             <Tooltip>
               <TooltipTrigger asChild>
                 <Link
-                  href="/profile"
+                  href="/app/profile"
                   onClick={onNavigate}
                   className="flex items-center justify-center rounded-md p-1.5 hover:bg-sidebar-accent"
                 >

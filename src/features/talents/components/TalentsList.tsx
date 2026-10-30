@@ -148,7 +148,7 @@ export default function TalentsList() {
                     <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-muted-foreground text-pretty">{talent.bio}</p>
 
                     <div className="mt-auto flex gap-2 pt-4">
-                      <Link href={`/talents/${talent.id}`} className="flex-1">
+                      <Link href={`/app/talents/${talent.id}`} className="flex-1">
                         <Button size="sm" className="w-full">{t('Book a session', 'Pesan sesi')}</Button>
                       </Link>
                       {talent.linkedinUrl && (
@@ -156,7 +156,7 @@ export default function TalentsList() {
                           <Button variant="outline" size="sm">LinkedIn</Button>
                         </a>
                       )}
-                      <ShareButton compact url={`/talents/${talent.id}`} title={`${talent.name} — MasmasIT`} />
+                      <ShareButton compact url={`/app/talents/${talent.id}`} title={`${talent.name} — MasmasIT`} />
                     </div>
                   </div>
                 ))}

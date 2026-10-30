@@ -90,7 +90,7 @@ export default function TeamBuilderDetail() {
       return;
     }
     toast.success(t('Team deleted', 'Tim dihapus'));
-    router.push('/team-builder');
+    router.push('/app/team-builder');
   };
 
   const editTeamBuilderMembers = async (memberId: string, role: string) => {
@@ -128,7 +128,7 @@ export default function TeamBuilderDetail() {
       return;
     }
     toast.success(isDecline ? t('Invitation declined', 'Undangan ditolak') : t('You left the team', 'Kamu keluar dari tim'));
-    router.push('/team-builder');
+    router.push('/app/team-builder');
   };
 
   return (
@@ -242,13 +242,13 @@ export default function TeamBuilderDetail() {
 
           <div className="mt-10 flex flex-col gap-3 border-t border-border pt-8 sm:flex-row">
             {isOwner && (
-              <Link href={`/team-collabs/register?team=${team.id}`} className="w-full sm:w-auto">
+              <Link href={`/app/team-collabs/register?team=${team.id}`} className="w-full sm:w-auto">
                 <Button variant="outline" className="h-11 w-full rounded-full px-6 text-base font-semibold sm:w-auto">
                   {t('Register for Team Collabs', 'Daftar ke Team Collabs')}
                 </Button>
               </Link>
             )}
-            <Link href="/projects" className="w-full sm:w-auto">
+            <Link href="/app/projects" className="w-full sm:w-auto">
               <Button variant="outline" className="h-11 w-full rounded-full px-6 text-base font-semibold sm:w-auto">
                 {t('Browse client projects', 'Jelajahi proyek klien')}
               </Button>
