@@ -896,7 +896,7 @@ export default function HomePage() {
                 );
                 const preview = <EcosystemPreview ekey={e.key} flip={flip} courses={homeCourses} events={homeEvents} />;
                 const inner = (
-                  <div className={`group flex h-full flex-col overflow-hidden rounded-xl transition-[box-shadow,transform] duration-300 hover:-translate-y-0.5 hover:shadow-card-hover ${tone.wash} ${lead ? 'min-h-[320px] p-6' : 'min-h-[380px] p-5'}`}>
+                  <div className={`group flex h-full flex-col overflow-hidden rounded-xl transition-[box-shadow,transform] duration-300 hover:-translate-y-0.5 hover:shadow-card-hover wash-neutral ${lead ? 'min-h-[320px] p-6' : 'min-h-[380px] p-5'}`}>
                     {flip ? <>{preview}{header}</> : <>{header}{preview}</>}
                   </div>
                 );
