@@ -132,41 +132,39 @@ export default function ExternalJobsList() {
       </p>
 
       {/* Search always shows; the country/role selects ride inline from sm up,
-          and collapse into a bottom-sheet triggered by a Filter button below sm. */}
-      <div className="mt-4 space-y-3">
-        <div className="grid gap-3 sm:grid-cols-[1fr_auto_auto]">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder={t('Search jobs (e.g. react, devops)...', 'Cari lowongan (mis. react, devops)...')}
-              className="pl-9"
-            />
-          </div>
-          <Select value={country} onValueChange={setCountry}>
-            <SelectTrigger className="hidden sm:flex sm:w-52"><SelectValue placeholder={t('Country', 'Negara')} /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t('All countries', 'Semua negara')}</SelectItem>
-              {countries.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <Select value={role} onValueChange={setRole}>
-            <SelectTrigger className="hidden sm:flex sm:w-44"><SelectValue placeholder={t('Role', 'Peran')} /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t('All roles', 'Semua peran')}</SelectItem>
-              {(Object.keys(roleLabels) as ExternalJobRole[]).map((r) => (
-                <SelectItem key={r} value={r}>{t(roleLabels[r].en, roleLabels[r].id)}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          and collapse into a bottom-sheet behind a Filter button beside it below sm. */}
+      <div className="mt-4 flex items-center gap-3">
+        <div className="relative min-w-0 flex-1">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder={t('Search jobs (e.g. react, devops)...', 'Cari lowongan (mis. react, devops)...')}
+            className="pl-9"
+          />
         </div>
-
+        <Select value={country} onValueChange={setCountry}>
+          <SelectTrigger className="hidden sm:flex sm:w-52"><SelectValue placeholder={t('Country', 'Negara')} /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t('All countries', 'Semua negara')}</SelectItem>
+            {countries.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        <Select value={role} onValueChange={setRole}>
+          <SelectTrigger className="hidden sm:flex sm:w-44"><SelectValue placeholder={t('Role', 'Peran')} /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t('All roles', 'Semua peran')}</SelectItem>
+            {(Object.keys(roleLabels) as ExternalJobRole[]).map((r) => (
+              <SelectItem key={r} value={r}>{t(roleLabels[r].en, roleLabels[r].id)}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <MobileFilterDrawer
           triggerLabel={t('Filter', 'Filter')}
           title={t('Filter your search', 'Filter pencarianmu')}
           applyLabel={t('Show results', 'Tampilkan hasil')}
           activeCount={(country !== 'all' ? 1 : 0) + (role !== 'all' ? 1 : 0)}
+          className="h-10"
         >
           <MobileFilterField label={t('Country', 'Negara')}>
             <Select value={country} onValueChange={setCountry}>

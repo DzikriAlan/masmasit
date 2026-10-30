@@ -18,7 +18,7 @@ import { cn } from '@/shared/lib/utils';
 
 /**
  * Search stays inline everywhere; the row of Selects beside it collapses
- * into this bottom sheet below `sm` so filters don't eat the phone's whole
+ * into this bottom sheet below `sm`, its trigger beside the search field, so filters don't eat the phone's whole
  * first screen. Callers render the same filter controls twice — once in a
  * `hidden sm:grid` row for desktop, once as children here — rather than this
  * component trying to relayout arbitrary filter markup itself.
@@ -28,12 +28,15 @@ export function MobileFilterDrawer({
   title,
   applyLabel,
   activeCount = 0,
+  className,
   children,
 }: Readonly<{
   triggerLabel: string;
   title: string;
   applyLabel: string;
   activeCount?: number;
+  /** For the trigger; it sits beside the search field, so it sizes to its label. */
+  className?: string;
   children: ReactNode;
 }>) {
   const [open, setOpen] = useState(false);
@@ -41,7 +44,7 @@ export function MobileFilterDrawer({
   return (
     <Drawer open={open} onOpenChange={setOpen}>
       <DrawerTrigger asChild>
-        <Button type="button" variant="outline" className="w-full gap-2 sm:hidden">
+        <Button type="button" variant="outline" className={cn('shrink-0 gap-2 sm:hidden', className)}>
           <SlidersHorizontal className="h-4 w-4" />
           {triggerLabel}
           {activeCount > 0 && (

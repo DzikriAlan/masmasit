@@ -71,8 +71,9 @@ export function BrowseToolbar({
 
   return (
     <div className="mb-8 space-y-3">
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="relative min-w-0 flex-1 basis-64">
+      {/* One row on phones too: search, then the Filter button beside it. */}
+      <div className="flex items-center gap-3 sm:flex-wrap">
+        <div className="relative min-w-0 flex-1 sm:basis-64">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={searchValue}
@@ -85,16 +86,13 @@ export function BrowseToolbar({
 
         {filters.map((filter) => renderSelect(filter, cn('hidden h-11 sm:flex', filter.width ?? 'sm:w-44')))}
 
-        {trailing}
-      </div>
-
-      <div className="flex items-center gap-3">
         {filters.length > 0 && (
           <MobileFilterDrawer
             triggerLabel={t('Filter', 'Filter')}
             title={t('Filter your search', 'Filter pencarianmu')}
             applyLabel={t('Show results', 'Tampilkan hasil')}
             activeCount={activeCount}
+            className="h-11"
           >
             {filters.map((filter) => (
               <MobileFilterField key={filter.key} label={filter.label}>
@@ -104,18 +102,22 @@ export function BrowseToolbar({
           </MobileFilterDrawer>
         )}
 
-        {hasActive && onClearFilters && (
+        {trailing}
+      </div>
+
+      {hasActive && onClearFilters && (
+        <div className="hidden items-center gap-3 sm:flex">
           <Button
             variant="ghost"
             size="sm"
             onClick={onClearFilters}
-            className="hidden h-8 gap-1.5 px-2 text-muted-foreground hover:text-foreground sm:inline-flex"
+            className="h-8 gap-1.5 px-2 text-muted-foreground hover:text-foreground"
           >
             <X className="h-3.5 w-3.5" />
             {t('Clear filters', 'Hapus filter')}
           </Button>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
