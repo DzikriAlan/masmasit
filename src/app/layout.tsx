@@ -16,7 +16,7 @@ import '@fontsource-variable/familjen-grotesk';
 import '@fontsource-variable/inter';
 // Wordmark face only — Plus Jakarta Sans, by Indonesian foundry Tokotype.
 import '@fontsource/plus-jakarta-sans/800.css';
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { AuthProvider } from '@/components/auth-provider';
 import { LanguageProvider } from '@/components/language-provider';
 import { QueryProvider } from '@/components/query-provider';
@@ -34,16 +34,21 @@ export const metadata: Metadata = {
       { url: '/icon-192.webp', sizes: '192x192', type: 'image/webp' },
       { url: '/icon-512.webp', sizes: '512x512', type: 'image/webp' },
     ],
-    apple: [{ url: '/icon-180.webp', sizes: '180x180', type: 'image/webp' }],
+    // iOS ignores WebP home-screen icons.
+    apple: [{ url: '/icons/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
     shortcut: ['/icon-32.webp'],
   },
-  manifest: '/site.webmanifest',
+  // The manifest itself is src/app/manifest.ts; iOS reads this instead when
+  // the site is added to the home screen.
+  appleWebApp: { capable: true, title: 'MasmasIT', statusBarStyle: 'default' },
   openGraph: {
     title: 'MasmasIT',
     description: 'Hybrid IT Community, Talent & Agency Ecosystem for Indonesian IT practitioners.',
     images: [{ url: '/icon-512.webp', width: 512, height: 512, type: 'image/webp' }],
   },
 };
+
+export const viewport: Viewport = { themeColor: '#7d122d' };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

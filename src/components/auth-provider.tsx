@@ -17,6 +17,7 @@ import {
   postAuthSignUpProfile,
   postAuthSignUpRole,
 } from '@/features/auth/services/authServices';
+import { deletePushToken } from '@/features/push/services/pushServices';
 
 interface AuthContextValue {
   user: User | null;
@@ -128,6 +129,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
+    // While still signed in: the RPC needs the session, and this device should
+    // stop getting the next account-holder's pushes.
+    await deletePushToken().catch(() => {});
     await postAuthSignOut();
     setProfile(null);
     setRoles([]);

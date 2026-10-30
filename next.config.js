@@ -31,6 +31,15 @@ const nextConfig = {
       ]),
     ];
   },
+  // A cached service worker keeps an old one running for up to a day.
+  async headers() {
+    return [
+      {
+        source: '/sw.js',
+        headers: [{ key: 'Cache-Control', value: 'no-cache, no-store, must-revalidate' }],
+      },
+    ];
+  },
   eslint: {
     ignoreDuringBuilds: true,
   },

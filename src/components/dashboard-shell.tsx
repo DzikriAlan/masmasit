@@ -31,6 +31,7 @@ import { useAuth } from '@/components/auth-provider';
 import { useShellHint } from '@/components/shell-hint';
 import { useLang } from '@/components/language-provider';
 import { NotificationBell } from '@/features/notifications/components/NotificationBell';
+import { DevicePush } from '@/features/push/components/DevicePush';
 import { MessagesUnreadBadge } from '@/features/messages/components/MessagesUnreadBadge';
 import { GlobalSearch } from '@/features/search/components/GlobalSearch';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -471,6 +472,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             (globals.css), so no page sets margins of its own. */}
         <div className="w-full p-4 md:p-8">{children}</div>
       </main>
+      <DevicePush />
     </div>
   );
 }
