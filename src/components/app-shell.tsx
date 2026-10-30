@@ -2,14 +2,36 @@
 
 import { usePathname } from 'next/navigation';
 
+import { useAuth } from '@/components/auth-provider';
 import { Navbar } from '@/components/navbar';
 import { Footer } from '@/components/footer';
+import { DashboardShell } from '@/components/dashboard-shell';
 import { cn } from '@/shared/lib/utils';
 
+const PUBLIC_PATHS = [
+  '/',
+  '/about',
+  '/contact',
+  '/login',
+  '/register',
+  '/forgot-password',
+  '/reset-password',
+  '/privacy-policy',
+  '/terms-of-service',
+];
+
+function isPublicPath(pathname: string): boolean {
+  return PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+}
+
 export function AppShell({ children }: { children: React.ReactNode }) {
-  // The navbar is fixed and transparent at the top of the page. The homepage
-  // hero runs underneath it; every other page starts below the bar.
-  const isHome = usePathname() === '/';
+  const pathname = usePathname();
+  const { user, loading } = useAuth();
+  const isHome = pathname === '/';
+
+  if (!loading && user && !isPublicPath(pathname)) {
+    return <DashboardShell>{children}</DashboardShell>;
+  }
 
   return (
     <div className="flex min-h-screen flex-col bg-background">

@@ -92,6 +92,13 @@ const config: Config = {
           amber: 'hsl(var(--eco-amber) / <alpha-value>)',
           green: 'hsl(var(--eco-green) / <alpha-value>)',
         },
+        sidebar: {
+          DEFAULT: 'hsl(var(--sidebar))',
+          foreground: 'hsl(var(--sidebar-foreground))',
+          accent: 'hsl(var(--sidebar-accent))',
+          'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
+          border: 'hsl(var(--sidebar-border))',
+        },
         'card-hover': 'hsl(var(--card-hover))',
         'border-strong': 'hsl(var(--border-strong))',
         border: 'hsl(var(--border))',
