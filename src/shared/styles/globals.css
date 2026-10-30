@@ -102,12 +102,13 @@
     /* Starfield dots read as dust on the light canvas. */
     --particle-opacity: 0;
 
-    /* Sidebar (dashboard shell) — clean white, Recraft-inspired. */
-    --sidebar: 0 0% 100%;
+    /* Sidebar (dashboard shell) — a faint grey, so the white page beside it
+       reads as the brighter surface. */
+    --sidebar: 0 0% 97.5%;
     --sidebar-foreground: 0 0% 10%;
-    --sidebar-accent: 0 0% 96%;
+    --sidebar-accent: 0 0% 93%;
     --sidebar-accent-foreground: 0 0% 10%;
-    --sidebar-border: 0 0% 93%;
+    --sidebar-border: 0 0% 91%;
     --sidebar-muted: 0 0% 44%;
     --sidebar-active: 0 0% 10%;
   }
@@ -189,7 +190,9 @@
      Scoped so landing/public pages keep their original canvas tokens; the
      burgundy primary comes from :root / .dark. */
   .dashboard-page {
-    --background: 0 0% 97%;
+    /* White page, a shade whiter than the grey sidebar beside it (as in
+       Pixel); cards keep their borders to stand off it. */
+    --background: 0 0% 100%;
     --foreground: 0 0% 9%;
     --card: 0 0% 100%;
     --card-foreground: 0 0% 9%;
