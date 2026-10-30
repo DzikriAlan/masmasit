@@ -348,7 +348,7 @@ export default function DiscoverList() {
         <div className="mt-16 grid gap-10 lg:grid-cols-2">
           <section>
             <div className="mb-5 flex items-end justify-between gap-4">
-              <h2 className={cn('font-display text-xl font-semibold', TONE_TEXT[toneOf('jobs')])}>{t('Open roles', 'Lowongan Terbuka')}</h2>
+              <h2 className={cn('font-display text-xl font-semibold text-primary')}>{t('Open roles', 'Lowongan Terbuka')}</h2>
               <Link href="/app/jobs" className="shrink-0 text-sm font-medium text-primary hover:underline">{t('See all', 'Lihat semua')}</Link>
             </div>
             <LoadData
@@ -382,7 +382,7 @@ export default function DiscoverList() {
 
           <section>
             <div className="mb-5 flex items-end justify-between gap-4">
-              <h2 className={cn('font-display text-xl font-semibold', TONE_TEXT[toneOf('events')])}>{t('Upcoming events', 'Event Mendatang')}</h2>
+              <h2 className={cn('font-display text-xl font-semibold text-primary')}>{t('Upcoming events', 'Event Mendatang')}</h2>
               <Link href="/app/events" className="shrink-0 text-sm font-medium text-primary hover:underline">{t('See all', 'Lihat semua')}</Link>
             </div>
             <LoadData

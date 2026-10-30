@@ -54,7 +54,7 @@ export default function AgencyDetail() {
               )}
             </div>
             <div>
-              <h1 className={`font-display text-2xl font-semibold tracking-tight sm:text-3xl ${TONE_TEXT[toneOf('agency')]}`}>{agency.name}</h1>
+              <h1 className={`font-display text-2xl font-semibold tracking-tight sm:text-3xl text-primary`}>{agency.name}</h1>
               {agency.is_in_house && (
                 <span className={`mt-1 inline-block text-xs font-medium ${TONE_TEXT[toneOf('agency')]}`}>
                   {t('MasmasIT in-house', 'In-house MasmasIT')}
