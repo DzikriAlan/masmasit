@@ -120,10 +120,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // a plain path; /auth/callback reads it and clears it.
     if (typeof window !== 'undefined') {
       const target = new URLSearchParams(window.location.search).get('redirect');
-      const safeTarget = target && target.startsWith('/') && !target.startsWith('//') ? target : null;
-      document.cookie = safeTarget
-        ? `auth_next=${encodeURIComponent(safeTarget)}; path=/; max-age=600; samesite=lax`
-        : 'auth_next=; path=/; max-age=0; samesite=lax';
+      const safeTarget = target && target.startsWith('/') && !target.startsWith('//') ? target : '/dashboard';
+      document.cookie = `auth_next=${encodeURIComponent(safeTarget)}; path=/; max-age=600; samesite=lax`;
     }
     const { error } = await postAuthGoogleSignIn(redirectTo);
     return { error: error?.message ?? null };

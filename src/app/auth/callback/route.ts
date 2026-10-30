@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
     value && value.startsWith('/') && !value.startsWith('//') ? value : null;
   const cookieNext = getSafePath(decodeURIComponent(req.cookies.get('auth_next')?.value ?? ''));
   const queryNext = getSafePath(searchParams.get('next'));
-  const next = (queryNext && queryNext !== '/' ? queryNext : cookieNext) ?? '/';
+  const next = (queryNext && queryNext !== '/' ? queryNext : cookieNext) ?? '/dashboard';
 
   const res = NextResponse.redirect(`${origin}${next}`);
   res.cookies.set('auth_next', '', { path: '/', maxAge: 0 });

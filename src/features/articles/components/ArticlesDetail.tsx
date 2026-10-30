@@ -40,7 +40,7 @@ export default function ArticlesDetail({ slug }: Props) {
 
   return (
     <AppShell>
-      <LoadData minHeight="60vh" className="mx-auto max-w-3xl px-4 py-10 sm:px-6 lg:px-8" hideIcon response={data}>
+      <LoadData minHeight="60vh" className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8" hideIcon response={data}>
         {data.data && (
           <article>
             <Link href="/discover" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">

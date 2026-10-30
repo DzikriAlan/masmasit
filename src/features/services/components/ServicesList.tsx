@@ -146,7 +146,7 @@ export default function ServicesList() {
 
   return (
     <AppShell>
-      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <PageHeader
           eyebrow={t('Ecosystem · Business', 'Ekosistem · Bisnis')}
           tone={toneOf('services')}

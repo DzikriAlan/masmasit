@@ -204,7 +204,7 @@ function SidebarBody({
           {collapsed ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />}
         </Button>
       </TooltipTrigger>
-      <TooltipContent side={collapsed ? 'right' : 'bottom'} sideOffset={6}>
+      <TooltipContent side="right" sideOffset={6}>
         {toggleLabel}
       </TooltipContent>
     </Tooltip>
@@ -405,9 +405,8 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         )}
       >
         <div
-          key={collapsed ? 'rail' : 'full'}
           className={cn(
-            'h-full shrink-0 animate-fade-up',
+            'h-full shrink-0',
             collapsed ? 'w-16' : 'w-64'
           )}
         >
@@ -455,7 +454,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           collapsed ? 'md:pl-16' : 'md:pl-64'
         )}
       >
-        <div className="w-full p-4 md:p-8">{children}</div>
+        <div className="w-full">{children}</div>
       </main>
     </div>
   );
