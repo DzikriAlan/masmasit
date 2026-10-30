@@ -98,6 +98,8 @@ const config: Config = {
           accent: 'hsl(var(--sidebar-accent))',
           'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
           border: 'hsl(var(--sidebar-border))',
+          muted: 'hsl(var(--sidebar-muted))',
+          active: 'hsl(var(--sidebar-active))',
         },
         'card-hover': 'hsl(var(--card-hover))',
         'border-strong': 'hsl(var(--border-strong))',

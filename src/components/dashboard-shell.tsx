@@ -154,7 +154,7 @@ function NavSectionBlock({
   return (
     <nav aria-label={label} className="grid gap-0.5 px-2">
       {collapsed ? null : (
-        <p className="px-3 py-1.5 text-xs font-semibold tracking-wide uppercase text-sidebar-foreground/50">
+        <p className="px-3 py-1.5 text-[11px] font-semibold tracking-wider uppercase text-sidebar-muted">
           {label}
         </p>
       )}
@@ -199,7 +199,7 @@ function SidebarBody({
           size="icon"
           aria-label={toggleLabel}
           onClick={onToggleCollapsed}
-          className={cn('text-sidebar-foreground/60 hover:text-sidebar-foreground', collapsed && 'size-10')}
+          className={cn('text-sidebar-muted hover:text-sidebar-foreground hover:bg-sidebar-accent', collapsed && 'size-10')}
         >
           {collapsed ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />}
         </Button>
@@ -223,10 +223,10 @@ function SidebarBody({
               href={item.href}
               onClick={onNavigate}
               className={cn(
-                'flex items-center justify-center rounded-md p-2.5 transition-colors',
+                'flex items-center justify-center rounded-lg p-2.5 transition-colors',
                 active
-                  ? 'bg-eco-blue/15 text-eco-blue'
-                  : 'text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground'
+                  ? 'bg-sidebar-accent text-sidebar-active font-semibold'
+                  : 'text-sidebar-muted hover:bg-sidebar-accent hover:text-sidebar-foreground'
               )}
             >
               <Icon className="size-4" />
@@ -246,10 +246,10 @@ function SidebarBody({
         href={item.href}
         onClick={onNavigate}
         className={cn(
-          'flex items-center gap-3 rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
+          'flex items-center gap-3 rounded-lg px-3 py-1.5 text-sm transition-colors',
           active
-            ? 'bg-eco-blue/15 text-eco-blue'
-            : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground'
+            ? 'bg-sidebar-accent text-sidebar-active font-semibold'
+            : 'text-sidebar-muted font-medium hover:bg-sidebar-accent hover:text-sidebar-foreground'
         )}
       >
         <Icon className="size-4 shrink-0" />
@@ -309,7 +309,7 @@ function SidebarBody({
               <TooltipTrigger asChild>
                 <button
                   onClick={toggleLang}
-                  className="rounded-md p-2 text-xs font-semibold text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                  className="rounded-md p-2 text-xs font-semibold text-sidebar-muted hover:bg-sidebar-accent hover:text-sidebar-foreground"
                 >
                   {lang === 'en' ? 'EN' : 'ID'}
                 </button>
@@ -339,7 +339,7 @@ function SidebarBody({
               <TooltipTrigger asChild>
                 <button
                   onClick={handleSignOut}
-                  className="rounded-md p-2.5 text-sidebar-foreground/60 transition-colors hover:bg-sidebar-accent hover:text-destructive"
+                  className="rounded-md p-2.5 text-sidebar-muted transition-colors hover:bg-sidebar-accent hover:text-destructive"
                 >
                   <LogOut className="size-4" />
                   <span className="sr-only">{t('Sign out', 'Keluar')}</span>
@@ -359,20 +359,20 @@ function SidebarBody({
               </Avatar>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium text-sidebar-foreground">{displayName}</p>
-                <p className="truncate text-xs text-sidebar-foreground/50">{user?.email}</p>
+                <p className="truncate text-xs text-sidebar-muted">{user?.email}</p>
               </div>
               <button
                 onClick={toggleLang}
                 className="shrink-0 rounded-md px-1.5 py-1 text-xs font-semibold"
               >
-                <span className={lang === 'en' ? 'text-sidebar-foreground' : 'text-sidebar-foreground/40'}>EN</span>
-                <span className="text-sidebar-foreground/30"> / </span>
-                <span className={lang === 'id' ? 'text-sidebar-foreground' : 'text-sidebar-foreground/40'}>ID</span>
+                <span className={lang === 'en' ? 'text-sidebar-foreground' : 'text-sidebar-muted'}>EN</span>
+                <span className="text-sidebar-muted"> / </span>
+                <span className={lang === 'id' ? 'text-sidebar-foreground' : 'text-sidebar-muted'}>ID</span>
               </button>
             </div>
             <button
               onClick={handleSignOut}
-              className="flex w-full items-center gap-3 rounded-md px-3 py-1.5 text-sm font-medium text-sidebar-foreground/60 transition-colors hover:bg-sidebar-accent hover:text-destructive"
+              className="flex w-full items-center gap-3 rounded-lg px-3 py-1.5 text-sm font-medium text-sidebar-muted transition-colors hover:bg-sidebar-accent hover:text-destructive"
             >
               <LogOut className="size-4" />
               {t('Sign out', 'Keluar')}
