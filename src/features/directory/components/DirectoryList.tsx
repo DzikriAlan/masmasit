@@ -6,10 +6,11 @@ import { MapPin } from 'lucide-react';
 
 import type { DataDirectory } from '@/features/directory/types/directoryTypes';
 import { useDirectoryControllers } from '@/features/directory/controllers/directoryControllers';
-import { DIRECTORY_PAGE_SIZE } from '@/features/directory/services/directoryServices';
 
 import { AppShell } from '@/components/app-shell';
 import { PageHeader } from '@/components/page-header';
+import { Pager } from '@/components/pager';
+import { DEFAULT_PAGE_SIZE } from '@/shared/lib/paginate';
 import { LoadData } from '@/components/load-data';
 import { BrowseToolbar } from '@/components/browse-toolbar';
 import { CardGridSkeleton } from '@/components/card-skeleton';
@@ -18,7 +19,6 @@ import { useLang } from '@/components/language-provider';
 import { signedOutState } from '@/shared/lib/browse-gate';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { ShareButton } from '@/components/share-button';
 import { TONE_CHIP, toneOf } from '@/shared/lib/tones';
 import { cn } from '@/shared/lib/utils';
@@ -37,7 +37,7 @@ export default function DirectoryList() {
   const [filters, setFilters] = useState({
     search: '',
     filter: { location: 'all', status: 'all', skill: 'all' },
-    pagination: { currentPage: 1, perPage: DIRECTORY_PAGE_SIZE },
+    pagination: { currentPage: 1, perPage: DEFAULT_PAGE_SIZE as number },
   });
 
   const data = useMemo(() => {
@@ -62,7 +62,7 @@ export default function DirectoryList() {
     });
 
     const rows = fetchDirectory.data ?? [];
-    const list = rows.map(getMappedMember);
+    const list = rows.slice(0, filters.pagination.perPage).map(getMappedMember);
 
     return {
       data: list,
@@ -79,7 +79,7 @@ export default function DirectoryList() {
         ? t('Try a different skill or city.', 'Coba skill atau kota lain.')
         : t('Profiles appear here once members complete onboarding.', 'Profil muncul di sini setelah member menyelesaikan onboarding.'),
       pagination: filters.pagination,
-      hasNextPage: rows.length === DIRECTORY_PAGE_SIZE,
+      hasNextPage: rows.length > filters.pagination.perPage,
     };
   }, [fetchDirectory.data, fetchDirectory.isPending, fetchDirectory.isError, filters, t, user, authLoading]);
 
@@ -142,6 +142,10 @@ export default function DirectoryList() {
     setFilters((prev) => ({ ...prev, pagination: { ...prev.pagination, currentPage: page } }));
   };
 
+  const editDirectoryPageSize = (perPage: number) => {
+    setFilters((prev) => ({ ...prev, pagination: { currentPage: 1, perPage } }));
+  };
+
   useEffect(() => {
     const timeout = setTimeout(() => {
       setGetDirectory({
@@ -150,6 +154,7 @@ export default function DirectoryList() {
         statusFilter: filters.filter.status,
         skillFilter: filters.filter.skill,
         page: filters.pagination.currentPage,
+        perPage: filters.pagination.perPage,
       });
     }, 300);
     return () => clearTimeout(timeout);
@@ -231,26 +236,14 @@ export default function DirectoryList() {
           )}
         </LoadData>
 
-        {!data.isLoading && (data.pagination.currentPage > 1 || data.hasNextPage) && (
-          <nav className="mt-10 flex items-center justify-center gap-3" aria-label={t('Pagination', 'Paginasi')}>
-            <Button
-              variant="outline"
-              disabled={data.pagination.currentPage === 1}
-              onClick={() => loadDirectory(data.pagination.currentPage - 1)}
-            >
-              {t('Previous', 'Sebelumnya')}
-            </Button>
-            <span className="text-sm text-muted-foreground">
-              {t('Page', 'Halaman')} {data.pagination.currentPage}
-            </span>
-            <Button
-              variant="outline"
-              disabled={!data.hasNextPage}
-              onClick={() => loadDirectory(data.pagination.currentPage + 1)}
-            >
-              {t('Next', 'Berikutnya')}
-            </Button>
-          </nav>
+        {!data.isLoading && (
+          <Pager
+            page={data.pagination.currentPage}
+            hasNextPage={data.hasNextPage}
+            pageSize={data.pagination.perPage}
+            onPageChange={loadDirectory}
+            onPageSizeChange={editDirectoryPageSize}
+          />
         )}
       </div>
     </AppShell>

@@ -11,8 +11,6 @@ export const getDirectorySkills = async () => {
   );
 };
 
-export const DIRECTORY_PAGE_SIZE = 24;
-
 /**
  * The skill filter is applied through an inner join on `user_skills`, so it
  * narrows the whole table rather than just the rows already fetched.
@@ -38,10 +36,11 @@ export const getDirectory = async (payload: PayloadGetDirectory) => {
     query = query.eq('user_skills.skill_id', payload.skillFilter);
   }
 
-  const from = (payload.page - 1) * DIRECTORY_PAGE_SIZE;
+  // One row past the page, so the list knows whether a next page exists.
+  const from = (payload.page - 1) * payload.perPage;
 
   return toApiResponse<DataDirectory[]>(
-    query.order('created_at', { ascending: false }).range(from, from + DIRECTORY_PAGE_SIZE - 1),
+    query.order('created_at', { ascending: false }).range(from, from + payload.perPage),
     'Members retrieved successfully'
   );
 };

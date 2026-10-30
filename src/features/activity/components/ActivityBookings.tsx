@@ -1,6 +1,7 @@
 'use client';
 
 import { useLang } from '@/components/language-provider';
+import { Pager, usePagination } from '@/components/pager';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ReviewForm, StarRating } from '@/components/review-form';
@@ -33,6 +34,8 @@ export function ActivityBookings({
   onSubmitBookingReview,
 }: Props) {
   const { t } = useLang();
+  const pagedMine = usePagination(myBookings);
+  const pagedIncoming = usePagination(incomingBookings);
 
   return (
     <div className="space-y-6">
@@ -43,7 +46,7 @@ export function ActivityBookings({
         isEmpty={incomingBookings.length === 0}
         emptyTitle={t('No incoming bookings.', 'Belum ada booking masuk.')}
       >
-        {incomingBookings.map((b) => (
+        {pagedIncoming.items.map((b) => (
           <div key={b.id} className="rounded-lg border border-border/60 p-4">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
@@ -69,6 +72,7 @@ export function ActivityBookings({
             )}
           </div>
         ))}
+        <Pager className="mt-4" {...pagedIncoming.pager} />
       </ActivityPanel>
 
       <ActivityPanel
@@ -77,7 +81,7 @@ export function ActivityBookings({
         isEmpty={myBookings.length === 0}
         emptyTitle={t('You have not booked any session.', 'Anda belum memesan sesi.')}
       >
-        {myBookings.map((b) => {
+        {pagedMine.items.map((b) => {
           const givenRating = myRatings[b.id] ?? 0;
           const canReview = b.status === 'completed' && !givenRating && Boolean(b.talent_id);
           return (
@@ -104,6 +108,7 @@ export function ActivityBookings({
             </div>
           );
         })}
+        <Pager className="mt-4" {...pagedMine.pager} />
       </ActivityPanel>
     </div>
   );

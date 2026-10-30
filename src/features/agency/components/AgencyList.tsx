@@ -9,6 +9,7 @@ import { useAgencyControllers } from '@/features/agency/controllers/agencyContro
 
 import { AppShell } from '@/components/app-shell';
 import { PageHeader } from '@/components/page-header';
+import { Pager, usePagination } from '@/components/pager';
 import { LoadData } from '@/components/load-data';
 import { BrowseToolbar } from '@/components/browse-toolbar';
 import { CardGridSkeleton } from '@/components/card-skeleton';
@@ -75,6 +76,8 @@ export default function AgencyList() {
     setFilters({ search: '' });
   };
 
+  const paged = usePagination(data.data);
+
   return (
     <AppShell>
       <div className="page-container mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -111,43 +114,46 @@ export default function AgencyList() {
           {data.isLoading ? (
             <CardGridSkeleton count={6} chips={0} lines={3} />
           ) : (
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {data.data.map((agency) => (
-                <Link
-                  key={agency.id}
-                  href={`/agency/${agency.slug}`}
-                  className="group flex h-full min-w-0 flex-col rounded-xl border border-border bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-foreground/25 hover:shadow-[var(--shadow-card-hover)]"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className={cn('flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg', TONE_CHIP[toneOf('agency')])}>
-                      {agency.logoUrl ? (
-                        <img src={agency.logoUrl} alt="" className="h-full w-full object-cover" />
-                      ) : (
-                        <span className="font-semibold">{agency.initial}</span>
-                      )}
+            <>
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                {paged.items.map((agency) => (
+                  <Link
+                    key={agency.id}
+                    href={`/agency/${agency.slug}`}
+                    className="group flex h-full min-w-0 flex-col rounded-xl border border-border bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-foreground/25 hover:shadow-[var(--shadow-card-hover)]"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={cn('flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg', TONE_CHIP[toneOf('agency')])}>
+                        {agency.logoUrl ? (
+                          <img src={agency.logoUrl} alt="" className="h-full w-full object-cover" />
+                        ) : (
+                          <span className="font-semibold">{agency.initial}</span>
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate font-semibold group-hover:underline">{agency.name}</p>
+                        {agency.isInHouse && (
+                          <span className={cn('mt-0.5 flex items-center gap-1 text-xs font-medium', TONE_TEXT[toneOf('agency')])}>
+                            <BadgeCheck className="h-3.5 w-3.5" />
+                            {t('MasmasIT in-house', 'In-house MasmasIT')}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate font-semibold group-hover:underline">{agency.name}</p>
-                      {agency.isInHouse && (
-                        <span className={cn('mt-0.5 flex items-center gap-1 text-xs font-medium', TONE_TEXT[toneOf('agency')])}>
-                          <BadgeCheck className="h-3.5 w-3.5" />
-                          {t('MasmasIT in-house', 'In-house MasmasIT')}
-                        </span>
-                      )}
-                    </div>
-                  </div>
 
-                  <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-muted-foreground text-pretty">
-                    {agency.description}
-                  </p>
+                    <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-muted-foreground text-pretty">
+                      {agency.description}
+                    </p>
 
-                  <span className="mt-auto flex items-center gap-1 pt-4 text-sm font-medium text-foreground group-hover:underline">
-                    {t('View catalogue', 'Lihat katalog')}
-                    <ArrowUpRight className="h-3.5 w-3.5" />
-                  </span>
-                </Link>
-              ))}
-            </div>
+                    <span className="mt-auto flex items-center gap-1 pt-4 text-sm font-medium text-foreground group-hover:underline">
+                      {t('View catalogue', 'Lihat katalog')}
+                      <ArrowUpRight className="h-3.5 w-3.5" />
+                    </span>
+                  </Link>
+                ))}
+              </div>
+              <Pager {...paged.pager} />
+            </>
           )}
         </LoadData>
       </div>

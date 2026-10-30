@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { MobileCard, MobileCardList } from '@/components/mobile-card';
+import { Pager, usePagination } from '@/components/pager';
 
 import { useAdminOnboardingControllers } from '@/features/admin/controllers/adminControllers';
 import type { DataAdminOnboarding } from '@/features/admin/types/adminTypes';
@@ -53,6 +54,7 @@ export default function AdminOnboarding({ enabled }: Props) {
         skillNames(r).some((s) => s.toLowerCase().includes(q))
     );
   }, [all, done, doneOnly, query]);
+  const paged = usePagination(rows);
 
   // How many completed members picked each option; shown as a ranked bar list
   // so the admin sees the community's shape before reading rows.
@@ -157,7 +159,7 @@ export default function AdminOnboarding({ enabled }: Props) {
 
             <div className="mt-4 md:hidden">
               <MobileCardList>
-                {rows.map((r) => {
+                {paged.items.map((r) => {
                   const fields = r.fields.length ? (
                     <div className="flex flex-wrap gap-1">
                       {r.fields.map((f) => (
@@ -236,7 +238,7 @@ export default function AdminOnboarding({ enabled }: Props) {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {rows.map((r) => (
+                  {paged.items.map((r) => (
                     <tr key={r.id} className="align-top transition-colors hover:bg-muted/40">
                       <td className="sticky left-0 z-10 bg-card py-2.5 pr-4">
                         <div className="flex items-center gap-2.5">
@@ -298,6 +300,8 @@ export default function AdminOnboarding({ enabled }: Props) {
                 {t('No member matches.', 'Tidak ada member yang cocok.')}
               </p>
             )}
+
+            <Pager className="mt-4" {...paged.pager} />
           </>
         )}
       </CardContent>

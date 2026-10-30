@@ -3,6 +3,7 @@
 import Link from 'next/link';
 
 import { useLang } from '@/components/language-provider';
+import { Pager, usePagination } from '@/components/pager';
 import { Badge } from '@/components/ui/badge';
 
 import { ACTIVITY_STATUS_VARIANT, type DataActivityTeams } from '@/features/activity/types/activityTypes';
@@ -17,6 +18,9 @@ interface Props {
 /** Teams owned / joined and the member's Team Collabs listings. */
 export function ActivityTeams({ teams, isLoading, isError }: Props) {
   const { t } = useLang();
+  const pagedCollabs = usePagination(teams.collabs);
+  const pagedJoined = usePagination(teams.joined);
+  const pagedOwned = usePagination(teams.owned);
   const teamCount = teams.owned.length + teams.joined.length;
 
   return (
@@ -28,13 +32,14 @@ export function ActivityTeams({ teams, isLoading, isError }: Props) {
         isEmpty={teamCount === 0}
         emptyTitle={t('You are not in a team yet.', 'Anda belum tergabung di tim.')}
       >
-        {teams.owned.map((team) => (
+        {pagedOwned.items.map((team) => (
           <ActivityRow key={`own-${team.id}`}>
             <Link href={`/team-builder/${team.id}`} className="font-medium hover:underline">{team.name}</Link>
             <Badge variant="default">{t('Owner', 'Pemilik')}</Badge>
           </ActivityRow>
         ))}
-        {teams.joined.map((m) => (
+        <Pager className="mt-4" {...pagedOwned.pager} />
+        {pagedJoined.items.map((m) => (
           <ActivityRow key={`member-${m.id}`}>
             <Link href={m.teams ? `/team-builder/${m.teams.id}` : '/team-builder'} className="font-medium hover:underline">
               {m.teams?.name ?? t('Team removed', 'Tim dihapus')}
@@ -42,6 +47,7 @@ export function ActivityTeams({ teams, isLoading, isError }: Props) {
             <Badge variant="secondary">{m.role_title}</Badge>
           </ActivityRow>
         ))}
+        <Pager className="mt-4" {...pagedJoined.pager} />
       </ActivityPanel>
 
       {teams.collabs.length > 0 && (
@@ -51,7 +57,7 @@ export function ActivityTeams({ teams, isLoading, isError }: Props) {
           isEmpty={false}
           emptyTitle=""
         >
-          {teams.collabs.map((c) => (
+          {pagedCollabs.items.map((c) => (
             <ActivityRow key={c.id}>
               <div className="min-w-0">
                 <Link href="/team-collabs" className="font-medium hover:underline">{c.focus}</Link>
@@ -62,6 +68,7 @@ export function ActivityTeams({ teams, isLoading, isError }: Props) {
               <Badge variant={ACTIVITY_STATUS_VARIANT[c.status] ?? 'outline'} className="capitalize">{c.status}</Badge>
             </ActivityRow>
           ))}
+          <Pager className="mt-4" {...pagedCollabs.pager} />
         </ActivityPanel>
       )}
     </div>

@@ -6,6 +6,7 @@ import { Ban, Loader2, Search, UserCheck, Users } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { useLang } from '@/components/language-provider';
+import { Pager } from '@/components/pager';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -13,12 +14,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { DEFAULT_PAGE_SIZE } from '@/shared/lib/paginate';
 
 import type { DataAdminMember } from '@/features/admin/types/adminTypes';
 import { useAdminMembersControllers } from '@/features/admin/controllers/adminControllers';
-import AdminPager from '@/features/admin/components/AdminPager';
-
-const PAGE_SIZE = 20;
 
 interface Props {
   enabled: boolean;
@@ -35,6 +34,7 @@ export default function AdminMembers({ enabled, currentUserId }: Props) {
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState<number>(DEFAULT_PAGE_SIZE);
   const [suspendedOnly, setSuspendedOnly] = useState(false);
   const [target, setTarget] = useState<DataAdminMember | null>(null);
   const [reason, setReason] = useState('');
@@ -48,12 +48,12 @@ export default function AdminMembers({ enabled, currentUserId }: Props) {
   }, [searchInput]);
 
   const { fetchAdminMembers, changeAdminMemberSuspension } = useAdminMembersControllers(
-    { search, page, limit: PAGE_SIZE, suspendedOnly },
+    { search, page, limit: pageSize, suspendedOnly },
     enabled
   );
 
   const members = fetchAdminMembers.data?.items ?? [];
-  const pagination = fetchAdminMembers.data?.pagination ?? { page: 1, limit: PAGE_SIZE, total: 0, totalPages: 1 };
+  const pagination = fetchAdminMembers.data?.pagination ?? { page: 1, limit: pageSize, total: 0, totalPages: 1 };
   const saving = changeAdminMemberSuspension.isPending;
 
   const editSuspendOpen = (member: DataAdminMember) => {
@@ -156,7 +156,18 @@ export default function AdminMembers({ enabled, currentUserId }: Props) {
           </div>
         )}
 
-        <AdminPager page={pagination.page} totalPages={pagination.totalPages} total={pagination.total} onPageChange={setPage} />
+        <Pager
+          className="mt-4"
+          page={pagination.page}
+          pageCount={pagination.totalPages}
+          total={pagination.total}
+          pageSize={pageSize}
+          onPageChange={setPage}
+          onPageSizeChange={(size) => {
+            setPageSize(size);
+            setPage(1);
+          }}
+        />
       </CardContent>
 
       <Dialog open={Boolean(target)} onOpenChange={(open) => !open && setTarget(null)}>

@@ -6,6 +6,7 @@ export interface PayloadGetDirectory {
   statusFilter: string;
   skillFilter: string;
   page: number;
+  perPage: number;
 }
 
 export interface DataDirectory extends UserProfile {

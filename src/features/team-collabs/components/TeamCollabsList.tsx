@@ -10,6 +10,7 @@ import TeamCollabsEditDialog from '@/features/team-collabs/components/TeamCollab
 
 import { AppShell } from '@/components/app-shell';
 import { PageHeader } from '@/components/page-header';
+import { Pager, usePagination } from '@/components/pager';
 import { LoadData } from '@/components/load-data';
 import { CardGridSkeleton } from '@/components/card-skeleton';
 import { MatchedBadge, MatchedHandoff } from '@/components/matched-handoff';
@@ -73,6 +74,8 @@ export default function TeamCollabsList() {
     return true;
   };
 
+  const paged = usePagination(data.data);
+
   return (
     <AppShell>
       <div className="page-container mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -95,65 +98,68 @@ export default function TeamCollabsList() {
           {data.isLoading ? (
             <CardGridSkeleton count={6} chips={1} lines={2} />
           ) : (
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {data.data.map((listing) => (
-                <div key={listing.id} className="flex h-full min-w-0 flex-col rounded-xl border border-border bg-card p-5">
-                  <div className="flex items-start gap-3">
-                    <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-sm font-semibold ${TONE_CHIP[toneOf('team-collabs')]}`}>
-                      {listing.initial}
+            <>
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                {paged.items.map((listing) => (
+                  <div key={listing.id} className="flex h-full min-w-0 flex-col rounded-xl border border-border bg-card p-5">
+                    <div className="flex items-start gap-3">
+                      <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-sm font-semibold ${TONE_CHIP[toneOf('team-collabs')]}`}>
+                        {listing.initial}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <h3 className="line-clamp-2 font-semibold leading-snug">{listing.focus}</h3>
+                        <p className="mt-0.5 truncate text-sm text-muted-foreground">{listing.teamName}</p>
+                      </div>
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <h3 className="line-clamp-2 font-semibold leading-snug">{listing.focus}</h3>
-                      <p className="mt-0.5 truncate text-sm text-muted-foreground">{listing.teamName}</p>
+
+                    <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-muted-foreground text-pretty">
+                      {listing.description}
+                    </p>
+
+                    <div className="mt-auto pt-4">
+                      {listing.status === 'matched' && <MatchedBadge />}
+                      {listing.status === 'matched' && listing.matchedWith && (
+                        <p className="mt-2 text-sm font-medium text-foreground">
+                          {t(`Matched with ${listing.matchedWith}`, `Matched dengan ${listing.matchedWith}`)}
+                        </p>
+                      )}
+                      {listing.status === 'closed' && (
+                        <Badge variant="outline" className="text-xs text-muted-foreground">
+                          {t('Withdrawn', 'Ditarik')}
+                        </Badge>
+                      )}
+                      {listing.status === 'open' && (
+                        <Badge variant="outline" className="text-xs">{t('Open', 'Terbuka')}</Badge>
+                      )}
+
+                      {listing.status === 'matched' && listing.isOwner && (
+                        <MatchedHandoff subject={listing.focus} className="mt-3" />
+                      )}
+                      {listing.status === 'open' && listing.isOwner && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="mt-3 w-full"
+                          onClick={() => clearTeamCollabs(listing.id)}
+                          disabled={changeTeamCollabsWithdraw.isPending}
+                        >
+                          {t('Withdraw listing', 'Tarik listing')}
+                        </Button>
+                      )}
+                      {listing.status === 'open' && listing.isOwner && (
+                        <TeamCollabsEditDialog
+                          focus={listing.focus}
+                          description={listing.description}
+                          isSaving={modifyTeamCollabs.isPending}
+                          onEditTeamCollabs={(form) => editTeamCollabs(listing.id, form)}
+                        />
+                      )}
                     </div>
                   </div>
-
-                  <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-muted-foreground text-pretty">
-                    {listing.description}
-                  </p>
-
-                  <div className="mt-auto pt-4">
-                    {listing.status === 'matched' && <MatchedBadge />}
-                    {listing.status === 'matched' && listing.matchedWith && (
-                      <p className="mt-2 text-sm font-medium text-foreground">
-                        {t(`Matched with ${listing.matchedWith}`, `Matched dengan ${listing.matchedWith}`)}
-                      </p>
-                    )}
-                    {listing.status === 'closed' && (
-                      <Badge variant="outline" className="text-xs text-muted-foreground">
-                        {t('Withdrawn', 'Ditarik')}
-                      </Badge>
-                    )}
-                    {listing.status === 'open' && (
-                      <Badge variant="outline" className="text-xs">{t('Open', 'Terbuka')}</Badge>
-                    )}
-
-                    {listing.status === 'matched' && listing.isOwner && (
-                      <MatchedHandoff subject={listing.focus} className="mt-3" />
-                    )}
-                    {listing.status === 'open' && listing.isOwner && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="mt-3 w-full"
-                        onClick={() => clearTeamCollabs(listing.id)}
-                        disabled={changeTeamCollabsWithdraw.isPending}
-                      >
-                        {t('Withdraw listing', 'Tarik listing')}
-                      </Button>
-                    )}
-                    {listing.status === 'open' && listing.isOwner && (
-                      <TeamCollabsEditDialog
-                        focus={listing.focus}
-                        description={listing.description}
-                        isSaving={modifyTeamCollabs.isPending}
-                        onEditTeamCollabs={(form) => editTeamCollabs(listing.id, form)}
-                      />
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+              <Pager {...paged.pager} />
+            </>
           )}
         </LoadData>
       </div>

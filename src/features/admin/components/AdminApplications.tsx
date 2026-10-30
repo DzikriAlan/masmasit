@@ -5,15 +5,14 @@ import Link from 'next/link';
 import { FileText, Loader2, Search } from 'lucide-react';
 
 import { useLang } from '@/components/language-provider';
+import { Pager } from '@/components/pager';
 import { friendlyError } from '@/shared/lib/friendlyError';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { DEFAULT_PAGE_SIZE } from '@/shared/lib/paginate';
 
 import { useAdminApplicationsControllers } from '@/features/admin/controllers/adminControllers';
-import AdminPager from '@/features/admin/components/AdminPager';
-
-const PAGE_SIZE = 20;
 
 const STATUS_VARIANT: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
   pending: 'outline',
@@ -32,6 +31,7 @@ export default function AdminApplications({ enabled }: Props) {
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState<number>(DEFAULT_PAGE_SIZE);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -41,10 +41,10 @@ export default function AdminApplications({ enabled }: Props) {
     return () => clearTimeout(timer);
   }, [searchInput]);
 
-  const { fetchAdminApplications } = useAdminApplicationsControllers({ search, page, limit: PAGE_SIZE }, enabled);
+  const { fetchAdminApplications } = useAdminApplicationsControllers({ search, page, limit: pageSize }, enabled);
 
   const rows = fetchAdminApplications.data?.items ?? [];
-  const pagination = fetchAdminApplications.data?.pagination ?? { page: 1, limit: PAGE_SIZE, total: 0, totalPages: 1 };
+  const pagination = fetchAdminApplications.data?.pagination ?? { page: 1, limit: pageSize, total: 0, totalPages: 1 };
 
   const STATUS_LABEL: Record<string, string> = {
     pending: t('Pending', 'Menunggu'),
@@ -98,7 +98,18 @@ export default function AdminApplications({ enabled }: Props) {
           </div>
         )}
 
-        <AdminPager page={pagination.page} totalPages={pagination.totalPages} total={pagination.total} onPageChange={setPage} />
+        <Pager
+          className="mt-4"
+          page={pagination.page}
+          pageCount={pagination.totalPages}
+          total={pagination.total}
+          pageSize={pageSize}
+          onPageChange={setPage}
+          onPageSizeChange={(size) => {
+            setPageSize(size);
+            setPage(1);
+          }}
+        />
       </CardContent>
     </Card>
   );

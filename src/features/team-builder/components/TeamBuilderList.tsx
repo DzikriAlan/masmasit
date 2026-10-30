@@ -11,6 +11,7 @@ import { useTeamBuilderControllers } from '@/features/team-builder/controllers/t
 
 import { AppShell } from '@/components/app-shell';
 import { PageHeader } from '@/components/page-header';
+import { Pager, usePagination } from '@/components/pager';
 import { LoadData } from '@/components/load-data';
 import { RowSkeleton } from '@/components/card-skeleton';
 import { useAuth } from '@/components/auth-provider';
@@ -101,6 +102,8 @@ export default function TeamBuilderList() {
     if (!loading && !user) router.push(loginHref());
   }, [loading, user, router]);
 
+  const paged = usePagination(data.data);
+
   return (
     <AppShell>
       <div className="page-container mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
@@ -161,27 +164,30 @@ export default function TeamBuilderList() {
           {data.isLoading ? (
             <RowSkeleton count={3} />
           ) : (
-            <div className="flex flex-col gap-3">
-              {data.data.map((team) => (
-                <Link
-                  key={team.id}
-                  href={`/team-builder/${team.id}`}
-                  className="group flex items-center gap-4 rounded-xl border border-border bg-card p-4 transition-colors hover:border-foreground/25"
-                >
-                  <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg font-semibold ${TONE_CHIP[toneOf('team-builder')]}`}>
-                    {team.initial}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-semibold group-hover:underline">{team.name}</p>
-                    <p className="truncate text-sm text-muted-foreground">
-                      {team.description || t('No description', 'Tanpa deskripsi')}
-                    </p>
-                  </div>
-                  <span className="hidden shrink-0 text-xs text-muted-foreground sm:block">{team.createdAt}</span>
-                  <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
-                </Link>
-              ))}
-            </div>
+            <>
+              <div className="flex flex-col gap-3">
+                {paged.items.map((team) => (
+                  <Link
+                    key={team.id}
+                    href={`/team-builder/${team.id}`}
+                    className="group flex items-center gap-4 rounded-xl border border-border bg-card p-4 transition-colors hover:border-foreground/25"
+                  >
+                    <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg font-semibold ${TONE_CHIP[toneOf('team-builder')]}`}>
+                      {team.initial}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-semibold group-hover:underline">{team.name}</p>
+                      <p className="truncate text-sm text-muted-foreground">
+                        {team.description || t('No description', 'Tanpa deskripsi')}
+                      </p>
+                    </div>
+                    <span className="hidden shrink-0 text-xs text-muted-foreground sm:block">{team.createdAt}</span>
+                    <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+                  </Link>
+                ))}
+              </div>
+              <Pager {...paged.pager} />
+            </>
           )}
         </LoadData>
       </div>

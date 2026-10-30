@@ -12,6 +12,7 @@ import ExternalJobsList from '@/features/external-jobs/components/ExternalJobsLi
 
 import { AppShell } from '@/components/app-shell';
 import { PageHeader } from '@/components/page-header';
+import { Pager, usePagination } from '@/components/pager';
 import { LoadData } from '@/components/load-data';
 import { BrowseToolbar } from '@/components/browse-toolbar';
 import { CardGridSkeleton } from '@/components/card-skeleton';
@@ -135,6 +136,8 @@ export default function JobsList() {
     return () => clearTimeout(timeout);
   }, [filters, setGetJobs]);
 
+  const paged = usePagination(data.data);
+
   return (
     <AppShell>
       <div className="page-container mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -173,11 +176,14 @@ export default function JobsList() {
               {data.isLoading ? (
                 <CardGridSkeleton count={6} chips={2} lines={1} />
               ) : (
-                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                  {data.data.map((job) => (
-                    <JobsCard key={job.id} job={job} />
-                  ))}
-                </div>
+                <>
+                  <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                    {paged.items.map((job) => (
+                      <JobsCard key={job.id} job={job} />
+                    ))}
+                  </div>
+                  <Pager {...paged.pager} />
+                </>
               )}
             </LoadData>
           </TabsContent>

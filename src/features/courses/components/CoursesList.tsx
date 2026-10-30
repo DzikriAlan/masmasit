@@ -9,6 +9,7 @@ import { useCoursesControllers } from '@/features/courses/controllers/coursesCon
 
 import { AppShell } from '@/components/app-shell';
 import { PageHeader } from '@/components/page-header';
+import { Pager, usePagination } from '@/components/pager';
 import { LoadData } from '@/components/load-data';
 import { BrowseToolbar } from '@/components/browse-toolbar';
 import { CardGridSkeleton } from '@/components/card-skeleton';
@@ -114,6 +115,8 @@ export default function CoursesList() {
     setFilters({ search: '', filter: { level: 'all', price: 'all' } });
   };
 
+  const paged = usePagination(data.data);
+
   return (
     <AppShell>
       <div className="page-container mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -145,40 +148,43 @@ export default function CoursesList() {
           {data.isLoading ? (
             <CardGridSkeleton count={6} chips={2} lines={2} />
           ) : (
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {data.data.map((course) => (
-                <Link
-                  key={course.id}
-                  href={`/courses/${course.id}`}
-                  className="group flex h-full min-w-0 flex-col rounded-xl border border-border bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-foreground/25 hover:shadow-[var(--shadow-card-hover)]"
-                >
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Badge variant="outline" className={cn('text-[11px] capitalize', TONE_CHIP[toneOf('courses')])}>
-                      {course.level}
-                    </Badge>
-                    {course.category && (
-                      <Badge variant="outline" className="text-[11px]">{course.category}</Badge>
-                    )}
-                  </div>
+            <>
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                {paged.items.map((course) => (
+                  <Link
+                    key={course.id}
+                    href={`/courses/${course.id}`}
+                    className="group flex h-full min-w-0 flex-col rounded-xl border border-border bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-foreground/25 hover:shadow-[var(--shadow-card-hover)]"
+                  >
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Badge variant="outline" className={cn('text-[11px] capitalize', TONE_CHIP[toneOf('courses')])}>
+                        {course.level}
+                      </Badge>
+                      {course.category && (
+                        <Badge variant="outline" className="text-[11px]">{course.category}</Badge>
+                      )}
+                    </div>
 
-                  <h3 className="mt-3 line-clamp-2 font-semibold leading-snug group-hover:underline">{course.title}</h3>
-                  <p className="mt-1.5 text-sm text-muted-foreground">{course.coach}</p>
-                  <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-muted-foreground text-pretty">
-                    {course.description}
-                  </p>
+                    <h3 className="mt-3 line-clamp-2 font-semibold leading-snug group-hover:underline">{course.title}</h3>
+                    <p className="mt-1.5 text-sm text-muted-foreground">{course.coach}</p>
+                    <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-muted-foreground text-pretty">
+                      {course.description}
+                    </p>
 
-                  <div className="mt-auto flex items-center justify-between gap-3 border-t border-border/60 pt-4">
-                    <span className={cn('font-semibold', course.price === 0 ? 'text-success' : TONE_TEXT[toneOf('courses')])}>
-                      {course.priceLabel}
-                    </span>
-                    <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                      <Users className="h-3.5 w-3.5" />
-                      {course.enrolled} {t('enrolled', 'terdaftar')}
-                    </span>
-                  </div>
-                </Link>
-              ))}
-            </div>
+                    <div className="mt-auto flex items-center justify-between gap-3 border-t border-border/60 pt-4">
+                      <span className={cn('font-semibold', course.price === 0 ? 'text-success' : TONE_TEXT[toneOf('courses')])}>
+                        {course.priceLabel}
+                      </span>
+                      <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                        <Users className="h-3.5 w-3.5" />
+                        {course.enrolled} {t('enrolled', 'terdaftar')}
+                      </span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+              <Pager {...paged.pager} />
+            </>
           )}
         </LoadData>
       </div>

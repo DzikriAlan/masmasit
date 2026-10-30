@@ -9,6 +9,7 @@ import { useTalentsControllers } from '@/features/talents/controllers/talentsCon
 
 import { AppShell } from '@/components/app-shell';
 import { PageHeader } from '@/components/page-header';
+import { Pager, usePagination } from '@/components/pager';
 import { LoadData } from '@/components/load-data';
 import { BrowseToolbar } from '@/components/browse-toolbar';
 import { CardGridSkeleton } from '@/components/card-skeleton';
@@ -96,6 +97,8 @@ export default function TalentsList() {
     setFilters({ search: '', filter: { location: 'all' } });
   };
 
+  const paged = usePagination(data.data);
+
   return (
     <AppShell>
       <div className="page-container mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -122,41 +125,44 @@ export default function TalentsList() {
           {data.isLoading ? (
             <CardGridSkeleton count={6} chips={0} lines={2} />
           ) : (
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {data.data.map((talent) => (
-                <div key={talent.id} className="flex h-full min-w-0 flex-col rounded-xl border border-border bg-card p-5">
-                  <div className="flex items-start gap-3">
-                    <Avatar className="h-12 w-12 shrink-0">
-                      {talent.avatarUrl && <AvatarImage src={talent.avatarUrl} alt="" />}
-                      <AvatarFallback className={TONE_CHIP[toneOf('talents')]}>{talent.initial}</AvatarFallback>
-                    </Avatar>
-                    <div className="min-w-0 flex-1">
-                      <h3 className="truncate font-semibold">{talent.name}</h3>
-                      {talent.location && (
-                        <p className="mt-0.5 flex items-center gap-1 truncate text-sm text-muted-foreground">
-                          <MapPin className="h-3 w-3 shrink-0" />
-                          {talent.location}
-                        </p>
+            <>
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                {paged.items.map((talent) => (
+                  <div key={talent.id} className="flex h-full min-w-0 flex-col rounded-xl border border-border bg-card p-5">
+                    <div className="flex items-start gap-3">
+                      <Avatar className="h-12 w-12 shrink-0">
+                        {talent.avatarUrl && <AvatarImage src={talent.avatarUrl} alt="" />}
+                        <AvatarFallback className={TONE_CHIP[toneOf('talents')]}>{talent.initial}</AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0 flex-1">
+                        <h3 className="truncate font-semibold">{talent.name}</h3>
+                        {talent.location && (
+                          <p className="mt-0.5 flex items-center gap-1 truncate text-sm text-muted-foreground">
+                            <MapPin className="h-3 w-3 shrink-0" />
+                            {talent.location}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-muted-foreground text-pretty">{talent.bio}</p>
+
+                    <div className="mt-auto flex gap-2 pt-4">
+                      <Link href={`/talents/${talent.id}`} className="flex-1">
+                        <Button size="sm" className="w-full">{t('Book a session', 'Pesan sesi')}</Button>
+                      </Link>
+                      {talent.linkedinUrl && (
+                        <a href={talent.linkedinUrl} target="_blank" rel="noreferrer">
+                          <Button variant="outline" size="sm">LinkedIn</Button>
+                        </a>
                       )}
+                      <ShareButton compact url={`/talents/${talent.id}`} title={`${talent.name} — MasmasIT`} />
                     </div>
                   </div>
-
-                  <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-muted-foreground text-pretty">{talent.bio}</p>
-
-                  <div className="mt-auto flex gap-2 pt-4">
-                    <Link href={`/talents/${talent.id}`} className="flex-1">
-                      <Button size="sm" className="w-full">{t('Book a session', 'Pesan sesi')}</Button>
-                    </Link>
-                    {talent.linkedinUrl && (
-                      <a href={talent.linkedinUrl} target="_blank" rel="noreferrer">
-                        <Button variant="outline" size="sm">LinkedIn</Button>
-                      </a>
-                    )}
-                    <ShareButton compact url={`/talents/${talent.id}`} title={`${talent.name} — MasmasIT`} />
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+              <Pager {...paged.pager} />
+            </>
           )}
         </LoadData>
       </div>

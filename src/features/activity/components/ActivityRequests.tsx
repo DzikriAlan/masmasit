@@ -1,6 +1,7 @@
 'use client';
 
 import { useLang } from '@/components/language-provider';
+import { Pager, usePagination } from '@/components/pager';
 import { Badge } from '@/components/ui/badge';
 
 import {
@@ -22,6 +23,7 @@ interface Props {
 /** Service requests with status and DP / final payment (TC-05-10). */
 export function ActivityRequests({ requests, isLoading, isError, submitting, onSubmitPayment }: Props) {
   const { t } = useLang();
+  const paged = usePagination(requests.requests);
 
   return (
     <ActivityPanel
@@ -32,7 +34,7 @@ export function ActivityRequests({ requests, isLoading, isError, submitting, onS
       isEmpty={requests.requests.length === 0}
       emptyTitle={t('You have not sent a service request.', 'Anda belum mengirim permintaan layanan.')}
     >
-      {requests.requests.map((r) => {
+      {paged.items.map((r) => {
         const serviceName = r.agency_services?.title ?? t('Service request', 'Permintaan layanan');
         const hasDp = r.dp_amount != null && r.dp_amount > 0;
         const finalAmount = Math.max((r.budget ?? 0) - (r.dp_amount ?? 0), 0);
@@ -77,6 +79,7 @@ export function ActivityRequests({ requests, isLoading, isError, submitting, onS
           </div>
         );
       })}
+      <Pager className="mt-4" {...paged.pager} />
     </ActivityPanel>
   );
 }

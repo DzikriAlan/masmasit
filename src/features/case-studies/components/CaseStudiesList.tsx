@@ -1,6 +1,7 @@
 'use client';
 
 import { AppShell } from '@/components/app-shell';
+import { Pager, usePagination } from '@/components/pager';
 import { TONE_TEXT, toneOf } from '@/shared/lib/tones';
 import { LoadData } from '@/components/load-data';
 import { useAuth } from '@/components/auth-provider';
@@ -19,6 +20,8 @@ export default function CaseStudiesList() {
   const studies = fetchCaseStudies.data ?? [];
   const loading = fetchCaseStudies.isPending;
 
+  const paged = usePagination(studies);
+
   return (
     <AppShell>
       <div className="page-container mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -36,39 +39,42 @@ export default function CaseStudiesList() {
             emptyTitle: t('No case studies published yet.', 'Belum ada studi kasus yang dipublikasikan.'),
           }}
         >
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {studies.map((cs) => (
-              <Card key={cs.id} className="glass group h-full overflow-hidden transition-all hover:border-primary/40 hover:-translate-y-0.5">
-                {cs.image_url && (
-                  <div className="relative h-40 overflow-hidden">
-                    <img src={cs.image_url} alt={cs.title} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-card via-card/30 to-transparent" />
-                    {cs.category && <Badge variant="secondary" className="absolute top-3 left-3 backdrop-blur-md">{cs.category}</Badge>}
-                  </div>
-                )}
-                <CardContent className="p-6">
-                  {!cs.image_url && cs.category && <Badge variant="secondary" className="mb-3">{cs.category}</Badge>}
-                  <h3 className="font-display text-lg font-semibold">{cs.title}</h3>
-                  <p className="mt-1 text-sm text-muted-foreground">{t('Client', 'Klien')}: {cs.client_name}</p>
+          <>
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {paged.items.map((cs) => (
+                <Card key={cs.id} className="glass group h-full overflow-hidden transition-all hover:border-primary/40 hover:-translate-y-0.5">
+                  {cs.image_url && (
+                    <div className="relative h-40 overflow-hidden">
+                      <img src={cs.image_url} alt={cs.title} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-card via-card/30 to-transparent" />
+                      {cs.category && <Badge variant="secondary" className="absolute top-3 left-3 backdrop-blur-md">{cs.category}</Badge>}
+                    </div>
+                  )}
+                  <CardContent className="p-6">
+                    {!cs.image_url && cs.category && <Badge variant="secondary" className="mb-3">{cs.category}</Badge>}
+                    <h3 className="font-display text-lg font-semibold">{cs.title}</h3>
+                    <p className="mt-1 text-sm text-muted-foreground">{t('Client', 'Klien')}: {cs.client_name}</p>
 
-                  <div className="mt-4 space-y-3">
-                    <div>
-                      <div className="text-xs font-semibold text-destructive">{t('Challenge', 'Tantangan')}</div>
-                      <p className="mt-1 text-sm text-muted-foreground">{cs.challenge}</p>
+                    <div className="mt-4 space-y-3">
+                      <div>
+                        <div className="text-xs font-semibold text-destructive">{t('Challenge', 'Tantangan')}</div>
+                        <p className="mt-1 text-sm text-muted-foreground">{cs.challenge}</p>
+                      </div>
+                      <div>
+                        <div className={`text-xs font-semibold ${TONE_TEXT[toneOf('case-studies')]}`}>{t('Solution', 'Solusi')}</div>
+                        <p className="mt-1 text-sm text-muted-foreground">{cs.solution}</p>
+                      </div>
+                      <div className="rounded-lg bg-success/10 p-3">
+                        <div className="text-xs font-semibold text-success">{t('Result', 'Hasil')}</div>
+                        <p className="mt-1 text-sm font-medium text-success">{cs.result}</p>
+                      </div>
                     </div>
-                    <div>
-                      <div className={`text-xs font-semibold ${TONE_TEXT[toneOf('case-studies')]}`}>{t('Solution', 'Solusi')}</div>
-                      <p className="mt-1 text-sm text-muted-foreground">{cs.solution}</p>
-                    </div>
-                    <div className="rounded-lg bg-success/10 p-3">
-                      <div className="text-xs font-semibold text-success">{t('Result', 'Hasil')}</div>
-                      <p className="mt-1 text-sm font-medium text-success">{cs.result}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+            <Pager {...paged.pager} />
+          </>
         </LoadData>
       </div>
     </AppShell>

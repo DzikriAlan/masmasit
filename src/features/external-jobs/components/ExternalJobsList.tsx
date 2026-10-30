@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Search, ExternalLink } from 'lucide-react';
 
 import { LoadData } from '@/components/load-data';
+import { Pager, usePagination } from '@/components/pager';
 import { useLang } from '@/components/language-provider';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -119,6 +120,8 @@ export default function ExternalJobsList() {
     });
   }, [allJobs, country, role]);
 
+  const paged = usePagination(jobs);
+
   return (
     <div>
       <p className="text-sm text-muted-foreground">
@@ -207,52 +210,55 @@ export default function ExternalJobsList() {
             {Array.from({ length: 6 }).map((_, i) => <ExternalJobCardSkeleton key={i} />)}
           </div>
         ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {jobs.map((job) => (
-            <a
-              key={job.id}
-              href={job.url}
-              target="_blank"
-              rel="noreferrer"
-              className="group flex h-full min-w-0 flex-col rounded-xl border border-border p-5 transition-colors hover:border-foreground/30 hover:bg-muted/30"
-            >
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex min-w-0 items-center gap-2.5">
-                  <CompanyLogo name={job.company_name} domain={job.company_domain} toneClass={TONE_CHIP[toneOf('external-jobs')]} />
-                  <div className="min-w-0">
-                    <p className="truncate font-semibold text-foreground">{job.title}</p>
-                    <p className="truncate text-sm text-muted-foreground">{job.company_name}</p>
+        <>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {paged.items.map((job) => (
+              <a
+                key={job.id}
+                href={job.url}
+                target="_blank"
+                rel="noreferrer"
+                className="group flex h-full min-w-0 flex-col rounded-xl border border-border p-5 transition-colors hover:border-foreground/30 hover:bg-muted/30"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex min-w-0 items-center gap-2.5">
+                    <CompanyLogo name={job.company_name} domain={job.company_domain} toneClass={TONE_CHIP[toneOf('external-jobs')]} />
+                    <div className="min-w-0">
+                      <p className="truncate font-semibold text-foreground">{job.title}</p>
+                      <p className="truncate text-sm text-muted-foreground">{job.company_name}</p>
+                    </div>
                   </div>
+                  <ExternalLink className="h-4 w-4 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
                 </div>
-                <ExternalLink className="h-4 w-4 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
-              </div>
 
-              <div className="mt-3 flex flex-wrap gap-1.5">
-                <Badge variant="outline" className={`text-xs capitalize ${TONE_CHIP[toneOf('external-jobs')]}`}>
-                  {t(roleLabels[job.role_category].en, roleLabels[job.role_category].id)}
-                </Badge>
-                {splitLocations(job.location).map((loc) => (
-                  <Badge key={loc} variant="outline" className="text-xs">
-                    {loc}
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  <Badge variant="outline" className={`text-xs capitalize ${TONE_CHIP[toneOf('external-jobs')]}`}>
+                    {t(roleLabels[job.role_category].en, roleLabels[job.role_category].id)}
                   </Badge>
-                ))}
-                {job.salary && <Badge variant="outline" className="text-xs">{job.salary}</Badge>}
-              </div>
-
-              {job.tags.length > 0 && (
-                <div className="mt-3 flex flex-wrap gap-1 border-t border-border/60 pt-3">
-                  {job.tags.slice(0, 4).map((tag) => (
-                    <span key={tag} className="rounded bg-muted px-1.5 py-0.5 text-[11px] text-muted-foreground">{tag}</span>
+                  {splitLocations(job.location).map((loc) => (
+                    <Badge key={loc} variant="outline" className="text-xs">
+                      {loc}
+                    </Badge>
                   ))}
+                  {job.salary && <Badge variant="outline" className="text-xs">{job.salary}</Badge>}
                 </div>
-              )}
 
-              <p className="mt-auto pt-3 text-xs text-muted-foreground/70">
-                via {job.source} · {new Date(job.published_at).toLocaleDateString('id-ID')}
-              </p>
-            </a>
-          ))}
-        </div>
+                {job.tags.length > 0 && (
+                  <div className="mt-3 flex flex-wrap gap-1 border-t border-border/60 pt-3">
+                    {job.tags.slice(0, 4).map((tag) => (
+                      <span key={tag} className="rounded bg-muted px-1.5 py-0.5 text-[11px] text-muted-foreground">{tag}</span>
+                    ))}
+                  </div>
+                )}
+
+                <p className="mt-auto pt-3 text-xs text-muted-foreground/70">
+                  via {job.source} · {new Date(job.published_at).toLocaleDateString('id-ID')}
+                </p>
+              </a>
+            ))}
+          </div>
+          <Pager {...paged.pager} />
+        </>
         )}
       </LoadData>
     </div>

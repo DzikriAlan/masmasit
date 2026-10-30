@@ -9,7 +9,8 @@ interface FeedStore {
 }
 
 export const useFeedStates = create<FeedStore>((set) => ({
-  payloadGetFeed: { limit: 40 },
+  // The feed's whole window (its cap), paged on the client 15 at a time.
+  payloadGetFeed: { limit: 200 },
 
   feed: {
     status: 'loading',

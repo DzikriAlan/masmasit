@@ -13,6 +13,7 @@ import { PaymentCard } from '@/features/payments/components/PaymentCard';
 import { useFeeActive } from '@/features/payments/controllers/paymentsControllers';
 
 import { AppShell } from '@/components/app-shell';
+import { Pager, usePagination } from '@/components/pager';
 import { PageHeader } from '@/components/page-header';
 import { LoadData } from '@/components/load-data';
 import { BrowseToolbar } from '@/components/browse-toolbar';
@@ -242,6 +243,10 @@ export default function EventsList() {
     }));
   };
 
+  const pagedUpcoming = usePagination(data.rest);
+
+  const pagedPast = usePagination(data.past);
+
   return (
     <AppShell>
       <div className="page-container mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -338,16 +343,19 @@ export default function EventsList() {
                   <h2 className="mb-4 font-display text-xl font-semibold">
                     {t('Upcoming', 'Mendatang')} <span className="text-muted-foreground">({data.data.length})</span>
                   </h2>
-                  <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                    {data.rest.map((event) => (
-                      <EventsCard
-                        key={event.id}
-                        event={event}
-                        isSubmitting={filters.rsvpLoadingId === event.id}
-                        onSubmitRsvp={submitEventsRsvp}
-                      />
-                    ))}
-                  </div>
+                  <>
+                    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                      {pagedUpcoming.items.map((event) => (
+                        <EventsCard
+                          key={event.id}
+                          event={event}
+                          isSubmitting={filters.rsvpLoadingId === event.id}
+                          onSubmitRsvp={submitEventsRsvp}
+                        />
+                      ))}
+                    </div>
+                    <Pager {...pagedUpcoming.pager} />
+                  </>
                 </section>
               )}
 
@@ -356,20 +364,23 @@ export default function EventsList() {
                   <h2 className="mb-4 font-display text-xl font-semibold text-muted-foreground">
                     {t('Past events', 'Event sebelumnya')}
                   </h2>
-                  <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                    {data.past.map((event) => (
-                      <div key={event.id} className="rounded-xl border border-border/70 bg-card/50 p-5">
-                        <Badge variant="outline" className="text-[11px]">{t('Ended', 'Selesai')}</Badge>
-                        <h3 className="mt-2.5 line-clamp-2 font-medium leading-snug">
-                          <Link href={`/events/${event.id}`} className="hover:underline">{event.title}</Link>
-                        </h3>
-                        <p className="mt-1 truncate text-sm text-muted-foreground">{event.location}</p>
-                        <p className="mt-0.5 text-xs text-muted-foreground">
-                          {event.attending} {t('attended', 'hadir')}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
+                  <>
+                    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                      {pagedPast.items.map((event) => (
+                        <div key={event.id} className="rounded-xl border border-border/70 bg-card/50 p-5">
+                          <Badge variant="outline" className="text-[11px]">{t('Ended', 'Selesai')}</Badge>
+                          <h3 className="mt-2.5 line-clamp-2 font-medium leading-snug">
+                            <Link href={`/events/${event.id}`} className="hover:underline">{event.title}</Link>
+                          </h3>
+                          <p className="mt-1 truncate text-sm text-muted-foreground">{event.location}</p>
+                          <p className="mt-0.5 text-xs text-muted-foreground">
+                            {event.attending} {t('attended', 'hadir')}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                    <Pager {...pagedPast.pager} />
+                  </>
                 </section>
               )}
             </div>

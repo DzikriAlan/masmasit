@@ -11,6 +11,7 @@ import { BuildsImagesGallery, BuildsImagesPicker } from '@/features/builds/compo
 
 import { AppShell } from '@/components/app-shell';
 import { PageHeader } from '@/components/page-header';
+import { Pager, usePagination } from '@/components/pager';
 import { LoadData } from '@/components/load-data';
 import { RowSkeleton } from '@/components/card-skeleton';
 import { useAuth } from '@/components/auth-provider';
@@ -188,6 +189,8 @@ export default function BuildsList() {
     clearBuildsForm();
   };
 
+  const paged = usePagination(data.data);
+
   return (
     <AppShell>
       <div className="page-container mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
@@ -266,88 +269,91 @@ export default function BuildsList() {
           {data.isLoading ? (
             <RowSkeleton count={4} />
           ) : (
-            <div className="flex flex-col gap-4">
-              {data.data.map((build) => (
-                <article key={build.id} className="rounded-xl border border-border bg-card p-5">
-                  <div className="flex items-start gap-3">
-                    <Avatar className="h-10 w-10 shrink-0">
-                      {build.avatarUrl && <AvatarImage src={build.avatarUrl} alt="" />}
-                      <AvatarFallback className={TONE_CHIP[toneOf('builds')]}>{build.initial}</AvatarFallback>
-                    </Avatar>
+            <>
+              <div className="flex flex-col gap-4">
+                {paged.items.map((build) => (
+                  <article key={build.id} className="rounded-xl border border-border bg-card p-5">
+                    <div className="flex items-start gap-3">
+                      <Avatar className="h-10 w-10 shrink-0">
+                        {build.avatarUrl && <AvatarImage src={build.avatarUrl} alt="" />}
+                        <AvatarFallback className={TONE_CHIP[toneOf('builds')]}>{build.initial}</AvatarFallback>
+                      </Avatar>
 
-                    <div className="min-w-0 flex-1">
-                      <p className="flex flex-wrap items-center gap-x-2 text-sm text-muted-foreground">
-                        <span className="truncate font-medium text-foreground">{build.author}</span>
-                        <span aria-hidden>·</span>
-                        <span>{build.postedAt}</span>
-                      </p>
-                      <h3 className="mt-1 font-semibold leading-snug">{build.title}</h3>
-                      <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground text-pretty">{build.description}</p>
-                      <BuildsImagesGallery images={build.images} title={build.title} />
+                      <div className="min-w-0 flex-1">
+                        <p className="flex flex-wrap items-center gap-x-2 text-sm text-muted-foreground">
+                          <span className="truncate font-medium text-foreground">{build.author}</span>
+                          <span aria-hidden>·</span>
+                          <span>{build.postedAt}</span>
+                        </p>
+                        <h3 className="mt-1 font-semibold leading-snug">{build.title}</h3>
+                        <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground text-pretty">{build.description}</p>
+                        <BuildsImagesGallery images={build.images} title={build.title} />
 
-                      <div className="mt-4 flex flex-wrap items-center gap-4">
-                        <button
-                          type="button"
-                          onClick={() => editBuildsLike(build.id, build.isLiked)}
-                          aria-pressed={build.isLiked}
-                          className={cn(
-                            'flex items-center gap-1.5 text-xs font-medium transition-colors',
-                            build.isLiked ? 'text-destructive' : 'text-muted-foreground hover:text-foreground'
-                          )}
-                        >
-                          <Heart className={cn('h-3.5 w-3.5', build.isLiked && 'fill-current')} />
-                          {build.likes}
-                        </button>
-
-                        {build.linkUrl && (
-                          <a
-                            href={build.linkUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground"
+                        <div className="mt-4 flex flex-wrap items-center gap-4">
+                          <button
+                            type="button"
+                            onClick={() => editBuildsLike(build.id, build.isLiked)}
+                            aria-pressed={build.isLiked}
+                            className={cn(
+                              'flex items-center gap-1.5 text-xs font-medium transition-colors',
+                              build.isLiked ? 'text-destructive' : 'text-muted-foreground hover:text-foreground'
+                            )}
                           >
-                            <ExternalLink className="h-3.5 w-3.5" />
-                            {t('Link', 'Tautan')}
-                          </a>
-                        )}
+                            <Heart className={cn('h-3.5 w-3.5', build.isLiked && 'fill-current')} />
+                            {build.likes}
+                          </button>
 
-                        {build.isOnSpotlight && (
-                          <Link href="/spotlight" className="text-xs font-medium text-foreground hover:underline">
-                            {t('On Spotlight', 'Di Spotlight')}
-                          </Link>
-                        )}
+                          {build.linkUrl && (
+                            <a
+                              href={build.linkUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground"
+                            >
+                              <ExternalLink className="h-3.5 w-3.5" />
+                              {t('Link', 'Tautan')}
+                            </a>
+                          )}
 
-                        {build.isOwner && (
-                          <div className="ml-auto flex items-center gap-1">
-                            <button
-                              type="button"
-                              onClick={() => editBuilds(build)}
-                              className="flex items-center gap-1 rounded px-1.5 py-1 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
-                            >
-                              <Pencil className="h-3.5 w-3.5" />
-                              {t('Edit', 'Ubah')}
-                            </button>
-                            <DeleteConfirmButton
-                              title={t('Delete this build?', 'Hapus build ini?')}
-                              description={t(
-                                'It will also disappear from Spotlight if it was there.',
-                                'Build ini juga akan hilang dari Spotlight jika tampil di sana.'
-                              )}
-                              disabled={removeBuilds.isPending}
-                              className="flex items-center gap-1 rounded px-1.5 py-1 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-destructive"
-                              onClearConfirm={() => clearBuilds(build.id)}
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                              {t('Delete', 'Hapus')}
-                            </DeleteConfirmButton>
-                          </div>
-                        )}
+                          {build.isOnSpotlight && (
+                            <Link href="/spotlight" className="text-xs font-medium text-foreground hover:underline">
+                              {t('On Spotlight', 'Di Spotlight')}
+                            </Link>
+                          )}
+
+                          {build.isOwner && (
+                            <div className="ml-auto flex items-center gap-1">
+                              <button
+                                type="button"
+                                onClick={() => editBuilds(build)}
+                                className="flex items-center gap-1 rounded px-1.5 py-1 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+                              >
+                                <Pencil className="h-3.5 w-3.5" />
+                                {t('Edit', 'Ubah')}
+                              </button>
+                              <DeleteConfirmButton
+                                title={t('Delete this build?', 'Hapus build ini?')}
+                                description={t(
+                                  'It will also disappear from Spotlight if it was there.',
+                                  'Build ini juga akan hilang dari Spotlight jika tampil di sana.'
+                                )}
+                                disabled={removeBuilds.isPending}
+                                className="flex items-center gap-1 rounded px-1.5 py-1 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-destructive"
+                                onClearConfirm={() => clearBuilds(build.id)}
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                                {t('Delete', 'Hapus')}
+                              </DeleteConfirmButton>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </article>
-              ))}
-            </div>
+                  </article>
+                ))}
+              </div>
+              <Pager {...paged.pager} />
+            </>
           )}
         </LoadData>
       </div>

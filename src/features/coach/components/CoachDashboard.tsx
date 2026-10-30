@@ -10,6 +10,7 @@ import {
 import { AppShell } from '@/components/app-shell';
 import { useAuth } from '@/components/auth-provider';
 import { useLang } from '@/components/language-provider';
+import { Pager, usePagination } from '@/components/pager';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -104,6 +105,7 @@ export default function CoachDashboard() {
     }));
 
   const courses = sortCourseModules(fetchCoachCourses.data ?? []);
+  const pagedCourses = usePagination(courses);
   const selectedCourse = courses.find((c) => c.id === selectedCourseId) ?? null;
   const saving = changeCoachApplication.isPending || storeCoachCourses.isPending;
   const savingModule = storeCoachModules.isPending;
@@ -784,7 +786,7 @@ export default function CoachDashboard() {
               <Card className="glass"><CardContent className="p-8 text-center text-muted-foreground">{t('No courses yet. Create your first course!', 'Belum ada kursus. Buat kursus pertama Anda!')}</CardContent></Card>
             ) : (
               <div className="space-y-3">
-                {courses.map((c) => (
+                {pagedCourses.items.map((c) => (
                   <Card key={c.id} className="glass group cursor-pointer transition-all hover:border-primary/40 hover:-translate-y-0.5" onClick={() => setSelectedCourseId(c.id)}>
                     <CardContent className="flex items-center justify-between p-5">
                       <div>
@@ -804,6 +806,7 @@ export default function CoachDashboard() {
                     </CardContent>
                   </Card>
                 ))}
+                <Pager className="mt-4" {...pagedCourses.pager} />
               </div>
             )}
           </>

@@ -3,6 +3,7 @@
 import Link from 'next/link';
 
 import { useLang } from '@/components/language-provider';
+import { Pager, usePagination } from '@/components/pager';
 import { Badge } from '@/components/ui/badge';
 
 import { ACTIVITY_STATUS_VARIANT, type DataActivityProjects } from '@/features/activity/types/activityTypes';
@@ -17,6 +18,8 @@ interface Props {
 /** Projects posted and bids placed (TC-03-10). */
 export function ActivityProjects({ projects, isLoading, isError }: Props) {
   const { t } = useLang();
+  const pagedBids = usePagination(projects.bids);
+  const pagedPosted = usePagination(projects.posted);
 
   return (
     <div className="space-y-6">
@@ -27,7 +30,7 @@ export function ActivityProjects({ projects, isLoading, isError }: Props) {
         isEmpty={projects.posted.length === 0}
         emptyTitle={t('You have not posted a project.', 'Anda belum memasang proyek.')}
       >
-        {projects.posted.map((p) => (
+        {pagedPosted.items.map((p) => (
           <ActivityRow key={p.id}>
             <div className="min-w-0">
               <Link href={`/projects/${p.id}`} className="font-medium hover:underline">{p.title}</Link>
@@ -38,6 +41,7 @@ export function ActivityProjects({ projects, isLoading, isError }: Props) {
             <Badge variant={ACTIVITY_STATUS_VARIANT[p.status] ?? 'outline'} className="capitalize">{p.status.replace('_', ' ')}</Badge>
           </ActivityRow>
         ))}
+        <Pager className="mt-4" {...pagedPosted.pager} />
       </ActivityPanel>
 
       <ActivityPanel
@@ -47,7 +51,7 @@ export function ActivityProjects({ projects, isLoading, isError }: Props) {
         isEmpty={projects.bids.length === 0}
         emptyTitle={t('You have not bid on a project.', 'Anda belum mengajukan bid.')}
       >
-        {projects.bids.map((b) => (
+        {pagedBids.items.map((b) => (
           <ActivityRow key={b.id}>
             <div className="min-w-0">
               <Link href={b.projects ? `/projects/${b.projects.id}` : '/projects'} className="font-medium hover:underline">
@@ -60,6 +64,7 @@ export function ActivityProjects({ projects, isLoading, isError }: Props) {
             <Badge variant={ACTIVITY_STATUS_VARIANT[b.status] ?? 'outline'} className="capitalize">{b.status}</Badge>
           </ActivityRow>
         ))}
+        <Pager className="mt-4" {...pagedBids.pager} />
       </ActivityPanel>
     </div>
   );

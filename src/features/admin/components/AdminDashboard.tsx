@@ -7,6 +7,7 @@ import { ShieldCheck, Loader2, Check, X, Users, Briefcase, Code2, GraduationCap,
 import { AppShell } from '@/components/app-shell';
 import { useAuth } from '@/components/auth-provider';
 import { useLang } from '@/components/language-provider';
+import { Pager, usePagination } from '@/components/pager';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -104,6 +105,13 @@ export default function AdminDashboard() {
   const visiblePeople = pendingOnly
     ? coaches.filter((c) => c.coach_approved === 'pending' || c.talent_approved === 'pending')
     : coaches;
+  const pagedEvents = usePagination(pendingEvents);
+  const pagedCompanies = usePagination(visibleCompanies);
+  const pagedAgencies = usePagination(pendingAgencies);
+  const pagedTeamCollabs = usePagination(openTeamCollabs);
+  const pagedPeople = usePagination(visiblePeople);
+  const pagedPayments = usePagination(payments);
+  const pagedAgencyProjects = usePagination(agencyProjects);
 
 
   // The fee form is edited in place, so it seeds from the fetched row once and
@@ -310,7 +318,7 @@ export default function AdminDashboard() {
                   <p className="text-sm text-muted-foreground">{t('No events waiting for approval.', 'Tidak ada event yang menunggu persetujuan.')}</p>
                 ) : (
                   <div className="space-y-3">
-                    {pendingEvents.map((e) => (
+                    {pagedEvents.items.map((e) => (
                       <div key={e.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border/60 p-3">
                         <div className="min-w-0">
                           <p className="truncate font-medium">{e.title}</p>
@@ -325,6 +333,7 @@ export default function AdminDashboard() {
                         </div>
                       </div>
                     ))}
+                    <Pager className="mt-4" {...pagedEvents.pager} />
                   </div>
                 )}
               </CardContent>
@@ -338,7 +347,7 @@ export default function AdminDashboard() {
                   <p className="text-sm text-muted-foreground">{t('Nothing waiting for a decision.', 'Tidak ada yang menunggu keputusan.')}</p>
                 ) : (
                   <div className="space-y-3">
-                    {visibleCompanies.map((c) => (
+                    {pagedCompanies.items.map((c) => (
                       <div key={c.id} className="flex items-center justify-between rounded-lg border border-border/60 p-4">
                         <div>
                           <p className="font-medium">{c.name}</p>
@@ -355,6 +364,7 @@ export default function AdminDashboard() {
                         </div>
                       </div>
                     ))}
+                    <Pager className="mt-4" {...pagedCompanies.pager} />
                   </div>
                 )}
               </CardContent>
@@ -368,7 +378,7 @@ export default function AdminDashboard() {
                   <p className="text-sm text-muted-foreground">{t('Nothing waiting for a decision.', 'Tidak ada yang menunggu keputusan.')}</p>
                 ) : (
                   <div className="space-y-3">
-                    {pendingAgencies.map((a) => (
+                    {pagedAgencies.items.map((a) => (
                       <div key={a.id} className="flex items-center justify-between rounded-lg border border-border/60 p-4">
                         <div>
                           <p className="font-medium">{a.name}</p>
@@ -380,6 +390,7 @@ export default function AdminDashboard() {
                         </div>
                       </div>
                     ))}
+                    <Pager className="mt-4" {...pagedAgencies.pager} />
                   </div>
                 )}
               </CardContent>
@@ -394,7 +405,7 @@ export default function AdminDashboard() {
                   <p className="text-sm text-muted-foreground">{t('No open listings.', 'Tidak ada listing terbuka.')}</p>
                 ) : (
                   <div className="space-y-3">
-                    {openTeamCollabs.map((c) => (
+                    {pagedTeamCollabs.items.map((c) => (
                       <div key={c.id} className="rounded-lg border border-border/60 p-4">
                         <p className="font-medium">{c.focus}</p>
                         <p className="text-sm text-muted-foreground">{c.teams?.name ?? t('A team', 'Sebuah tim')} · {c.profiles?.full_name ?? 'Unknown'}</p>
@@ -414,6 +425,7 @@ export default function AdminDashboard() {
                         </div>
                       </div>
                     ))}
+                    <Pager className="mt-4" {...pagedTeamCollabs.pager} />
                   </div>
                 )}
               </CardContent>
@@ -427,7 +439,7 @@ export default function AdminDashboard() {
                   <p className="text-sm text-muted-foreground">{t('No applications yet.', 'Belum ada pendaftaran.')}</p>
                 ) : (
                   <div className="space-y-3">
-                    {visiblePeople.map((c) => (
+                    {pagedPeople.items.map((c) => (
                       <div key={c.id} className="rounded-lg border border-border/60 p-4">
                         <div className="flex items-center justify-between">
                           <div>
@@ -461,6 +473,7 @@ export default function AdminDashboard() {
                         </div>
                       </div>
                     ))}
+                    <Pager className="mt-4" {...pagedPeople.pager} />
                   </div>
                 )}
               </CardContent>
@@ -480,7 +493,7 @@ export default function AdminDashboard() {
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {payments.map((row, i) => (
+                    {pagedPayments.items.map((row, i) => (
                       <div key={`${row.table}-${row.id}-${row.subField ?? ''}-${i}`} className="rounded-lg border border-border/60 p-4">
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                           <div className="flex-1">
@@ -503,6 +516,7 @@ export default function AdminDashboard() {
                         </div>
                       </div>
                     ))}
+                    <Pager className="mt-4" {...pagedPayments.pager} />
                   </div>
                 )}
               </CardContent>
@@ -518,7 +532,7 @@ export default function AdminDashboard() {
                   <p className="text-sm text-muted-foreground">{t('No agency projects yet.', 'Belum ada proyek agency.')}</p>
                 ) : (
                   <div className="space-y-3">
-                    {agencyProjects.map((p) => (
+                    {pagedAgencyProjects.items.map((p) => (
                       <div key={p.id} className="rounded-lg border border-border/60 p-4">
                         <div className="flex items-start justify-between">
                           <div>
@@ -542,6 +556,7 @@ export default function AdminDashboard() {
                         </div>
                       </div>
                     ))}
+                    <Pager className="mt-4" {...pagedAgencyProjects.pager} />
                   </div>
                 )}
               </CardContent>

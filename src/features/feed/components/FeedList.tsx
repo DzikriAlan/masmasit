@@ -4,10 +4,10 @@ import { useMemo, useState } from 'react';
 
 import { AppShell } from '@/components/app-shell';
 import { PageHeader } from '@/components/page-header';
+import { Pager, usePagination } from '@/components/pager';
 import { LoadData } from '@/components/load-data';
 import { RowSkeleton } from '@/components/card-skeleton';
 import { useLang } from '@/components/language-provider';
-import { Button } from '@/components/ui/button';
 import { TONE_CHIP, toneOf } from '@/shared/lib/tones';
 import { cn } from '@/shared/lib/utils';
 
@@ -24,7 +24,7 @@ const KINDS: FeedKind[] = ['job', 'project', 'build', 'event'];
 export default function FeedList() {
   const { t } = useLang();
   const { kinds, area } = useFeedLabels();
-  const { fetchFeed, payloadGetFeed, setGetFeed } = useFeedControllers();
+  const { fetchFeed } = useFeedControllers();
 
   const [filters, setFilters] = useState({ filter: { kind: 'all' as FeedKind | 'all' } });
 
@@ -37,16 +37,15 @@ export default function FeedList() {
       isLoading: fetchFeed.isPending,
       isError: fetchFeed.isError,
       isEmpty: !fetchFeed.isPending && !fetchFeed.isError && list.length === 0,
-      canLoadMore: all.length >= payloadGetFeed.limit && payloadGetFeed.limit < 200,
       errorTitle: t('Could not load the feed.', 'Gagal memuat feed.'),
       errorSubtitle: t('Check your connection and try again.', 'Periksa koneksi lalu coba lagi.'),
       emptyTitle: t('Nothing here yet.', 'Belum ada aktivitas.'),
       emptySubtitle: t('New jobs, projects, builds and events will show up here.', 'Lowongan, proyek, build, dan event baru akan muncul di sini.'),
     };
-  }, [fetchFeed.data, fetchFeed.isPending, fetchFeed.isError, filters, payloadGetFeed.limit, t]);
+  }, [fetchFeed.data, fetchFeed.isPending, fetchFeed.isError, filters, t]);
 
   const editFeedKind = (kind: FeedKind | 'all') => setFilters((prev) => ({ ...prev, filter: { ...prev.filter, kind } }));
-  const loadFeedMore = () => setGetFeed({ limit: payloadGetFeed.limit + 40 });
+  const paged = usePagination(data.data);
 
   return (
     <AppShell>
@@ -91,21 +90,16 @@ export default function FeedList() {
           {data.isLoading ? (
             <RowSkeleton count={6} />
           ) : (
-            <div className="flex flex-col gap-3">
-              {data.data.map((item) => (
-                <FeedItem key={item.id} item={item} />
-              ))}
-            </div>
+            <>
+              <div className="flex flex-col gap-3">
+                {paged.items.map((item) => (
+                  <FeedItem key={item.id} item={item} />
+                ))}
+              </div>
+              <Pager {...paged.pager} />
+            </>
           )}
         </LoadData>
-
-        {data.canLoadMore && !data.isLoading && (
-          <div className="mt-6 flex justify-center">
-            <Button variant="outline" onClick={loadFeedMore} disabled={fetchFeed.isFetching}>
-              {t('Load more', 'Muat lebih banyak')}
-            </Button>
-          </div>
-        )}
       </div>
     </AppShell>
   );

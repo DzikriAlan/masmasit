@@ -11,6 +11,7 @@ import { ProjectsPostForm, type ProjectsFormValues } from '@/features/projects/c
 
 import { AppShell } from '@/components/app-shell';
 import { PageHeader } from '@/components/page-header';
+import { Pager, usePagination } from '@/components/pager';
 import { LoadData } from '@/components/load-data';
 import { BrowseToolbar } from '@/components/browse-toolbar';
 import { CardGridSkeleton } from '@/components/card-skeleton';
@@ -165,6 +166,8 @@ export default function ProjectsList() {
     return () => clearTimeout(timeout);
   }, [filters.search, filters.filter.status, setGetProjects]);
 
+  const paged = usePagination(data.data);
+
   return (
     <AppShell>
       <div className="page-container mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -206,11 +209,14 @@ export default function ProjectsList() {
           {data.isLoading ? (
             <CardGridSkeleton count={6} chips={0} lines={3} />
           ) : (
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {data.data.map((project) => (
-                <ProjectsCard key={project.id} project={project} />
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                {paged.items.map((project) => (
+                  <ProjectsCard key={project.id} project={project} />
+                ))}
+              </div>
+              <Pager {...paged.pager} />
+            </>
           )}
         </LoadData>
       </div>

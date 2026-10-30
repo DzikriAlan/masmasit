@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 
 import { AppShell } from '@/components/app-shell';
 import { LoadData } from '@/components/load-data';
+import { Pager, usePagination } from '@/components/pager';
 import { useAuth } from '@/components/auth-provider';
 import { useLang } from '@/components/language-provider';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -40,7 +41,9 @@ export default function JobApplicants() {
     useJobsEmployerControllers(company?.id, selectedJobId);
 
   const jobs = fetchJobsOwned.data ?? [];
+  const pagedJobs = usePagination(jobs);
   const applicants = fetchJobsApplicants.data ?? [];
+  const pagedApplicants = usePagination(applicants);
   const loading = fetchJobsCompany.isPending || fetchJobsOwned.isPending;
   const selectedJob = jobs.find((j) => j.id === selectedJobId) ?? null;
   const getAppliedDate = (iso: string) =>
@@ -113,7 +116,7 @@ export default function JobApplicants() {
         ) : (
           <div className="grid gap-6 md:grid-cols-[320px_1fr]">
             <div className="space-y-3">
-              {jobs.map((job) => (
+              {pagedJobs.items.map((job) => (
                 <Card
                   key={job.id}
                   className={`glass cursor-pointer transition-all hover:border-primary/40 ${selectedJobId === job.id ? 'border-primary/60' : ''}`}
@@ -132,6 +135,7 @@ export default function JobApplicants() {
                   </CardContent>
                 </Card>
               ))}
+              <Pager className="mt-4" {...pagedJobs.pager} />
             </div>
 
             <Card className="glass">
@@ -167,7 +171,7 @@ export default function JobApplicants() {
                         emptyTitle: t('No applicants yet.', 'Belum ada pelamar.'),
                       }}
                     >
-                      {applicants.map((app) => (
+                      {pagedApplicants.items.map((app) => (
                         <div key={app.id} className="rounded-lg border border-border/60 p-4">
                           <div className="flex flex-wrap items-start justify-between gap-3">
                             <div>
@@ -236,6 +240,7 @@ export default function JobApplicants() {
                           </div>
                         </div>
                       ))}
+                      <Pager className="mt-4" {...pagedApplicants.pager} />
                     </LoadData>
                   </CardContent>
                 </>

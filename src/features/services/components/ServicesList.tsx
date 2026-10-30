@@ -9,6 +9,7 @@ import { useServicesControllers } from '@/features/services/controllers/services
 
 import { AppShell } from '@/components/app-shell';
 import { PageHeader } from '@/components/page-header';
+import { Pager, usePagination } from '@/components/pager';
 import { LoadData } from '@/components/load-data';
 import { BrowseToolbar } from '@/components/browse-toolbar';
 import { CardGridSkeleton } from '@/components/card-skeleton';
@@ -144,6 +145,8 @@ export default function ServicesList() {
     setFilters((prev) => ({ ...prev, selectedServiceId: null, isSubmitted: true }));
   };
 
+  const paged = usePagination(data.data);
+
   return (
     <AppShell>
       <div className="page-container mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -170,32 +173,35 @@ export default function ServicesList() {
           {data.isLoading ? (
             <CardGridSkeleton count={6} chips={1} lines={2} />
           ) : (
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {data.data.map((service) => (
-                <div key={service.id} className="flex h-full min-w-0 flex-col rounded-xl border border-border bg-card p-5">
-                  <Badge variant="outline" className={cn('w-fit text-[11px]', TONE_CHIP[toneOf('services')])}>
-                    {service.category}
-                  </Badge>
-                  <h3 className="mt-3 font-semibold leading-snug">{service.title}</h3>
-                  <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-muted-foreground text-pretty">
-                    {service.description}
-                  </p>
+            <>
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                {paged.items.map((service) => (
+                  <div key={service.id} className="flex h-full min-w-0 flex-col rounded-xl border border-border bg-card p-5">
+                    <Badge variant="outline" className={cn('w-fit text-[11px]', TONE_CHIP[toneOf('services')])}>
+                      {service.category}
+                    </Badge>
+                    <h3 className="mt-3 font-semibold leading-snug">{service.title}</h3>
+                    <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-muted-foreground text-pretty">
+                      {service.description}
+                    </p>
 
-                  <div className="mt-auto space-y-3 pt-4">
-                    <p className={cn('text-sm font-semibold', TONE_TEXT[toneOf('services')])}>{service.priceLabel}</p>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="w-full gap-2"
-                      onClick={() => editServicesRequest(service.id)}
-                    >
-                      {t('Request project', 'Minta proyek')}
-                      <ArrowRight className="h-3.5 w-3.5" />
-                    </Button>
+                    <div className="mt-auto space-y-3 pt-4">
+                      <p className={cn('text-sm font-semibold', TONE_TEXT[toneOf('services')])}>{service.priceLabel}</p>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="w-full gap-2"
+                        onClick={() => editServicesRequest(service.id)}
+                      >
+                        {t('Request project', 'Minta proyek')}
+                        <ArrowRight className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+              <Pager {...paged.pager} />
+            </>
           )}
         </LoadData>
       </div>

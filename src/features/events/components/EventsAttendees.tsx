@@ -5,6 +5,7 @@ import { Download, Users } from 'lucide-react';
 import { useLang } from '@/components/language-provider';
 import { LoadData } from '@/components/load-data';
 import { MobileCard, MobileCardList } from '@/components/mobile-card';
+import { Pager, usePagination } from '@/components/pager';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -41,6 +42,7 @@ export function EventsAttendees({
   onLoadAttendeesCsv: () => void;
 }>) {
   const { t } = useLang();
+  const paged = usePagination(attendees);
 
   const paymentBadge = (a: EventsAttendeesItem) =>
     isPaidEvent ? (
@@ -77,7 +79,7 @@ export function EventsAttendees({
           }}
         >
           <MobileCardList>
-            {attendees.map((a) => (
+            {paged.items.map((a) => (
               <MobileCard
                 key={a.id}
                 name={a.name}
@@ -105,7 +107,7 @@ export function EventsAttendees({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {attendees.map((a) => (
+                {paged.items.map((a) => (
                   <TableRow key={a.id}>
                     <TableCell className="font-medium">{a.name}</TableCell>
                     <TableCell className="text-sm text-muted-foreground">{a.email}</TableCell>
@@ -116,6 +118,7 @@ export function EventsAttendees({
               </TableBody>
             </Table>
           </div>
+          <Pager className="mt-4" {...paged.pager} />
         </LoadData>
       </CardContent>
     </Card>

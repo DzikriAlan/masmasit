@@ -6,16 +6,15 @@ import { Flag, Loader2, Search, Star, Trash2, ArrowDownCircle } from 'lucide-rea
 import { toast } from 'sonner';
 
 import { useLang } from '@/components/language-provider';
+import { Pager } from '@/components/pager';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { DEFAULT_PAGE_SIZE } from '@/shared/lib/paginate';
 
 import type { AdminModerationType, DataAdminModeration } from '@/features/admin/types/adminTypes';
 import { useAdminModerationControllers } from '@/features/admin/controllers/adminControllers';
-import AdminPager from '@/features/admin/components/AdminPager';
-
-const PAGE_SIZE = 20;
 
 interface Props {
   enabled: boolean;
@@ -33,6 +32,7 @@ export default function AdminModeration({ enabled }: Props) {
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState<number>(DEFAULT_PAGE_SIZE);
 
   const TYPES: { value: AdminModerationType; label: string }[] = [
     { value: 'jobs', label: t('Jobs', 'Lowongan') },
@@ -55,12 +55,12 @@ export default function AdminModeration({ enabled }: Props) {
   }, [searchInput]);
 
   const { fetchAdminModeration, removeAdminModeration, changeAdminModeration } = useAdminModerationControllers(
-    { type, search, page, limit: PAGE_SIZE },
+    { type, search, page, limit: pageSize },
     enabled
   );
 
   const items = fetchAdminModeration.data?.items ?? [];
-  const pagination = fetchAdminModeration.data?.pagination ?? { page: 1, limit: PAGE_SIZE, total: 0, totalPages: 1 };
+  const pagination = fetchAdminModeration.data?.pagination ?? { page: 1, limit: pageSize, total: 0, totalPages: 1 };
   const busy = removeAdminModeration.isPending || changeAdminModeration.isPending;
 
   const loadType = (value: AdminModerationType) => {
@@ -174,7 +174,18 @@ export default function AdminModeration({ enabled }: Props) {
           </div>
         )}
 
-        <AdminPager page={pagination.page} totalPages={pagination.totalPages} total={pagination.total} onPageChange={setPage} />
+        <Pager
+          className="mt-4"
+          page={pagination.page}
+          pageCount={pagination.totalPages}
+          total={pagination.total}
+          pageSize={pageSize}
+          onPageChange={setPage}
+          onPageSizeChange={(size) => {
+            setPageSize(size);
+            setPage(1);
+          }}
+        />
       </CardContent>
     </Card>
   );

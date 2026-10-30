@@ -3,6 +3,7 @@
 import Link from 'next/link';
 
 import { useLang } from '@/components/language-provider';
+import { Pager, usePagination } from '@/components/pager';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
@@ -18,6 +19,7 @@ interface Props {
 /** The company's posted jobs with applicant counts. */
 export function ActivityJobs({ jobs, isLoading, isError }: Props) {
   const { t } = useLang();
+  const paged = usePagination(jobs.jobs);
   const isApproved = jobs.company?.approval_status === 'approved';
   const description = jobs.company
     ? `${jobs.company.name} · ${t('Status', 'Status')}: ${jobs.company.approval_status}`
@@ -38,7 +40,7 @@ export function ActivityJobs({ jobs, isLoading, isError }: Props) {
         </div>
       }
     >
-      {jobs.jobs.map((job) => (
+      {paged.items.map((job) => (
         <ActivityRow key={job.id}>
           <div className="min-w-0">
             <Link href={`/jobs/${job.id}`} className="font-medium hover:underline">{job.title}</Link>
@@ -49,6 +51,7 @@ export function ActivityJobs({ jobs, isLoading, isError }: Props) {
           <Badge variant={ACTIVITY_STATUS_VARIANT[job.status] ?? 'outline'} className="capitalize">{job.status}</Badge>
         </ActivityRow>
       ))}
+      <Pager className="mt-4" {...paged.pager} />
     </ActivityPanel>
   );
 }

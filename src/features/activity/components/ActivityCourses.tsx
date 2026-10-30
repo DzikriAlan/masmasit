@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Award } from 'lucide-react';
 
 import { useLang } from '@/components/language-provider';
+import { Pager, usePagination } from '@/components/pager';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 
@@ -19,6 +20,7 @@ interface Props {
 /** My Courses: progress plus certificate status per course (TC-07-05). */
 export function ActivityCourses({ courses, isLoading, isError }: Props) {
   const { t } = useLang();
+  const paged = usePagination(courses);
 
   return (
     <ActivityPanel
@@ -29,7 +31,7 @@ export function ActivityCourses({ courses, isLoading, isError }: Props) {
       isEmpty={courses.length === 0}
       emptyTitle={t('You are not enrolled in any course yet.', 'Anda belum terdaftar di kursus manapun.')}
     >
-      {courses.map((en) => {
+      {paged.items.map((en) => {
         const isUnpaid = en.payment_status !== 'paid' && Boolean(en.courses && en.courses.price > 0);
         const isComplete = en.progress >= 100;
         const certificateLabel = en.certificateIssuedAt
@@ -61,6 +63,7 @@ export function ActivityCourses({ courses, isLoading, isError }: Props) {
           </div>
         );
       })}
+      <Pager className="mt-4" {...paged.pager} />
     </ActivityPanel>
   );
 }

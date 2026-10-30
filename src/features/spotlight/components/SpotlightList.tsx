@@ -11,6 +11,7 @@ import type { SpotlightCardItem } from '@/features/spotlight/components/Spotligh
 
 import { AppShell } from '@/components/app-shell';
 import { PageHeader } from '@/components/page-header';
+import { Pager, usePagination } from '@/components/pager';
 import { LoadData } from '@/components/load-data';
 import { CardGridSkeleton } from '@/components/card-skeleton';
 import { useAuth } from '@/components/auth-provider';
@@ -193,6 +194,8 @@ export default function SpotlightList() {
     clearSpotlightForm();
   };
 
+  const paged = usePagination(data.data);
+
   return (
     <AppShell>
       <div className="page-container mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -299,30 +302,33 @@ export default function SpotlightList() {
           {data.isLoading ? (
             <CardGridSkeleton count={6} chips={1} lines={3} />
           ) : (
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {data.data.map((item) => (
-                <SpotlightCard
-                  key={item.id}
-                  item={item}
-                  hotLabel={t('Hot', 'Hot')}
-                  visitLabel={t('Visit', 'Kunjungi')}
-                  labels={{
-                    like: item.isLiked ? t('Unlike', 'Batal suka') : t('Like', 'Suka'),
-                    edit: t('Edit', 'Ubah'),
-                    delete: item.isFromBuilds ? t('Remove', 'Turunkan') : t('Delete', 'Hapus'),
-                    deleteTitle: item.isFromBuilds
-                      ? t('Remove from Spotlight?', 'Turunkan dari Spotlight?')
-                      : t('Delete this entry?', 'Hapus entri ini?'),
-                    deleteDescription: item.isFromBuilds
-                      ? t('The build stays on /builds; it just leaves Spotlight.', 'Build tetap ada di /builds; hanya turun dari Spotlight.')
-                      : t('This cannot be undone.', 'Tindakan ini tidak bisa dibatalkan.'),
-                  }}
-                  onEditLike={editSpotlightLike}
-                  onEditItem={editSpotlightItem}
-                  onClearItem={clearSpotlightItem}
-                />
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                {paged.items.map((item) => (
+                  <SpotlightCard
+                    key={item.id}
+                    item={item}
+                    hotLabel={t('Hot', 'Hot')}
+                    visitLabel={t('Visit', 'Kunjungi')}
+                    labels={{
+                      like: item.isLiked ? t('Unlike', 'Batal suka') : t('Like', 'Suka'),
+                      edit: t('Edit', 'Ubah'),
+                      delete: item.isFromBuilds ? t('Remove', 'Turunkan') : t('Delete', 'Hapus'),
+                      deleteTitle: item.isFromBuilds
+                        ? t('Remove from Spotlight?', 'Turunkan dari Spotlight?')
+                        : t('Delete this entry?', 'Hapus entri ini?'),
+                      deleteDescription: item.isFromBuilds
+                        ? t('The build stays on /builds; it just leaves Spotlight.', 'Build tetap ada di /builds; hanya turun dari Spotlight.')
+                        : t('This cannot be undone.', 'Tindakan ini tidak bisa dibatalkan.'),
+                    }}
+                    onEditLike={editSpotlightLike}
+                    onEditItem={editSpotlightItem}
+                    onClearItem={clearSpotlightItem}
+                  />
+                ))}
+              </div>
+              <Pager {...paged.pager} />
+            </>
           )}
         </LoadData>
       </div>

@@ -10,6 +10,7 @@ import { useDiscussionsControllers } from '@/features/discussions/controllers/di
 
 import { AppShell } from '@/components/app-shell';
 import { PageHeader } from '@/components/page-header';
+import { Pager, usePagination } from '@/components/pager';
 import { LoadData } from '@/components/load-data';
 import { BrowseToolbar } from '@/components/browse-toolbar';
 import { RowSkeleton } from '@/components/card-skeleton';
@@ -154,6 +155,8 @@ export default function DiscussionsList() {
     clearDiscussionsForm();
   };
 
+  const paged = usePagination(data.data);
+
   return (
     <AppShell>
       <div className="page-container mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
@@ -219,42 +222,45 @@ export default function DiscussionsList() {
           {data.isLoading ? (
             <RowSkeleton count={5} />
           ) : (
-            <div className="flex flex-col gap-3">
-              {data.data.map((topic) => (
-                <Link
-                  key={topic.id}
-                  href={`/discussions/${topic.id}`}
-                  className="group flex items-start gap-3 rounded-xl border border-border bg-card p-4 transition-colors hover:border-foreground/25"
-                >
-                  <Avatar className="h-10 w-10 shrink-0">
-                    {topic.avatarUrl && <AvatarImage src={topic.avatarUrl} alt="" />}
-                    <AvatarFallback className={TONE_CHIP[toneOf('discussions')]}>{topic.initial}</AvatarFallback>
-                  </Avatar>
+            <>
+              <div className="flex flex-col gap-3">
+                {paged.items.map((topic) => (
+                  <Link
+                    key={topic.id}
+                    href={`/discussions/${topic.id}`}
+                    className="group flex items-start gap-3 rounded-xl border border-border bg-card p-4 transition-colors hover:border-foreground/25"
+                  >
+                    <Avatar className="h-10 w-10 shrink-0">
+                      {topic.avatarUrl && <AvatarImage src={topic.avatarUrl} alt="" />}
+                      <AvatarFallback className={TONE_CHIP[toneOf('discussions')]}>{topic.initial}</AvatarFallback>
+                    </Avatar>
 
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <p className="min-w-0 flex-1 truncate font-semibold group-hover:underline">{topic.title}</p>
-                      {topic.isFeatured && (
-                        <Badge variant="outline" className={cn('shrink-0 text-[11px]', TONE_CHIP[toneOf('discussions')])}>
-                          {t('Featured', 'Unggulan')}
-                        </Badge>
-                      )}
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="min-w-0 flex-1 truncate font-semibold group-hover:underline">{topic.title}</p>
+                        {topic.isFeatured && (
+                          <Badge variant="outline" className={cn('shrink-0 text-[11px]', TONE_CHIP[toneOf('discussions')])}>
+                            {t('Featured', 'Unggulan')}
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="mt-1 line-clamp-2 text-sm text-muted-foreground text-pretty">{topic.body}</p>
+                      <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                        <span className="truncate">{topic.author}</span>
+                        <span aria-hidden>·</span>
+                        <span>{topic.postedAt}</span>
+                        <span aria-hidden>·</span>
+                        <span className="flex items-center gap-1">
+                          <MessageSquare className="h-3 w-3" />
+                          {topic.replies} {t('replies', 'balasan')}
+                        </span>
+                      </div>
                     </div>
-                    <p className="mt-1 line-clamp-2 text-sm text-muted-foreground text-pretty">{topic.body}</p>
-                    <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                      <span className="truncate">{topic.author}</span>
-                      <span aria-hidden>·</span>
-                      <span>{topic.postedAt}</span>
-                      <span aria-hidden>·</span>
-                      <span className="flex items-center gap-1">
-                        <MessageSquare className="h-3 w-3" />
-                        {topic.replies} {t('replies', 'balasan')}
-                      </span>
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
+                  </Link>
+                ))}
+              </div>
+              <Pager {...paged.pager} />
+            </>
           )}
         </LoadData>
       </div>

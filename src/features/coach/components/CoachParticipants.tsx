@@ -5,6 +5,7 @@ import { Award, Users } from 'lucide-react';
 import { useLang } from '@/components/language-provider';
 import { LoadData } from '@/components/load-data';
 import { MobileCard, MobileCardList } from '@/components/mobile-card';
+import { Pager, usePagination } from '@/components/pager';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -39,6 +40,7 @@ export function CoachParticipants({
   isFree: boolean;
 }>) {
   const { t } = useLang();
+  const paged = usePagination(participants);
 
   const paymentLabels: Record<string, string> = {
     paid: t('Paid', 'Lunas'),
@@ -90,7 +92,7 @@ export function CoachParticipants({
           }}
         >
           <MobileCardList>
-            {participants.map((p) => (
+            {paged.items.map((p) => (
               <MobileCard
                 key={p.id}
                 name={p.name}
@@ -127,7 +129,7 @@ export function CoachParticipants({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {participants.map((p) => (
+                {paged.items.map((p) => (
                   <TableRow key={p.id}>
                     <TableCell>
                       <p className="font-medium">{p.name}</p>
@@ -142,6 +144,7 @@ export function CoachParticipants({
               </TableBody>
             </Table>
           </div>
+          <Pager className="mt-4" {...paged.pager} />
         </LoadData>
       </CardContent>
     </Card>

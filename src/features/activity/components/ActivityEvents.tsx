@@ -3,6 +3,7 @@
 import Link from 'next/link';
 
 import { useLang } from '@/components/language-provider';
+import { Pager, usePagination } from '@/components/pager';
 import { Badge } from '@/components/ui/badge';
 
 import { ACTIVITY_STATUS_VARIANT, type DataActivityEvent } from '@/features/activity/types/activityTypes';
@@ -17,6 +18,7 @@ interface Props {
 /** Event RSVPs (TC-08-06). */
 export function ActivityEvents({ rsvps, isLoading, isError }: Props) {
   const { t } = useLang();
+  const paged = usePagination(rsvps);
 
   return (
     <ActivityPanel
@@ -27,7 +29,7 @@ export function ActivityEvents({ rsvps, isLoading, isError }: Props) {
       isEmpty={rsvps.length === 0}
       emptyTitle={t('You have not RSVPed to any event.', 'Anda belum RSVP event apa pun.')}
     >
-      {rsvps.map((r) => {
+      {paged.items.map((r) => {
         const isUnpaid = Boolean(r.events?.is_paid) && r.payment_status !== 'paid';
         return (
           <ActivityRow key={r.id}>
@@ -47,6 +49,7 @@ export function ActivityEvents({ rsvps, isLoading, isError }: Props) {
           </ActivityRow>
         );
       })}
+      <Pager className="mt-4" {...paged.pager} />
     </ActivityPanel>
   );
 }

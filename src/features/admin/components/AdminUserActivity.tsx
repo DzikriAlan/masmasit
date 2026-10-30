@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { MobileCard, MobileCardList } from '@/components/mobile-card';
+import { Pager, usePagination } from '@/components/pager';
 
 import { useAdminUserActivityControllers } from '@/features/admin/controllers/adminControllers';
 import type { DataAdminUserActivity } from '@/features/admin/types/adminTypes';
@@ -66,6 +67,7 @@ export default function AdminUserActivity({ enabled }: Props) {
         r.roles.some((role) => role.toLowerCase().includes(q))
     );
   }, [fetchAdminUserActivity.data, query]);
+  const paged = usePagination(rows);
 
   const loading = fetchAdminUserActivity.isPending;
 
@@ -152,7 +154,7 @@ export default function AdminUserActivity({ enabled }: Props) {
                 pinned. */}
             <div className="mt-4 md:hidden">
               <MobileCardList>
-                {rows.map((r) => {
+                {paged.items.map((r) => {
                   const features = (
                     <Badge variant={r.features_used === 0 ? 'outline' : 'secondary'} className="tabular-nums">
                       {r.features_used}/{TOTAL_FEATURES}
@@ -220,7 +222,7 @@ export default function AdminUserActivity({ enabled }: Props) {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {rows.map((r) => (
+                  {paged.items.map((r) => (
                     <tr key={r.user_id} className="transition-colors hover:bg-muted/40">
                       <td className="sticky left-0 z-10 bg-card py-2.5 pr-4">
                         <div className="flex items-center gap-2.5">
@@ -272,6 +274,8 @@ export default function AdminUserActivity({ enabled }: Props) {
                 {t('No member matches that search.', 'Tidak ada member yang cocok.')}
               </p>
             )}
+
+            <Pager className="mt-4" {...paged.pager} />
           </>
         )}
       </CardContent>
