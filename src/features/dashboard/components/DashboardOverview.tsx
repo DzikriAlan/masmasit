@@ -3,12 +3,20 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Briefcase, Code2, GraduationCap, Calendar, Star, Users, Settings, ShieldCheck, TrendingUp, FileText, MessageCircle, Mail, Send, Building2, ClipboardList, Activity } from 'lucide-react';
+import {
+  Briefcase, Code2, GraduationCap, Calendar, Star, Users,
+  Settings, ShieldCheck, FileText, MessageCircle,
+  Mail, Send, Building2, ClipboardList, Activity, ArrowUpRight, ArrowDownRight,
+} from 'lucide-react';
+import {
+  AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
+  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+} from 'recharts';
 import { useAuth } from '@/components/auth-provider';
 import { useLang } from '@/components/language-provider';
 import { AppShell } from '@/components/app-shell';
 import { LoadData } from '@/components/load-data';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
@@ -16,18 +24,80 @@ import { toast } from 'sonner';
 import { useDashboardControllers } from '@/features/dashboard/controllers/dashboardControllers';
 import { loginHref } from '@/shared/lib/utils';
 
+const CHART_COLORS = [
+  'hsl(217, 91%, 60%)',  // blue
+  'hsl(263, 70%, 58%)',  // violet
+  'hsl(45, 93%, 58%)',   // amber
+  'hsl(160, 60%, 45%)',  // emerald
+  'hsl(340, 75%, 55%)',  // pink
+  'hsl(25, 95%, 53%)',   // orange
+  'hsl(199, 89%, 48%)',  // sky
+  'hsl(142, 71%, 45%)',  // green
+];
+
+const STATUS_COLORS: Record<string, string> = {
+  pending: 'hsl(45, 93%, 58%)',
+  reviewed: 'hsl(217, 91%, 60%)',
+  accepted: 'hsl(160, 60%, 45%)',
+  rejected: 'hsl(0, 72%, 51%)',
+  interview: 'hsl(263, 70%, 58%)',
+  hired: 'hsl(142, 71%, 45%)',
+};
+
+function CustomTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ name: string; value: number; color: string }>; label?: string }) {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="rounded-lg border border-border/50 bg-background px-3 py-2 text-xs shadow-xl">
+      <p className="mb-1.5 font-medium">{label}</p>
+      {payload.map((entry) => (
+        <div key={entry.name} className="flex items-center gap-2">
+          <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: entry.color }} />
+          <span className="text-muted-foreground">{entry.name}:</span>
+          <span className="font-medium tabular-nums">{entry.value}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function DashboardOverview() {
   const { user, profile, roles, loading, isEmailVerified, resendVerification } = useAuth();
   const { t } = useLang();
   const router = useRouter();
   const [sendingVerification, setSendingVerification] = useState(false);
 
-  const { fetchDashboardStats } = useDashboardControllers(user?.id);
+  const {
+    fetchDashboardStats,
+    fetchDashboardMonthlyActivity,
+    fetchDashboardSkillDistribution,
+    fetchDashboardApplicationStatus,
+  } = useDashboardControllers(user?.id);
 
   const stats = fetchDashboardStats.data ?? { applications: 0, projects: 0, enrollments: 0, rsvps: 0 };
+  const monthlyActivity = fetchDashboardMonthlyActivity.data ?? [];
+  const skillDistribution = fetchDashboardSkillDistribution.data ?? [];
+  const applicationStatus = fetchDashboardApplicationStatus.data ?? [];
   const isAdmin = roles.includes('super_admin') || roles.includes('regional_admin');
   const isCoach = Boolean(profile?.is_coach || profile?.coach_approved === 'approved');
   const isTalent = Boolean(profile?.is_talent);
+
+  const totalActivity = monthlyActivity.reduce(
+    (sum, m) => sum + m.applications + m.projects + m.enrollments + m.rsvps, 0
+  );
+  const recentActivity = monthlyActivity.length >= 2
+    ? monthlyActivity[monthlyActivity.length - 1]
+    : null;
+  const prevActivity = monthlyActivity.length >= 2
+    ? monthlyActivity[monthlyActivity.length - 2]
+    : null;
+  const recentTotal = recentActivity
+    ? recentActivity.applications + recentActivity.projects + recentActivity.enrollments + recentActivity.rsvps
+    : 0;
+  const prevTotal = prevActivity
+    ? prevActivity.applications + prevActivity.projects + prevActivity.enrollments + prevActivity.rsvps
+    : 0;
+  const trendPct = prevTotal > 0 ? Math.round(((recentTotal - prevTotal) / prevTotal) * 100) : 0;
+  const trendUp = trendPct >= 0;
 
   useEffect(() => {
     if (!loading && !user) router.push(loginHref());
@@ -36,6 +106,13 @@ export default function DashboardOverview() {
   if (loading) {
     return <LoadData minHeight="100vh" response={{ isLoading: true }} />;
   }
+
+  const statCards = [
+    { label: t('Job Applications', 'Lamaran Kerja'), value: stats.applications, icon: Briefcase, color: 'text-blue-400', bg: 'bg-blue-400/10' },
+    { label: t('My Projects', 'Proyek Saya'), value: stats.projects, icon: Code2, color: 'text-violet-400', bg: 'bg-violet-400/10' },
+    { label: t('Enrollments', 'Pendaftaran'), value: stats.enrollments, icon: GraduationCap, color: 'text-amber-400', bg: 'bg-amber-400/10' },
+    { label: t('Event RSVPs', 'RSVP Event'), value: stats.rsvps, icon: Calendar, color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
+  ];
 
   const quickLinks = [
     { href: '/directory', icon: Users, label: t('Browse Members', 'Jelajahi Member'), desc: t('Connect with IT practitioners', 'Terhubung dengan praktisi IT') },
@@ -47,7 +124,6 @@ export default function DashboardOverview() {
     { href: '/pesan', icon: MessageCircle, label: t('Messages', 'Pesan'), desc: t('Chat with the community', 'Chat dengan komunitas') },
   ];
 
-  // Role shortcuts (TC-12-04): one per role the member holds.
   const roleShortcuts = [
     { show: isAdmin, href: '/admin', icon: ShieldCheck, label: t('Admin Panel', 'Panel Admin') },
     { show: isCoach, href: '/coach', icon: GraduationCap, label: t('Coach Dashboard', 'Dashboard Coach') },
@@ -108,26 +184,337 @@ export default function DashboardOverview() {
           </div>
         )}
 
-        {/* Stats */}
+        {/* Stats Cards */}
         <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {[
-            { label: t('Job Applications', 'Lamaran Kerja'), value: stats.applications, icon: Briefcase, color: 'text-blue-400' },
-            { label: t('My Projects', 'Proyek Saya'), value: stats.projects, icon: Code2, color: 'text-violet-400' },
-            { label: t('Enrollments', 'Pendaftaran'), value: stats.enrollments, icon: GraduationCap, color: 'text-amber-400' },
-            { label: t('Event RSVPs', 'RSVP Event'), value: stats.rsvps, icon: Calendar, color: 'text-emerald-400' },
-          ].map((s, i) => (
-            <Card key={s.label} className={`glass glass-hover stagger-${i + 1}`}>
+          {statCards.map((s, i) => (
+            <Card key={s.label} className={`glass glass-hover stagger-${i + 1} overflow-hidden`}>
               <CardContent className="flex items-center gap-4 p-5">
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted transition-transform group-hover:scale-110">
+                <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${s.bg} transition-transform group-hover:scale-110`}>
                   <s.icon className={`h-6 w-6 ${s.color}`} />
                 </div>
                 <div>
-                  <div className="text-2xl font-bold">{s.value}</div>
+                  <div className="text-2xl font-bold tabular-nums">{s.value}</div>
                   <div className="text-xs text-muted-foreground">{s.label}</div>
                 </div>
               </CardContent>
             </Card>
           ))}
+        </div>
+
+        {/* Charts Grid */}
+        <div className="mb-8 grid gap-4 lg:grid-cols-3">
+          {/* Activity Area Chart */}
+          <Card className="glass lg:col-span-2">
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="font-display text-base">
+                    {t('Activity Overview', 'Ringkasan Aktivitas')}
+                  </CardTitle>
+                  <CardDescription className="text-xs">
+                    {t('Your activity in the last 6 months', 'Aktivitas Anda dalam 6 bulan terakhir')}
+                  </CardDescription>
+                </div>
+                {monthlyActivity.length >= 2 && (
+                  <div className="flex items-center gap-1.5 text-xs">
+                    {trendUp ? (
+                      <ArrowUpRight className="h-4 w-4 text-emerald-400" />
+                    ) : (
+                      <ArrowDownRight className="h-4 w-4 text-red-400" />
+                    )}
+                    <span className={trendUp ? 'text-emerald-400' : 'text-red-400'}>
+                      {trendUp ? '+' : ''}{trendPct}%
+                    </span>
+                    <span className="text-muted-foreground">
+                      {t('vs last month', 'vs bulan lalu')}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="h-[260px] w-full">
+                {monthlyActivity.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={monthlyActivity} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="gradApps" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor={CHART_COLORS[0]} stopOpacity={0.3} />
+                          <stop offset="95%" stopColor={CHART_COLORS[0]} stopOpacity={0} />
+                        </linearGradient>
+                        <linearGradient id="gradProjects" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor={CHART_COLORS[1]} stopOpacity={0.3} />
+                          <stop offset="95%" stopColor={CHART_COLORS[1]} stopOpacity={0} />
+                        </linearGradient>
+                        <linearGradient id="gradEnrollments" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor={CHART_COLORS[2]} stopOpacity={0.3} />
+                          <stop offset="95%" stopColor={CHART_COLORS[2]} stopOpacity={0} />
+                        </linearGradient>
+                        <linearGradient id="gradRsvps" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor={CHART_COLORS[3]} stopOpacity={0.3} />
+                          <stop offset="95%" stopColor={CHART_COLORS[3]} stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.5} />
+                      <XAxis
+                        dataKey="month"
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+                      />
+                      <YAxis
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+                        allowDecimals={false}
+                      />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Area
+                        type="monotone"
+                        dataKey="applications"
+                        name={t('Applications', 'Lamaran')}
+                        stroke={CHART_COLORS[0]}
+                        fill="url(#gradApps)"
+                        strokeWidth={2}
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="projects"
+                        name={t('Projects', 'Proyek')}
+                        stroke={CHART_COLORS[1]}
+                        fill="url(#gradProjects)"
+                        strokeWidth={2}
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="enrollments"
+                        name={t('Enrollments', 'Pendaftaran')}
+                        stroke={CHART_COLORS[2]}
+                        fill="url(#gradEnrollments)"
+                        strokeWidth={2}
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="rsvps"
+                        name="RSVPs"
+                        stroke={CHART_COLORS[3]}
+                        fill="url(#gradRsvps)"
+                        strokeWidth={2}
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+                    {fetchDashboardMonthlyActivity.isLoading
+                      ? t('Loading chart...', 'Memuat grafik...')
+                      : t('No activity data yet', 'Belum ada data aktivitas')}
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Application Status Donut */}
+          <Card className="glass">
+            <CardHeader className="pb-2">
+              <CardTitle className="font-display text-base">
+                {t('Application Status', 'Status Lamaran')}
+              </CardTitle>
+              <CardDescription className="text-xs">
+                {t('Your job applications by status', 'Lamaran kerja berdasarkan status')}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="h-[200px] w-full">
+                {applicationStatus.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={applicationStatus}
+                        dataKey="count"
+                        nameKey="status"
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={50}
+                        outerRadius={80}
+                        paddingAngle={3}
+                        strokeWidth={0}
+                      >
+                        {applicationStatus.map((entry, i) => (
+                          <Cell
+                            key={entry.status}
+                            fill={STATUS_COLORS[entry.status] ?? CHART_COLORS[i % CHART_COLORS.length]}
+                          />
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        content={({ active, payload }) => {
+                          if (!active || !payload?.length) return null;
+                          const d = payload[0];
+                          return (
+                            <div className="rounded-lg border border-border/50 bg-background px-3 py-2 text-xs shadow-xl">
+                              <div className="flex items-center gap-2">
+                                <span className="h-2 w-2 rounded-full" style={{ backgroundColor: d.payload.fill }} />
+                                <span className="capitalize">{String(d.name)}</span>
+                                <span className="ml-1 font-medium tabular-nums">{String(d.value)}</span>
+                              </div>
+                            </div>
+                          );
+                        }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+                    {fetchDashboardApplicationStatus.isLoading
+                      ? t('Loading...', 'Memuat...')
+                      : t('No applications yet', 'Belum ada lamaran')}
+                  </div>
+                )}
+              </div>
+              {applicationStatus.length > 0 && (
+                <div className="mt-2 flex flex-wrap justify-center gap-x-4 gap-y-1">
+                  {applicationStatus.map((entry, i) => (
+                    <div key={entry.status} className="flex items-center gap-1.5 text-xs">
+                      <span
+                        className="h-2 w-2 shrink-0 rounded-full"
+                        style={{ backgroundColor: STATUS_COLORS[entry.status] ?? CHART_COLORS[i % CHART_COLORS.length] }}
+                      />
+                      <span className="capitalize text-muted-foreground">{entry.status}</span>
+                      <span className="font-medium tabular-nums">{entry.count}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Skills & Activity Bar Chart Row */}
+        <div className="mb-8 grid gap-4 lg:grid-cols-2">
+          {/* Skills Distribution */}
+          <Card className="glass">
+            <CardHeader className="pb-2">
+              <CardTitle className="font-display text-base">
+                {t('Your Skills', 'Skill Anda')}
+              </CardTitle>
+              <CardDescription className="text-xs">
+                {t('Registered skills in your profile', 'Skill yang terdaftar di profil Anda')}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="h-[220px] w-full">
+                {skillDistribution.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={skillDistribution} layout="vertical" margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.5} horizontal={false} />
+                      <XAxis type="number" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} allowDecimals={false} />
+                      <YAxis
+                        type="category"
+                        dataKey="name"
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+                        width={90}
+                      />
+                      <Tooltip
+                        content={({ active, payload }) => {
+                          if (!active || !payload?.length) return null;
+                          const d = payload[0];
+                          return (
+                            <div className="rounded-lg border border-border/50 bg-background px-3 py-2 text-xs shadow-xl">
+                              <span className="font-medium">{String(d.payload.name)}</span>
+                            </div>
+                          );
+                        }}
+                      />
+                      <Bar dataKey="count" radius={[0, 4, 4, 0]} maxBarSize={24}>
+                        {skillDistribution.map((_, i) => (
+                          <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="flex h-full flex-col items-center justify-center gap-2 text-sm text-muted-foreground">
+                    {fetchDashboardSkillDistribution.isLoading
+                      ? t('Loading...', 'Memuat...')
+                      : (
+                        <>
+                          <p>{t('No skills added yet', 'Belum ada skill ditambahkan')}</p>
+                          <Link href="/profile">
+                            <Button variant="outline" size="sm" className="gap-1.5">
+                              <Settings className="h-3.5 w-3.5" />
+                              {t('Add skills', 'Tambah skill')}
+                            </Button>
+                          </Link>
+                        </>
+                      )}
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Monthly Bar Chart */}
+          <Card className="glass">
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="font-display text-base">
+                    {t('Monthly Breakdown', 'Rincian Bulanan')}
+                  </CardTitle>
+                  <CardDescription className="text-xs">
+                    {t('Total activities per month', 'Total aktivitas per bulan')}
+                  </CardDescription>
+                </div>
+                <div className="text-right">
+                  <div className="text-lg font-bold tabular-nums">{totalActivity}</div>
+                  <div className="text-[10px] text-muted-foreground">{t('total', 'total')}</div>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="h-[220px] w-full">
+                {monthlyActivity.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={monthlyActivity.map((m) => ({
+                        ...m,
+                        total: m.applications + m.projects + m.enrollments + m.rsvps,
+                      }))}
+                      margin={{ top: 5, right: 10, left: -20, bottom: 0 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.5} />
+                      <XAxis
+                        dataKey="month"
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+                      />
+                      <YAxis
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+                        allowDecimals={false}
+                      />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Bar dataKey="applications" name={t('Applications', 'Lamaran')} stackId="a" fill={CHART_COLORS[0]} radius={[0, 0, 0, 0]} />
+                      <Bar dataKey="projects" name={t('Projects', 'Proyek')} stackId="a" fill={CHART_COLORS[1]} radius={[0, 0, 0, 0]} />
+                      <Bar dataKey="enrollments" name={t('Enrollments', 'Pendaftaran')} stackId="a" fill={CHART_COLORS[2]} radius={[0, 0, 0, 0]} />
+                      <Bar dataKey="rsvps" name="RSVPs" stackId="a" fill={CHART_COLORS[3]} radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+                    {fetchDashboardMonthlyActivity.isLoading
+                      ? t('Loading chart...', 'Memuat grafik...')
+                      : t('No activity data yet', 'Belum ada data aktivitas')}
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Quick Links */}

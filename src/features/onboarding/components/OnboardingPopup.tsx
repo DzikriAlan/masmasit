@@ -124,15 +124,14 @@ function OnboardingPopupForm({ userId, profile }: { userId: string; profile: Use
 
   const snooze = async () => {
     setOpen(false);
-    // Closing always holds for the rest of this visit, even if the save below fails.
-    writeFlag('session', dismissedKey(userId));
+    writeFlag('local', doneKey(userId));
     try {
       await modifyOnboardingSnooze.mutateAsync({
         id: userId,
         until: new Date(Date.now() + SNOOZE_DAYS * 864e5).toISOString(),
       });
     } catch {
-      // Closing still works for this visit; it will simply ask again next load.
+      // localStorage flag still applies.
     }
     refreshProfile();
   };
