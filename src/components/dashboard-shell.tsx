@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 
 import { useAuth } from '@/components/auth-provider';
+import { useShellHint } from '@/components/shell-hint';
 import { useLang } from '@/components/language-provider';
 import { NotificationBell } from '@/features/notifications/components/NotificationBell';
 import { MessagesUnreadBadge } from '@/features/messages/components/MessagesUnreadBadge';
@@ -386,7 +387,11 @@ function SidebarBody({
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
-  const [collapsed, setCollapsed] = useState(readCollapsed);
+  const { sidebarCollapsed } = useShellHint();
+  // The server read the same cookie, so the first paint already has the
+  // sidebar's width; reading document.cookie alone ran only in the browser
+  // and the server-rendered width snapped on hydration.
+  const [collapsed, setCollapsed] = useState(() => sidebarCollapsed ?? readCollapsed());
   const { t } = useLang();
 
   // Dialogs, sheets and popovers portal to <body>, outside `.dashboard-page`;

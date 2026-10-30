@@ -6,6 +6,7 @@ import { useAuth } from '@/components/auth-provider';
 import { Navbar } from '@/components/navbar';
 import { Footer } from '@/components/footer';
 import { DashboardShell } from '@/components/dashboard-shell';
+import { useShellHint } from '@/components/shell-hint';
 import { cn } from '@/shared/lib/utils';
 
 const PUBLIC_PATHS = [
@@ -27,9 +28,14 @@ function isPublicPath(pathname: string): boolean {
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { user, loading } = useAuth();
+  const { signedIn } = useShellHint();
   const isHome = pathname === '/';
 
-  if (!loading && user && !isPublicPath(pathname)) {
+  // While auth loads, trust the server's session-cookie hint so a refresh
+  // paints the sidebar at once; a session that turns out invalid falls back
+  // to the public layout when loading ends.
+  const showDashboard = loading ? signedIn : Boolean(user);
+  if (showDashboard && !isPublicPath(pathname)) {
     return <DashboardShell>{children}</DashboardShell>;
   }
 
