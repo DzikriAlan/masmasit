@@ -11,6 +11,7 @@ import { supabase } from '@/shared/lib/supabase';
 import { CONTACT_EMAIL, waLink } from '@/shared/lib/external';
 import { useFeedHomeControllers } from '@/features/feed/controllers/feedControllers';
 import { useFeedLabels } from '@/features/feed/components/FeedItem';
+import { useTalentsControllers } from '@/features/talents/controllers/talentsControllers';
 import { Button } from '@/components/ui/button';
 import heroBackground from '@/shared/images/backgroundhero2.png';
 
@@ -637,27 +638,69 @@ function AgencyPreview({ akey, tone }: { akey: string; tone: (typeof tones)[Tone
 }
 
 /* Testimonials — a non-stop infinite marquee of tall portrait cards (photo
-   full-bleed, quote overlaid on a bottom gradient). Same duplicated-array
-   marquee technique used across the Ecosystem previews, never pauses. */
+   full-bleed, caption floating at the bottom). Real approved talents with a
+   photo fill it, their bio as the caption; the written testimonials stand in
+   until there are any. The figure fixes every card's size and the photo is
+   cropped into it (object-cover), so any avatar shape lands the same. */
+type MarqueeCard = { key: string; photo: string; text: string | null; quote: boolean; author: string; role: string };
+
+/** Enough cards for one marquee half to outrun the viewport. */
+const MARQUEE_MIN_CARDS = 6;
+
 function TestimonialMarquee() {
   const { t } = useLang();
+  const { fetchTalents } = useTalentsControllers();
+
+  const talentCards: MarqueeCard[] = (fetchTalents.data ?? [])
+    .filter((talent) => talent.avatar_url?.trim())
+    .map((talent) => ({
+      key: talent.id,
+      photo: talent.avatar_url!.trim(),
+      text: talent.bio?.trim() || null,
+      quote: false,
+      author: talent.full_name?.trim() || t('MasmasIT talent', 'Talent MasmasIT'),
+      role: talent.location?.trim() || t('Talent', 'Talent'),
+    }));
+  const base: MarqueeCard[] = talentCards.length
+    ? talentCards
+    : testimonials.map((q) => ({
+        key: q.author,
+        photo: q.photoTall,
+        text: t(q.textEn, q.textId),
+        quote: true,
+        author: q.author,
+        role: q.role,
+      }));
+  // A few talents repeat until one half is wide enough to loop seamlessly.
+  const half = Array.from({ length: Math.max(1, Math.ceil(MARQUEE_MIN_CARDS / base.length)) }, () => base).flat();
 
   return (
     <div className="marquee-fade -mx-4 overflow-hidden sm:-mx-6 lg:-mx-8">
       <div className="animate-marquee flex w-max gap-5 px-4 sm:gap-6 sm:px-6 lg:px-8">
-        {[...testimonials, ...testimonials].map((q, idx) => (
+        {[...half, ...half].map((q, idx) => (
           <figure
-            key={`${q.author}-${idx}`}
-            className="relative h-[420px] w-64 shrink-0 overflow-hidden rounded-3xl border border-border sm:h-[480px] sm:w-72"
+            key={`${q.key}-${idx}`}
+            className="relative h-[420px] w-64 shrink-0 overflow-hidden rounded-3xl border border-border bg-muted sm:h-[480px] sm:w-72"
           >
-            <img src={q.photoTall} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover" />
+            <img
+              src={q.photo}
+              alt=""
+              loading="lazy"
+              className="absolute inset-0 h-full w-full object-cover object-center"
+              // A dead link leaves the grey frame rather than a broken-image icon.
+              onError={(e) => {
+                e.currentTarget.style.visibility = 'hidden';
+              }}
+            />
             {/* Light floating caption instead of a dark gradient over the photo. */}
             <figcaption className="absolute inset-x-3 bottom-3 rounded-2xl bg-white/95 p-4">
-              <blockquote className="line-clamp-3 text-sm leading-snug text-neutral-800">
-                “{t(q.textEn, q.textId)}”
-              </blockquote>
-              <p className="mt-2.5 text-sm font-semibold text-neutral-950">{q.author}</p>
-              <p className="text-xs text-neutral-500">{q.role}</p>
+              {q.text && (
+                <blockquote className="line-clamp-3 text-sm leading-snug text-neutral-800">
+                  {q.quote ? `“${q.text}”` : q.text}
+                </blockquote>
+              )}
+              <p className={`truncate text-sm font-semibold text-neutral-950 ${q.text ? 'mt-2.5' : ''}`}>{q.author}</p>
+              <p className="truncate text-xs text-neutral-500">{q.role}</p>
             </figcaption>
           </figure>
         ))}
