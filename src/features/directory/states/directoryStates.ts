@@ -1,7 +1,5 @@
 import { create } from 'zustand';
 
-import { DEFAULT_PAGE_SIZE } from '@/shared/lib/paginate';
-
 import type { PayloadGetDirectory, Directory, DirectoryDetail } from '../types/directoryTypes';
 
 interface DirectoryStore {
@@ -17,8 +15,6 @@ export const useDirectoryStates = create<DirectoryStore>((set) => ({
     locationFilter: 'all',
     statusFilter: 'all',
     skillFilter: 'all',
-    page: 1,
-    perPage: DEFAULT_PAGE_SIZE,
   },
 
   directory: {

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Share2, Link2, MessageCircle, Linkedin, AtSign } from 'lucide-react';
+import { Share2, Link2, MessageCircle, Linkedin, AtSign, type LucideIcon } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { useLang } from '@/components/language-provider';
@@ -21,6 +21,9 @@ interface Props {
   text?: string;
   /** Icon-only button for list cards. */
   compact?: boolean;
+  /** Links to put above the share options, e.g. the person's own LinkedIn,
+   *  so a card needs no extra button for them. */
+  extraLinks?: { key: string; label: string; href: string; icon: LucideIcon }[];
   className?: string;
 }
 
@@ -45,7 +48,7 @@ function XGlyph({ className }: { className?: string }) {
  * Share a detail page: copy link, WhatsApp, LinkedIn, X and Threads. On touch
  * devices with the Web Share API the OS share sheet is used instead.
  */
-export function ShareButton({ url, title, text, compact = false, className }: Readonly<Props>) {
+export function ShareButton({ url, title, text, compact = false, className, extraLinks }: Readonly<Props>) {
   const { t } = useLang();
   const [filters, setFilters] = useState({ origin: process.env.NEXT_PUBLIC_SITE_URL ?? '', isNativeShare: false });
 
@@ -113,7 +116,11 @@ export function ShareButton({ url, title, text, compact = false, className }: Re
     </Button>
   );
 
-  if (filters.isNativeShare) {
+  const hasExtra = Boolean(extraLinks?.length);
+
+  // With extra links the menu stays, so they remain reachable on touch
+  // devices; the OS share sheet becomes one of its items instead.
+  if (filters.isNativeShare && !hasExtra) {
     return trigger((e) => {
       stopCardLink(e);
       void submitNativeShare();
@@ -124,17 +131,33 @@ export function ShareButton({ url, title, text, compact = false, className }: Re
     <DropdownMenu>
       <DropdownMenuTrigger asChild>{trigger(stopCardLink)}</DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48" onClick={stopBubbling}>
-        <DropdownMenuItem onSelect={submitCopyLink} className="gap-2">
-          <Link2 className="h-4 w-4" /> {t('Copy link', 'Salin tautan')}
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        {data.links.map((link) => (
+        {extraLinks?.map((link) => (
           <DropdownMenuItem key={link.key} asChild className="gap-2">
             <a href={link.href} target="_blank" rel="noopener noreferrer">
               <link.icon className="h-4 w-4" /> {link.label}
             </a>
           </DropdownMenuItem>
         ))}
+        {hasExtra && <DropdownMenuSeparator />}
+        {filters.isNativeShare ? (
+          <DropdownMenuItem onSelect={() => void submitNativeShare()} className="gap-2">
+            <Share2 className="h-4 w-4" /> {label}
+          </DropdownMenuItem>
+        ) : (
+          <>
+            <DropdownMenuItem onSelect={submitCopyLink} className="gap-2">
+              <Link2 className="h-4 w-4" /> {t('Copy link', 'Salin tautan')}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            {data.links.map((link) => (
+              <DropdownMenuItem key={link.key} asChild className="gap-2">
+                <a href={link.href} target="_blank" rel="noopener noreferrer">
+                  <link.icon className="h-4 w-4" /> {link.label}
+                </a>
+              </DropdownMenuItem>
+            ))}
+          </>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );

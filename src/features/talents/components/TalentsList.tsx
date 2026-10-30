@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { MapPin } from 'lucide-react';
+import { Linkedin, MapPin } from 'lucide-react';
 
 import type { Talent } from '@/features/talents/types/talentsTypes';
 import { useTalentsControllers } from '@/features/talents/controllers/talentsControllers';
@@ -17,6 +17,7 @@ import { useLang } from '@/components/language-provider';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { ShareButton } from '@/components/share-button';
+import { byCompleteness } from '@/shared/lib/profileCompleteness';
 import { TONE_CHIP, toneOf } from '@/shared/lib/tones';
 
 
@@ -48,7 +49,8 @@ export default function TalentsList() {
       return true;
     };
 
-    const all = (fetchTalents.data ?? []).map(getMappedTalent);
+    // Fullest profiles first, so the list opens on talents worth booking.
+    const all = byCompleteness(fetchTalents.data ?? [], (talent) => talent).map(getMappedTalent);
     const list = all.filter(getMatchesFilters);
     const isFiltered = Boolean(filters.search) || filters.filter.location !== 'all';
 
@@ -151,12 +153,16 @@ export default function TalentsList() {
                       <Link href={`/app/talents/${talent.id}`} className="flex-1">
                         <Button size="sm" className="w-full">{t('Book a session', 'Pesan sesi')}</Button>
                       </Link>
-                      {talent.linkedinUrl && (
-                        <a href={talent.linkedinUrl} target="_blank" rel="noreferrer">
-                          <Button variant="outline" size="sm">LinkedIn</Button>
-                        </a>
-                      )}
-                      <ShareButton compact url={`/app/talents/${talent.id}`} title={`${talent.name} — MasmasIT`} />
+                      <ShareButton
+                        compact
+                        url={`/app/talents/${talent.id}`}
+                        title={`${talent.name} — MasmasIT`}
+                        extraLinks={
+                          talent.linkedinUrl
+                            ? [{ key: 'linkedin-profile', label: t('LinkedIn profile', 'Profil LinkedIn'), href: talent.linkedinUrl, icon: Linkedin }]
+                            : undefined
+                        }
+                      />
                     </div>
                   </div>
                 ))}

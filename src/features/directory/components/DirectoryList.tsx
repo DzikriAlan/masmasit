@@ -9,8 +9,8 @@ import { useDirectoryControllers } from '@/features/directory/controllers/direct
 
 import { AppShell } from '@/components/app-shell';
 import { PageHeader } from '@/components/page-header';
-import { Pager } from '@/components/pager';
-import { DEFAULT_PAGE_SIZE } from '@/shared/lib/paginate';
+import { Pager, usePagination } from '@/components/pager';
+import { byCompleteness } from '@/shared/lib/profileCompleteness';
 import { LoadData } from '@/components/load-data';
 import { BrowseToolbar } from '@/components/browse-toolbar';
 import { CardGridSkeleton } from '@/components/card-skeleton';
@@ -37,7 +37,6 @@ export default function DirectoryList() {
   const [filters, setFilters] = useState({
     search: '',
     filter: { location: 'all', status: 'all', skill: 'all' },
-    pagination: { currentPage: 1, perPage: DEFAULT_PAGE_SIZE as number },
   });
 
   const data = useMemo(() => {
@@ -61,8 +60,12 @@ export default function DirectoryList() {
       isTalent: member.is_talent && member.talent_approved === 'approved',
     });
 
-    const rows = fetchDirectory.data ?? [];
-    const list = rows.slice(0, filters.pagination.perPage).map(getMappedMember);
+    // Fullest profiles first, so the directory opens on members worth reading.
+    const rows = byCompleteness(fetchDirectory.data ?? [], (member) => ({
+      ...member,
+      skillCount: member.user_skills?.length ?? 0,
+    }));
+    const list = rows.map(getMappedMember);
 
     return {
       data: list,
@@ -78,8 +81,6 @@ export default function DirectoryList() {
       emptySubtitle: isFiltered
         ? t('Try a different skill or city.', 'Coba skill atau kota lain.')
         : t('Profiles appear here once members complete onboarding.', 'Profil muncul di sini setelah member menyelesaikan onboarding.'),
-      pagination: filters.pagination,
-      hasNextPage: rows.length > filters.pagination.perPage,
     };
   }, [fetchDirectory.data, fetchDirectory.isPending, fetchDirectory.isError, filters, t, user, authLoading]);
 
@@ -118,14 +119,13 @@ export default function DirectoryList() {
   );
 
   const editDirectorySearch = (value: string) => {
-    setFilters((prev) => ({ ...prev, search: value, pagination: { ...prev.pagination, currentPage: 1 } }));
+    setFilters((prev) => ({ ...prev, search: value }));
   };
 
   const editDirectoryFilter = (key: string, value: string) => {
     setFilters((prev) => ({
       ...prev,
       filter: { ...prev.filter, [key]: value },
-      pagination: { ...prev.pagination, currentPage: 1 },
     }));
   };
 
@@ -134,16 +134,7 @@ export default function DirectoryList() {
       ...prev,
       search: '',
       filter: { location: 'all', status: 'all', skill: 'all' },
-      pagination: { ...prev.pagination, currentPage: 1 },
     }));
-  };
-
-  const loadDirectory = (page: number) => {
-    setFilters((prev) => ({ ...prev, pagination: { ...prev.pagination, currentPage: page } }));
-  };
-
-  const editDirectoryPageSize = (perPage: number) => {
-    setFilters((prev) => ({ ...prev, pagination: { currentPage: 1, perPage } }));
   };
 
   useEffect(() => {
@@ -153,12 +144,12 @@ export default function DirectoryList() {
         locationFilter: filters.filter.location,
         statusFilter: filters.filter.status,
         skillFilter: filters.filter.skill,
-        page: filters.pagination.currentPage,
-        perPage: filters.pagination.perPage,
       });
     }, 300);
     return () => clearTimeout(timeout);
   }, [filters, setGetDirectory]);
+
+  const paged = usePagination(data.data);
 
   return (
     <AppShell>
@@ -183,68 +174,61 @@ export default function DirectoryList() {
           {data.isLoading ? (
             <CardGridSkeleton count={6} chips={3} lines={2} />
           ) : (
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {data.data.map((member) => (
-                <Link
-                  key={member.id}
-                  href={`/app/directory/${member.id}`}
-                  className="group flex h-full min-w-0 flex-col rounded-xl border border-border bg-card p-5 transition-all hover:border-foreground/25 hover:shadow-[var(--shadow-card-hover)]"
-                >
-                  <div className="flex items-start gap-3">
-                    <Avatar className="h-12 w-12 shrink-0">
-                      {member.avatarUrl && <AvatarImage src={member.avatarUrl} alt="" />}
-                      <AvatarFallback className={TONE_CHIP[toneOf('directory')]}>{member.initial}</AvatarFallback>
-                    </Avatar>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <h3 className="min-w-0 flex-1 truncate font-semibold group-hover:underline">{member.name}</h3>
-                        {member.isTalent && (
-                          <Badge variant="outline" className={cn('shrink-0 text-[11px]', TONE_CHIP[toneOf('talents')])}>
-                            {t('Talent', 'Talent')}
-                          </Badge>
+            <>
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                {paged.items.map((member) => (
+                  <Link
+                    key={member.id}
+                    href={`/app/directory/${member.id}`}
+                    className="group flex h-full min-w-0 flex-col rounded-xl border border-border bg-card p-5 transition-all hover:border-foreground/25 hover:shadow-[var(--shadow-card-hover)]"
+                  >
+                    <div className="flex items-start gap-3">
+                      <Avatar className="h-12 w-12 shrink-0">
+                        {member.avatarUrl && <AvatarImage src={member.avatarUrl} alt="" />}
+                        <AvatarFallback className={TONE_CHIP[toneOf('directory')]}>{member.initial}</AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <h3 className="min-w-0 flex-1 truncate font-semibold group-hover:underline">{member.name}</h3>
+                          {member.isTalent && (
+                            <Badge variant="outline" className={cn('shrink-0 text-[11px]', TONE_CHIP[toneOf('talents')])}>
+                              {t('Talent', 'Talent')}
+                            </Badge>
+                          )}
+                          <ShareButton compact url={`/app/directory/${member.id}`} title={`${member.name} — MasmasIT`} className="-my-1.5 -mr-2" />
+                        </div>
+                        {member.location && (
+                          <p className="mt-0.5 flex items-center gap-1 truncate text-sm text-muted-foreground">
+                            <MapPin className="h-3 w-3 shrink-0" />
+                            {member.location}
+                          </p>
                         )}
-                        <ShareButton compact url={`/app/directory/${member.id}`} title={`${member.name} — MasmasIT`} className="-my-1.5 -mr-2" />
                       </div>
-                      {member.location && (
-                        <p className="mt-0.5 flex items-center gap-1 truncate text-sm text-muted-foreground">
-                          <MapPin className="h-3 w-3 shrink-0" />
-                          {member.location}
-                        </p>
-                      )}
                     </div>
-                  </div>
 
-                  {member.bio && (
-                    <p className="mt-3 line-clamp-2 text-sm leading-relaxed text-muted-foreground text-pretty">{member.bio}</p>
-                  )}
+                    {member.bio && (
+                      <p className="mt-3 line-clamp-2 text-sm leading-relaxed text-muted-foreground text-pretty">{member.bio}</p>
+                    )}
 
-                  {member.skills.length > 0 && (
-                    <div className="mt-3 flex flex-wrap gap-1.5">
-                      {member.skills.map((skill) => (
-                        <Badge key={skill} variant="secondary" className="text-[11px]">{skill}</Badge>
-                      ))}
-                      {member.extraSkills > 0 && (
-                        <Badge variant="outline" className="text-[11px]">+{member.extraSkills}</Badge>
-                      )}
-                    </div>
-                  )}
+                    {member.skills.length > 0 && (
+                      <div className="mt-3 flex flex-wrap gap-1.5">
+                        {member.skills.map((skill) => (
+                          <Badge key={skill} variant="secondary" className="text-[11px]">{skill}</Badge>
+                        ))}
+                        {member.extraSkills > 0 && (
+                          <Badge variant="outline" className="text-[11px]">+{member.extraSkills}</Badge>
+                        )}
+                      </div>
+                    )}
 
-                  {member.status && <p className="mt-auto pt-4 text-xs text-muted-foreground">{member.status}</p>}
-                </Link>
-              ))}
-            </div>
+                    {member.status && <p className="mt-auto pt-4 text-xs text-muted-foreground">{member.status}</p>}
+                  </Link>
+                ))}
+              </div>
+              <Pager {...paged.pager} />
+            </>
           )}
         </LoadData>
-
-        {!data.isLoading && (
-          <Pager
-            page={data.pagination.currentPage}
-            hasNextPage={data.hasNextPage}
-            pageSize={data.pagination.perPage}
-            onPageChange={loadDirectory}
-            onPageSizeChange={editDirectoryPageSize}
-          />
-        )}
       </div>
     </AppShell>
   );

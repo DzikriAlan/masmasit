@@ -36,11 +36,8 @@ export const getDirectory = async (payload: PayloadGetDirectory) => {
     query = query.eq('user_skills.skill_id', payload.skillFilter);
   }
 
-  // One row past the page, so the list knows whether a next page exists.
-  const from = (payload.page - 1) * payload.perPage;
-
   return toApiResponse<DataDirectory[]>(
-    query.order('created_at', { ascending: false }).range(from, from + payload.perPage),
+    query.order('created_at', { ascending: false }),
     'Members retrieved successfully'
   );
 };

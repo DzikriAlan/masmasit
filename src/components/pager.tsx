@@ -10,13 +10,10 @@ import { cn } from '@/shared/lib/utils';
 
 export interface PagerProps {
   page: number;
+  pageCount: number;
+  /** Rows in the whole list, across every page. */
+  total: number;
   pageSize: number;
-  /** Rows in the whole list, across every page, and how many pages that
-   *  makes. A list paged on the server without a count gives
-   *  `hasNextPage` instead. */
-  total?: number;
-  pageCount?: number;
-  hasNextPage?: boolean;
   onPageChange: (page: number) => void;
   onPageSizeChange: (size: number) => void;
   className?: string;
@@ -46,26 +43,12 @@ export function usePagination<T>(items: T[]) {
  * Pixel's pager: what is shown of how many, rows per page (15, 30, 45, 60),
  * and previous / next. Hidden while the whole list fits the smallest page.
  */
-export function Pager({
-  page,
-  pageCount,
-  total,
-  hasNextPage,
-  pageSize,
-  onPageChange,
-  onPageSizeChange,
-  className,
-}: Readonly<PagerProps>) {
+export function Pager({ page, pageCount, total, pageSize, onPageChange, onPageSizeChange, className }: Readonly<PagerProps>) {
   const { t } = useLang();
-  const counted = total !== undefined;
-  // Uncounted, the pager stays while a larger page is picked, so the reader
-  // can always get back to 15.
-  const hidden = counted ? total <= PAGE_SIZES[0] : page === 1 && !hasNextPage && pageSize === PAGE_SIZES[0];
-  if (hidden) return null;
+  if (total <= PAGE_SIZES[0]) return null;
 
   const from = (page - 1) * pageSize + 1;
-  const to = counted ? Math.min(page * pageSize, total) : 0;
-  const isLast = counted ? page >= (pageCount ?? 1) : !hasNextPage;
+  const to = Math.min(page * pageSize, total);
 
   return (
     <nav
@@ -73,7 +56,7 @@ export function Pager({
       className={cn('mt-6 flex flex-wrap items-center justify-between gap-2 text-sm text-muted-foreground', className)}
     >
       <span className="tabular-nums">
-        {counted && t(`Showing ${from}–${to} of ${total}`, `Menampilkan ${from}–${to} dari ${total}`)}
+        {t(`Showing ${from}–${to} of ${total}`, `Menampilkan ${from}–${to} dari ${total}`)}
       </span>
       <div className="flex flex-wrap items-center gap-2">
         <Select value={String(pageSize)} onValueChange={(value) => onPageSizeChange(Number(value))}>
@@ -92,11 +75,9 @@ export function Pager({
           {t('Previous', 'Sebelumnya')}
         </Button>
         <span className="tabular-nums">
-          {counted
-            ? t(`Page ${page} of ${pageCount}`, `Halaman ${page} dari ${pageCount}`)
-            : t(`Page ${page}`, `Halaman ${page}`)}
+          {t(`Page ${page} of ${pageCount}`, `Halaman ${page} dari ${pageCount}`)}
         </span>
-        <Button variant="outline" size="sm" disabled={isLast} onClick={() => onPageChange(page + 1)}>
+        <Button variant="outline" size="sm" disabled={page >= pageCount} onClick={() => onPageChange(page + 1)}>
           {t('Next', 'Berikutnya')}
         </Button>
       </div>
