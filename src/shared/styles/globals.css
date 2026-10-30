@@ -422,6 +422,29 @@
     color: #fff;
   }
 
+  /* Grey card: the colour card's flat, neutral sibling (Recraft's canvas
+     grey). Ink text instead of white; the white panels, labels and the
+     --wash-* tints inside turn neutral with it, while each preview keeps
+     its own accent colour. */
+  .wash-neutral {
+    --wash-h: 0;
+    --wash-s: 0%;
+    --wash-l: 94%;
+    --foreground: 0 0% 9%;
+    --muted-foreground: 0 0% 42%;
+    --border: 0 0% 88%;
+    color: hsl(var(--foreground));
+    background-color: hsl(0 0% 94.5%);
+  }
+  .wash-neutral .wash-label {
+    background-color: hsl(0 0% 100%);
+    box-shadow: inset 0 0 0 1px hsl(0 0% 0% / 0.08);
+    color: hsl(0 0% 20%);
+  }
+  .wash-neutral .wash-panel {
+    box-shadow: 0 0 0 1px hsl(0 0% 0% / 0.05);
+  }
+
   /* White panel inside a colour card. Restores the ink tokens so data
      (jobs, charts, chat, funnels) reads exactly as on the light canvas. */
   .wash-panel {

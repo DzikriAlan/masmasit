@@ -898,7 +898,7 @@ export default function HomePage() {
                   rel="noreferrer"
                   className={`w-[85vw] max-w-[360px] shrink-0 snap-start sm:w-auto sm:max-w-none sm:shrink ${c.wide ? 'lg:col-span-4' : 'lg:col-span-2'}`}
                 >
-                  <div className={`group flex h-full min-h-[400px] flex-col overflow-hidden rounded-xl p-5 transition-[box-shadow,transform] duration-300 hover:-translate-y-0.5 hover:shadow-card-hover ${tones[c.tone].wash}`}>
+                  <div className={`group flex h-full min-h-[400px] flex-col overflow-hidden rounded-xl p-5 transition-[box-shadow,transform] duration-300 hover:-translate-y-0.5 hover:shadow-card-hover wash-neutral`}>
                     <p className="wash-label">{t(c.tagEn, c.tagId)}</p>
                     <p className="mt-3 font-display text-xl leading-snug tracking-tight text-balance sm:text-2xl">
                       <span className="font-normal text-muted-foreground">{t(c.leadEn, c.leadId)} </span>
@@ -907,9 +907,9 @@ export default function HomePage() {
 
                     <AgencyPreview akey={c.key} tone={tones[c.tone]} />
 
-                    <div className="mt-4 flex items-center justify-between gap-3 border-t border-white/20 pt-4 text-xs">
+                    <div className="mt-4 flex items-center justify-between gap-3 border-t border-foreground/10 pt-4 text-xs">
                       <span className="text-muted-foreground">{t(c.metaEn, c.metaId)}</span>
-                      <span className="font-medium text-foreground underline decoration-white/40 underline-offset-4 transition-colors group-hover:decoration-white">
+                      <span className="font-medium text-foreground underline decoration-foreground/30 underline-offset-4 transition-colors group-hover:decoration-foreground">
                         {t('Talk to us', 'Hubungi kami')}
                       </span>
                     </div>
