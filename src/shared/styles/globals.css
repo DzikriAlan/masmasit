@@ -184,8 +184,9 @@
     --ring: 146 78% 42%;
   }
 
-  /* Internal pages (dashboard shell) — warm neutral palette, no blue tint.
-     Scoped so landing/public pages keep their original design tokens. */
+  /* Internal pages (dashboard shell) — warm neutral palette, no blue tint,
+     burgundy primary. Scoped so landing/public pages keep their original
+     design tokens. */
   .dashboard-page {
     --background: 0 0% 97%;
     --foreground: 0 0% 9%;
@@ -193,7 +194,7 @@
     --card-foreground: 0 0% 9%;
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 9%;
-    --primary: 0 0% 9%;
+    --primary: 345 75% 28%;
     --primary-foreground: 0 0% 100%;
     --secondary: 0 0% 95%;
     --secondary-foreground: 0 0% 12%;
@@ -203,7 +204,7 @@
     --accent-foreground: 0 0% 9%;
     --border: 0 0% 91%;
     --input: 0 0% 88%;
-    --ring: 0 0% 9%;
+    --ring: 345 75% 28%;
     --card-hover: 0 0% 100%;
     --border-strong: 0 0% 78%;
     --shadow-card: 0 1px 3px hsl(0 0% 0% / 0.04);
@@ -218,8 +219,8 @@
     --card-foreground: 0 0% 96%;
     --popover: 0 0% 10%;
     --popover-foreground: 0 0% 96%;
-    --primary: 0 0% 96%;
-    --primary-foreground: 0 0% 9%;
+    --primary: 345 62% 64%;
+    --primary-foreground: 345 45% 10%;
     --secondary: 0 0% 14%;
     --secondary-foreground: 0 0% 92%;
     --muted: 0 0% 13%;
@@ -228,12 +229,27 @@
     --accent-foreground: 0 0% 96%;
     --border: 0 0% 18%;
     --input: 0 0% 18%;
-    --ring: 0 0% 96%;
+    --ring: 345 62% 64%;
     --card-hover: 0 0% 12%;
     --border-strong: 0 0% 28%;
     --shadow-card: 0 0 0 0 transparent;
     --shadow-card-hover: 0 0 0 0 transparent;
     color: hsl(var(--foreground));
+  }
+
+  /* Burgundy primary for internal pages (matches .dashboard-page above),
+     also on <body> while the shell is mounted so portalled dialogs, sheets
+     and popovers carry it. */
+  .dashboard-body {
+    --primary: 345 75% 28%;
+    --primary-foreground: 0 0% 100%;
+    --ring: 345 75% 28%;
+  }
+  .dark .dashboard-body,
+  .dashboard-body.dark {
+    --primary: 345 62% 64%;
+    --primary-foreground: 345 45% 10%;
+    --ring: 345 62% 64%;
   }
 
   /* Internal pages take Pixel's type and shape: Inter for text and
