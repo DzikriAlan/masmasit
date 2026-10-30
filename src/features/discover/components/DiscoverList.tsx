@@ -326,9 +326,9 @@ export default function DiscoverList() {
           </LoadData>
         </section>
 
-        {/* 4 ── CTA: MasmasIT's own dark/accent-green closing-stage
+        {/* 4 ── CTA: MasmasIT's own dark/accent-brand closing-stage
             treatment (see globals.css), not a borrowed blue banner. */}
-        <section className="dark accent-green relative mt-16 overflow-hidden rounded-2xl bg-background">
+        <section className="dark accent-brand relative mt-16 overflow-hidden rounded-2xl bg-background">
           <div className="flex flex-col items-center gap-5 px-6 py-12 text-center sm:px-12">
             <h2 className="font-display text-2xl font-bold text-balance sm:text-3xl">
               {t('Shipped something? Put it on Spotlight.', 'Baru rilis sesuatu? Pajang di Spotlight.')}

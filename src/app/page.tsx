@@ -787,7 +787,7 @@ export default function HomePage() {
              light canvas at the ecosystem. */}
         <div className="dark relative overflow-hidden bg-background">
         {/* 1 ── HERO ------------------------------------------------------- */}
-        <section className="accent-green relative flex min-h-screen items-center overflow-hidden">
+        <section className="accent-brand relative flex min-h-screen items-center overflow-hidden">
           <img
             src={heroBackground.src}
             alt=""
@@ -1064,7 +1064,7 @@ export default function HomePage() {
         {/* 12 ── FINAL CTA — full-bleed band that bookends the hero artwork.
              Pitch + one primary action on the left, talk-first channels on
              the right; stacks to a single column on mobile. */}
-        <section className="render-lazy dark accent-green relative overflow-hidden bg-background">
+        <section className="render-lazy dark accent-brand relative overflow-hidden bg-background">
           <img
             src={heroBackground.src}
             alt=""

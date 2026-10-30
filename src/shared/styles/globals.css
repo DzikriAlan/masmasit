@@ -48,7 +48,8 @@
     --card-foreground: 240 10% 8%;
     --popover: 0 0% 100%;
     --popover-foreground: 240 10% 8%;
-    --primary: 240 10% 8%;
+    /* Burgundy primary, site-wide. */
+    --primary: 345 75% 28%;
     --primary-foreground: 0 0% 100%;
     --secondary: 240 8% 95%;
     --secondary-foreground: 240 10% 10%;
@@ -60,7 +61,7 @@
     --destructive-foreground: 0 0% 100%;
     --border: 240 8% 90%;
     --input: 240 8% 87%;
-    --ring: 217 91% 53%;
+    --ring: 345 75% 28%;
     --radius: 0.5rem;
     --radius-xl: 0.75rem;
     --radius-2xl: 1rem;
@@ -118,8 +119,9 @@
     --card-foreground: 0 0% 98%;
     --popover: 240 8% 8%;
     --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 240 10% 8%;
+    /* Lighter burgundy holds contrast on the dark canvas. */
+    --primary: 345 62% 64%;
+    --primary-foreground: 345 45% 10%;
     --secondary: 240 6% 13%;
     --secondary-foreground: 0 0% 94%;
     --muted: 240 6% 12%;
@@ -130,7 +132,7 @@
     --destructive-foreground: 0 0% 98%;
     --border: 240 6% 16%;
     --input: 240 6% 16%;
-    --ring: 213 94% 68%;
+    --ring: 345 62% 64%;
 
     --eco-blue: 213 94% 68%;
     --eco-violet: 258 90% 76%;
@@ -174,19 +176,18 @@
     color-scheme: dark;
   }
 
-  /* Brand green for the hero and the closing CTA/footer stage: those keep
-     MasmasIT's original green artwork and green primary action, while the
-     light canvas in between stays multi-colour. Declared after .dark so it
-     wins when both classes sit on the same element. */
-  .accent-green {
-    --primary: 146 78% 42%;
-    --primary-foreground: 150 40% 6%;
-    --ring: 146 78% 42%;
+  /* The hero and the closing CTA stage: dark artwork, burgundy primary in
+     its light dark-canvas shade even where the stage itself is not `.dark`.
+     Declared after .dark so it wins when both classes sit on one element. */
+  .accent-brand {
+    --primary: 345 62% 64%;
+    --primary-foreground: 345 45% 10%;
+    --ring: 345 62% 64%;
   }
 
-  /* Internal pages (dashboard shell) — warm neutral palette, no blue tint,
-     burgundy primary. Scoped so landing/public pages keep their original
-     design tokens. */
+  /* Internal pages (dashboard shell) — warm neutral palette, no blue tint.
+     Scoped so landing/public pages keep their original canvas tokens; the
+     burgundy primary comes from :root / .dark. */
   .dashboard-page {
     --background: 0 0% 97%;
     --foreground: 0 0% 9%;
@@ -194,8 +195,6 @@
     --card-foreground: 0 0% 9%;
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 9%;
-    --primary: 345 75% 28%;
-    --primary-foreground: 0 0% 100%;
     --secondary: 0 0% 95%;
     --secondary-foreground: 0 0% 12%;
     --muted: 0 0% 95%;
@@ -204,7 +203,6 @@
     --accent-foreground: 0 0% 9%;
     --border: 0 0% 91%;
     --input: 0 0% 88%;
-    --ring: 345 75% 28%;
     --card-hover: 0 0% 100%;
     --border-strong: 0 0% 78%;
     --shadow-card: 0 1px 3px hsl(0 0% 0% / 0.04);
@@ -219,8 +217,6 @@
     --card-foreground: 0 0% 96%;
     --popover: 0 0% 10%;
     --popover-foreground: 0 0% 96%;
-    --primary: 345 62% 64%;
-    --primary-foreground: 345 45% 10%;
     --secondary: 0 0% 14%;
     --secondary-foreground: 0 0% 92%;
     --muted: 0 0% 13%;
@@ -229,27 +225,11 @@
     --accent-foreground: 0 0% 96%;
     --border: 0 0% 18%;
     --input: 0 0% 18%;
-    --ring: 345 62% 64%;
     --card-hover: 0 0% 12%;
     --border-strong: 0 0% 28%;
     --shadow-card: 0 0 0 0 transparent;
     --shadow-card-hover: 0 0 0 0 transparent;
     color: hsl(var(--foreground));
-  }
-
-  /* Burgundy primary for internal pages (matches .dashboard-page above),
-     also on <body> while the shell is mounted so portalled dialogs, sheets
-     and popovers carry it. */
-  .dashboard-body {
-    --primary: 345 75% 28%;
-    --primary-foreground: 0 0% 100%;
-    --ring: 345 75% 28%;
-  }
-  .dark .dashboard-body,
-  .dashboard-body.dark {
-    --primary: 345 62% 64%;
-    --primary-foreground: 345 45% 10%;
-    --ring: 345 62% 64%;
   }
 
   /* Internal pages take Pixel's type and shape: Inter for text and
@@ -524,11 +504,11 @@
     color: hsl(0 0% 9%);
   }
 
-  /* Primary action: a single-hue blue gradient (deep royal → bright azure)
-     with white type. The fill slides on hover instead of darkening. */
+  /* Primary action: a single-hue burgundy gradient (deep wine → brighter
+     crimson) with white type. The fill slides on hover instead of darkening. */
   .btn-gradient {
     color: #fff;
-    background-image: linear-gradient(95deg, hsl(228 88% 48%) 0%, hsl(218 92% 52%) 50%, hsl(207 92% 50%) 100%);
+    background-image: linear-gradient(95deg, hsl(345 78% 28%) 0%, hsl(348 72% 36%) 50%, hsl(352 68% 44%) 100%);
     background-size: 140% 100%;
     background-position: 0% 50%;
     transition: background-position 0.5s ease, transform 0.2s ease;
