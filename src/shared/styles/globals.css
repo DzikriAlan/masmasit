@@ -164,6 +164,58 @@
     --primary-foreground: 150 40% 6%;
     --ring: 146 78% 42%;
   }
+
+  /* Internal pages (dashboard shell) — warm neutral palette, no blue tint.
+     Scoped so landing/public pages keep their original design tokens. */
+  .dashboard-page {
+    --background: 0 0% 97%;
+    --foreground: 0 0% 9%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 9%;
+    --primary: 0 0% 9%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 95%;
+    --secondary-foreground: 0 0% 12%;
+    --muted: 0 0% 95%;
+    --muted-foreground: 0 0% 40%;
+    --accent: 0 0% 94%;
+    --accent-foreground: 0 0% 9%;
+    --border: 0 0% 91%;
+    --input: 0 0% 88%;
+    --ring: 0 0% 9%;
+    --card-hover: 0 0% 100%;
+    --border-strong: 0 0% 78%;
+    --shadow-card: 0 1px 3px hsl(0 0% 0% / 0.04);
+    --shadow-card-hover: 0 1px 3px hsl(0 0% 0% / 0.04), 0 8px 24px -8px hsl(0 0% 0% / 0.1);
+    color: hsl(var(--foreground));
+  }
+  .dashboard-page.dark,
+  .dark .dashboard-page {
+    --background: 0 0% 6%;
+    --foreground: 0 0% 96%;
+    --card: 0 0% 9%;
+    --card-foreground: 0 0% 96%;
+    --popover: 0 0% 10%;
+    --popover-foreground: 0 0% 96%;
+    --primary: 0 0% 96%;
+    --primary-foreground: 0 0% 9%;
+    --secondary: 0 0% 14%;
+    --secondary-foreground: 0 0% 92%;
+    --muted: 0 0% 13%;
+    --muted-foreground: 0 0% 60%;
+    --accent: 0 0% 15%;
+    --accent-foreground: 0 0% 96%;
+    --border: 0 0% 18%;
+    --input: 0 0% 18%;
+    --ring: 0 0% 96%;
+    --card-hover: 0 0% 12%;
+    --border-strong: 0 0% 28%;
+    --shadow-card: 0 0 0 0 transparent;
+    --shadow-card-hover: 0 0 0 0 transparent;
+    color: hsl(var(--foreground));
+  }
 }
 
 @layer base {

@@ -396,7 +396,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-svh">
+    <div className="dashboard-page min-h-svh bg-background text-foreground">
       {/* Desktop sidebar */}
       <aside
         className={cn(
