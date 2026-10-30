@@ -167,7 +167,7 @@ export default function ProjectsList() {
 
   return (
     <AppShell>
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <div className="page-container mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <PageHeader
           eyebrow={t('Product · Work', 'Product · Kerja')}
           tone={toneOf('projects')}

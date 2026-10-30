@@ -83,7 +83,7 @@ export default function PostJob() {
 
   return (
     <AppShell>
-      <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6 lg:px-8">
+      <div className="page-container mx-auto max-w-2xl px-4 py-8 sm:px-6 lg:px-8">
         {mode === 'company' && !company && (
           <Card className="glass">
             <CardHeader>

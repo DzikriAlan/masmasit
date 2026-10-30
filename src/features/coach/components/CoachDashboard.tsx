@@ -363,7 +363,7 @@ export default function CoachDashboard() {
   if (selectedCourse) {
     return (
       <AppShell>
-        <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
+        <div className="page-container mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
           <Button variant="ghost" onClick={() => setSelectedCourseId(null)} className="mb-4 gap-2">
             <ArrowLeft className="h-4 w-4" /> {t('Back to Courses', 'Kembali ke Kursus')}
           </Button>
@@ -712,7 +712,7 @@ export default function CoachDashboard() {
   // --- Main Coach Dashboard View ---
   return (
     <AppShell>
-      <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
+      <div className="page-container mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-8">
           <h1 className="font-display text-3xl font-semibold flex items-center gap-3">
             <GraduationCap className="h-8 w-8 text-primary" /> {t('Coach Dashboard', 'Dashboard Coach')}

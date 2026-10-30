@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { MobileCard, MobileCardList } from '@/components/mobile-card';
 
 import { useAdminOnboardingControllers } from '@/features/admin/controllers/adminControllers';
 import type { DataAdminOnboarding } from '@/features/admin/types/adminTypes';
@@ -154,7 +155,71 @@ export default function AdminOnboarding({ enabled }: Props) {
               </label>
             </div>
 
-            <div className="mt-4 overflow-x-auto">
+            <div className="mt-4 md:hidden">
+              <MobileCardList>
+                {rows.map((r) => {
+                  const fields = r.fields.length ? (
+                    <div className="flex flex-wrap gap-1">
+                      {r.fields.map((f) => (
+                        <Badge key={f} variant="secondary">
+                          {label(ONBOARDING_FIELDS, f)}
+                        </Badge>
+                      ))}
+                    </div>
+                  ) : (
+                    '—'
+                  );
+                  const referral =
+                    r.referral_source === 'other' && r.referral_note
+                      ? `${label(ONBOARDING_REFERRALS, 'other')}: ${r.referral_note}`
+                      : label(ONBOARDING_REFERRALS, r.referral_source);
+                  const filled = r.onboarding_completed_at
+                    ? new Date(r.onboarding_completed_at).toLocaleDateString('id-ID')
+                    : t('not yet', 'belum');
+                  return (
+                    <MobileCard
+                      key={r.id}
+                      name={r.full_name ?? r.email}
+                      title={
+                        <>
+                          <span className="block truncate">{r.full_name ?? r.email}</span>
+                          <span className="block truncate text-xs font-normal text-muted-foreground">{r.email}</span>
+                        </>
+                      }
+                      leading={
+                        <Avatar className="h-7 w-7">
+                          {r.avatar_url && <AvatarImage src={r.avatar_url} alt={r.full_name ?? r.email} />}
+                          <AvatarFallback className="bg-primary/15 text-xs text-primary">
+                            {(r.full_name ?? r.email).charAt(0).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                      }
+                      summary={[
+                        { label: t('Level', 'Level'), value: label(ONBOARDING_LEVELS, r.experience_level) },
+                        { label: t('City', 'Kota'), value: r.location || '—' },
+                      ]}
+                      details={[
+                        { label: t('Email', 'Email'), value: r.email },
+                        { label: t('Field', 'Bidang'), value: fields },
+                        { label: t('Level', 'Level'), value: label(ONBOARDING_LEVELS, r.experience_level) },
+                        { label: t('Skills', 'Skill'), value: skillNames(r).join(', ') || '—' },
+                        { label: t('City', 'Kota'), value: r.location || '—' },
+                        { label: t('Phone', 'No. HP'), value: r.whatsapp || '—' },
+                        { label: t('Status', 'Status'), value: label(ONBOARDING_JOB_STATUSES, r.current_job_status) },
+                        {
+                          label: t('Goals', 'Tujuan'),
+                          value: r.join_goals.map((g) => label(ONBOARDING_GOALS, g)).join(', ') || '—',
+                        },
+                        { label: t('Heard from', 'Tahu dari'), value: referral },
+                        { label: t('Filled', 'Diisi'), value: filled },
+                      ]}
+                    />
+                  );
+                })}
+              </MobileCardList>
+            </div>
+
+            <div className="mt-4 hidden overflow-x-auto md:block">
               <table className="w-full border-collapse text-sm">
                 <thead>
                   <tr className="border-y border-border text-left">

@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { MobileCard, MobileCardList } from '@/components/mobile-card';
 
 import { useAdminUserActivityControllers } from '@/features/admin/controllers/adminControllers';
 import type { DataAdminUserActivity } from '@/features/admin/types/adminTypes';
@@ -145,10 +146,54 @@ export default function AdminUserActivity({ enabled }: Props) {
               />
             </div>
 
-            {/* 23 counters do not fit any phone, so the table scrolls sideways
-                with the member column pinned rather than wrapping into an
-                unreadable stack. */}
-            <div className="mt-4 overflow-x-auto">
+            {/* 23 counters do not fit any phone: below md each member is a
+                card with the headline numbers, every counter behind the eye.
+                From md up the table scrolls sideways with the member column
+                pinned. */}
+            <div className="mt-4 md:hidden">
+              <MobileCardList>
+                {rows.map((r) => {
+                  const features = (
+                    <Badge variant={r.features_used === 0 ? 'outline' : 'secondary'} className="tabular-nums">
+                      {r.features_used}/{TOTAL_FEATURES}
+                    </Badge>
+                  );
+                  return (
+                    <MobileCard
+                      key={r.user_id}
+                      name={r.full_name ?? r.email}
+                      title={
+                        <>
+                          <span className="block truncate">{r.full_name ?? r.email}</span>
+                          <span className="block truncate text-xs font-normal text-muted-foreground">
+                            {r.location ?? '—'} · {r.roles.join(', ') || 'member'}
+                          </span>
+                        </>
+                      }
+                      leading={
+                        <Avatar className="h-7 w-7">
+                          {r.avatar_url && <AvatarImage src={r.avatar_url} alt={r.full_name ?? r.email} />}
+                          <AvatarFallback className="bg-primary/15 text-xs text-primary">
+                            {(r.full_name ?? r.email).charAt(0).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                      }
+                      summary={[
+                        { label: t('Features', 'Fitur'), value: features },
+                        { label: t('Total', 'Total'), value: <span className="font-semibold tabular-nums">{r.total_records}</span> },
+                        { label: t('Last active', 'Terakhir aktif'), value: since(r.last_active_at) },
+                      ]}
+                      details={COLUMNS.map((c) => ({
+                        label: t(c.en, c.id),
+                        value: <span className="tabular-nums">{Number(r[c.key] ?? 0)}</span>,
+                      }))}
+                    />
+                  );
+                })}
+              </MobileCardList>
+            </div>
+
+            <div className="mt-4 hidden overflow-x-auto md:block">
               <table className="w-full border-collapse text-sm">
                 <thead>
                   <tr className="border-y border-border text-left">

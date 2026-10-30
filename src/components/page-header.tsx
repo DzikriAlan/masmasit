@@ -9,8 +9,11 @@ import { cn } from '@/shared/lib/utils';
  * newer Ecosystem page (Agency, Discussions, Builds, Spotlight, Team
  * Builder, Team Collabs). Title + subtitle on the left, one optional
  * primary action on the right; nothing else varies between pages except
- * that action and the content below. Pair with the same outer container
- * everywhere too: `mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8`.
+ * that action and the content below. Sized as Pixel's page header: a 2xl
+ * semibold title over a small muted subtitle. Pair with the same outer
+ * container everywhere too:
+ * `page-container mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8` — inside the
+ * dashboard shell that container yields to the shell's own gutter.
  *
  * `tone` colours the title with the page's ecosystem-area colour (see
  * shared/lib/tones.ts) — this is the site's stand-in for an icon: colour
@@ -36,18 +39,18 @@ export function PageHeader({
   meta?: ReactNode;
 }>) {
   return (
-    <div className="mb-8 border-b border-border pb-6">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div className="max-w-2xl">
+    <div className="mb-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div className="max-w-2xl space-y-1">
           {eyebrow && <p className="eyebrow mb-2 text-muted-foreground">{eyebrow}</p>}
-          <h1 className={cn('font-display text-3xl font-semibold tracking-tight', tone && TONE_TEXT[tone])}>
+          <h1 className={cn('font-display text-2xl font-semibold tracking-tight', tone && TONE_TEXT[tone])}>
             {title}
           </h1>
-          {subtitle && <p className="mt-2 leading-relaxed text-muted-foreground text-pretty">{subtitle}</p>}
+          {subtitle && <p className="text-sm text-muted-foreground text-pretty">{subtitle}</p>}
         </div>
-        {action}
+        {action && <div className="flex items-center gap-2">{action}</div>}
       </div>
-      {meta && <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted-foreground">{meta}</div>}
+      {meta && <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted-foreground">{meta}</div>}
     </div>
   );
 }

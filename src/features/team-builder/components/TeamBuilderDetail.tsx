@@ -135,7 +135,7 @@ export default function TeamBuilderDetail() {
     <AppShell>
               <LoadData
           minHeight="60vh"
-          className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8"
+          className="page-container mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8"
           hideIcon
           response={{
             isLoading: loading,

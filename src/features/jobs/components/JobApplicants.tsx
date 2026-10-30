@@ -77,7 +77,7 @@ export default function JobApplicants() {
   if (!company) {
     return (
       <AppShell>
-        <div className="mx-auto max-w-2xl px-4 py-20 text-center">
+        <div className="page-container mx-auto max-w-2xl px-4 py-20 text-center">
           <Briefcase className="mx-auto mb-4 h-10 w-10 text-muted-foreground" />
           <h1 className="font-display text-2xl font-semibold">{t('No company yet', 'Belum ada perusahaan')}</h1>
           <p className="mt-2 text-muted-foreground">
@@ -93,7 +93,7 @@ export default function JobApplicants() {
 
   return (
     <AppShell>
-      <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+      <div className="page-container mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
         <Button variant="ghost" onClick={() => router.back()} className="mb-4 gap-2">
           <ArrowLeft className="h-4 w-4" /> {t('Back', 'Kembali')}
         </Button>

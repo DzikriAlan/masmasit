@@ -235,7 +235,7 @@ export default function DiscoverList() {
         </div>
       </div>
 
-      <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+      <div className="page-container mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
         {/* 2 ── Latest across the ecosystem: articles, case studies and
             member writing, merged and sorted by date instead of split into
             tabs no one clicks between. */}

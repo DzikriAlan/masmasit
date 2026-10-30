@@ -389,6 +389,13 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(readCollapsed);
   const { t } = useLang();
 
+  // Dialogs, sheets and popovers portal to <body>, outside `.dashboard-page`;
+  // this class gives them the internal pages' type and radius too.
+  useEffect(() => {
+    document.body.classList.add('dashboard-body');
+    return () => document.body.classList.remove('dashboard-body');
+  }, []);
+
   function toggleCollapsed() {
     const next = !collapsed;
     setCollapsed(next);
@@ -454,7 +461,10 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           collapsed ? 'md:pl-16' : 'md:pl-64'
         )}
       >
-        <div className="w-full">{children}</div>
+        {/* Full-width content with one gutter for every page, as in Pixel. A
+            page's own `.page-container` drops its max-width and padding here
+            (globals.css), so no page sets margins of its own. */}
+        <div className="w-full p-4 md:p-8">{children}</div>
       </main>
     </div>
   );

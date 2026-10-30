@@ -13,23 +13,17 @@ const config: Config = {
         mono: ['var(--font-mono)', 'ui-monospace', 'monospace'],
         brand: ['var(--font-brand)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
       },
-      // Type scale: xs lifts to 13px so metadata stops reading as fine print;
-      // base is 15px; sizes above 2xl grow slower than Tailwind's default and
-      // carry a little negative tracking (Familjen is already compact, so it
-      // stays light) — headings don't need extra tracking classes.
-      fontSize: {
-        xs: ['0.8125rem', { lineHeight: '1.125rem' }],
-        sm: ['0.875rem', { lineHeight: '1.25rem' }],
-        base: ['0.9375rem', { lineHeight: '1.5rem' }],
-        lg: ['1.0625rem', { lineHeight: '1.625rem' }],
-        xl: ['1.1875rem', { lineHeight: '1.625rem', letterSpacing: '-0.005em' }],
-        '2xl': ['1.375rem', { lineHeight: '1.75rem', letterSpacing: '-0.01em' }],
-        '3xl': ['1.6875rem', { lineHeight: '2rem', letterSpacing: '-0.015em' }],
-        '4xl': ['2.125rem', { lineHeight: '2.375rem', letterSpacing: '-0.015em' }],
-        '5xl': ['2.625rem', { lineHeight: '2.875rem', letterSpacing: '-0.015em' }],
-        '6xl': ['3.25rem', { lineHeight: '3.375rem', letterSpacing: '-0.02em' }],
-        '7xl': ['3.875rem', { lineHeight: '3.875rem', letterSpacing: '-0.02em' }],
-      },
+      // Type scale: read from CSS variables so a scope can swap it. The
+      // public site (:root) keeps MasmasIT's own scale — xs lifts to 13px,
+      // base is 15px, sizes above 2xl grow slower and carry a little negative
+      // tracking; internal pages (.dashboard-page) use Tailwind's stock scale,
+      // as Pixel does. Values live in shared/styles/globals.css.
+      fontSize: Object.fromEntries(
+        ['xs', 'sm', 'base', 'lg', 'xl', '2xl', '3xl', '4xl', '5xl', '6xl', '7xl'].map((k) => [
+          k,
+          [`var(--text-${k})`, { lineHeight: `var(--text-${k}-lh)`, letterSpacing: `var(--text-${k}-ls)` }],
+        ])
+      ) as Record<string, [string, { lineHeight: string; letterSpacing: string }]>,
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
         'gradient-conic':
@@ -43,6 +37,9 @@ const config: Config = {
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',
+        xl: 'var(--radius-xl)',
+        '2xl': 'var(--radius-2xl)',
+        '3xl': 'var(--radius-3xl)',
       },
       colors: {
         background: 'hsl(var(--background))',

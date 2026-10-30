@@ -4,6 +4,7 @@ import { Award, Users } from 'lucide-react';
 
 import { useLang } from '@/components/language-provider';
 import { LoadData } from '@/components/load-data';
+import { MobileCard, MobileCardList } from '@/components/mobile-card';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -45,6 +46,29 @@ export function CoachParticipants({
     unpaid: t('Unpaid', 'Belum bayar'),
   };
 
+  const paymentBadge = (p: CoachParticipantsItem) =>
+    isFree ? (
+      <Badge variant="secondary" className="text-xs">{t('Free', 'Gratis')}</Badge>
+    ) : (
+      <Badge variant={PAYMENT_VARIANT[p.paymentStatus] ?? 'outline'} className="whitespace-nowrap text-xs">
+        {paymentLabels[p.paymentStatus] ?? p.paymentStatus}
+      </Badge>
+    );
+  const progressBar = (p: CoachParticipantsItem) => (
+    <div className="flex items-center gap-2">
+      <Progress value={p.progress} className="h-1.5 w-16" />
+      <span className="text-xs text-muted-foreground">{p.progress}%</span>
+    </div>
+  );
+  const certificate = (p: CoachParticipantsItem) =>
+    p.certificateIssuedAt ? (
+      <span className="flex items-center gap-1 whitespace-nowrap text-xs text-success">
+        <Award className="h-3.5 w-3.5" /> {p.certificateIssuedAt}
+      </span>
+    ) : (
+      <span className="text-xs text-muted-foreground">—</span>
+    );
+
   return (
     <Card className="glass mb-6">
       <CardHeader>
@@ -65,7 +89,33 @@ export function CoachParticipants({
             errorTitle: t('Could not load participants.', 'Gagal memuat peserta.'),
           }}
         >
-          <div className="overflow-x-auto">
+          <MobileCardList>
+            {participants.map((p) => (
+              <MobileCard
+                key={p.id}
+                name={p.name}
+                title={
+                  <>
+                    <span className="line-clamp-2">{p.name}</span>
+                    {p.email && <span className="block truncate text-xs font-normal text-muted-foreground">{p.email}</span>}
+                  </>
+                }
+                summary={[
+                  { label: t('Payment', 'Pembayaran'), value: paymentBadge(p) },
+                  { label: t('Progress', 'Progres'), value: progressBar(p) },
+                ]}
+                details={[
+                  { label: t('Name', 'Nama'), value: p.name },
+                  ...(p.email ? [{ label: 'Email', value: p.email }] : []),
+                  { label: t('Enrolled', 'Tanggal daftar'), value: p.enrolledAt },
+                  { label: t('Payment', 'Pembayaran'), value: paymentBadge(p) },
+                  { label: t('Progress', 'Progres'), value: progressBar(p) },
+                  { label: t('Certificate', 'Sertifikat'), value: certificate(p) },
+                ]}
+              />
+            ))}
+          </MobileCardList>
+          <div className="hidden overflow-x-auto md:block">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -84,30 +134,9 @@ export function CoachParticipants({
                       {p.email && <p className="text-xs text-muted-foreground">{p.email}</p>}
                     </TableCell>
                     <TableCell className="whitespace-nowrap text-sm">{p.enrolledAt}</TableCell>
-                    <TableCell>
-                      {isFree ? (
-                        <Badge variant="secondary" className="text-xs">{t('Free', 'Gratis')}</Badge>
-                      ) : (
-                        <Badge variant={PAYMENT_VARIANT[p.paymentStatus] ?? 'outline'} className="whitespace-nowrap text-xs">
-                          {paymentLabels[p.paymentStatus] ?? p.paymentStatus}
-                        </Badge>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Progress value={p.progress} className="h-1.5 w-16" />
-                        <span className="text-xs text-muted-foreground">{p.progress}%</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {p.certificateIssuedAt ? (
-                        <span className="flex items-center gap-1 whitespace-nowrap text-xs text-success">
-                          <Award className="h-3.5 w-3.5" /> {p.certificateIssuedAt}
-                        </span>
-                      ) : (
-                        <span className="text-xs text-muted-foreground">—</span>
-                      )}
-                    </TableCell>
+                    <TableCell>{paymentBadge(p)}</TableCell>
+                    <TableCell>{progressBar(p)}</TableCell>
+                    <TableCell>{certificate(p)}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

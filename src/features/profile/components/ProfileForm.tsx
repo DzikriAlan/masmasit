@@ -193,7 +193,7 @@ export default function ProfileForm() {
 
   return (
     <AppShell>
-      <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6 lg:px-8">
+      <div className="page-container mx-auto max-w-2xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs font-medium text-primary">
           <span className="h-1.5 w-1.5 animate-pulse-soft rounded-full bg-primary" />
           {t('Settings', 'Pengaturan')}

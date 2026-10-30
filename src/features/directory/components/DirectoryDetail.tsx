@@ -46,7 +46,7 @@ export default function DirectoryDetail() {
 
   return (
     <AppShell>
-      <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
+      <div className="page-container mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Header Card */}
         <Card className="glass mb-6">
           <CardContent className="p-6 sm:p-8">

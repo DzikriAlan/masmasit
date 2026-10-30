@@ -4,6 +4,7 @@ import { Download, Users } from 'lucide-react';
 
 import { useLang } from '@/components/language-provider';
 import { LoadData } from '@/components/load-data';
+import { MobileCard, MobileCardList } from '@/components/mobile-card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -41,6 +42,15 @@ export function EventsAttendees({
 }>) {
   const { t } = useLang();
 
+  const paymentBadge = (a: EventsAttendeesItem) =>
+    isPaidEvent ? (
+      <Badge variant={PAYMENT_VARIANT[a.paymentStatus] ?? 'outline'} className="whitespace-nowrap text-xs">
+        {a.paymentLabel}
+      </Badge>
+    ) : (
+      <Badge variant="secondary" className="text-xs">{t('Free', 'Gratis')}</Badge>
+    );
+
   return (
     <Card className="mt-6">
       <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-3">
@@ -66,7 +76,25 @@ export function EventsAttendees({
             errorTitle: t('Could not load attendees.', 'Gagal memuat peserta.'),
           }}
         >
-          <div className="overflow-x-auto">
+          <MobileCardList>
+            {attendees.map((a) => (
+              <MobileCard
+                key={a.id}
+                name={a.name}
+                summary={[
+                  { label: t('Payment', 'Pembayaran'), value: paymentBadge(a) },
+                  { label: t('Registered', 'Terdaftar'), value: a.registeredAt },
+                ]}
+                details={[
+                  { label: t('Name', 'Nama'), value: a.name },
+                  { label: 'Email', value: a.email },
+                  { label: t('Payment', 'Pembayaran'), value: paymentBadge(a) },
+                  { label: t('Registered', 'Terdaftar'), value: a.registeredAt },
+                ]}
+              />
+            ))}
+          </MobileCardList>
+          <div className="hidden overflow-x-auto md:block">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -81,15 +109,7 @@ export function EventsAttendees({
                   <TableRow key={a.id}>
                     <TableCell className="font-medium">{a.name}</TableCell>
                     <TableCell className="text-sm text-muted-foreground">{a.email}</TableCell>
-                    <TableCell>
-                      {isPaidEvent ? (
-                        <Badge variant={PAYMENT_VARIANT[a.paymentStatus] ?? 'outline'} className="whitespace-nowrap text-xs">
-                          {a.paymentLabel}
-                        </Badge>
-                      ) : (
-                        <Badge variant="secondary" className="text-xs">{t('Free', 'Gratis')}</Badge>
-                      )}
-                    </TableCell>
+                    <TableCell>{paymentBadge(a)}</TableCell>
                     <TableCell className="whitespace-nowrap text-sm">{a.registeredAt}</TableCell>
                   </TableRow>
                 ))}

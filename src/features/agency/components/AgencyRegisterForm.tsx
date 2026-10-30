@@ -65,7 +65,7 @@ export default function AgencyRegisterForm() {
   return (
     <AppShell>
       <PageDecor>
-        <div className="mx-auto max-w-lg px-4 py-12 sm:px-6 sm:py-16">
+        <div className="page-container mx-auto max-w-lg px-4 py-12 sm:px-6 sm:py-16">
           <Card className="glass">
             <CardHeader>
               <div className="mb-2 flex items-center gap-2 text-primary">

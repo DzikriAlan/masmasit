@@ -2,7 +2,7 @@ import '@/shared/styles/globals.css';
 // Self-hosted via npm instead of next/font/google — the latter fetches font
 // files from fonts.gstatic.com at compile time, which hangs indefinitely on
 // networks that block that host (seen in dev: endless "Retrying 1/3...").
-// Two faces, both variable:
+// Three faces, all variable:
 // - Golos Text (text/UI): drawn for interfaces — large x-height, compact
 //   width, tabular figures — so dense cards and navigation stay legible at
 //   13–15px.
@@ -11,6 +11,9 @@ import '@/shared/styles/globals.css';
 //   titles at 600–700 without needing extra weight or tracking.
 import '@fontsource-variable/golos-text';
 import '@fontsource-variable/familjen-grotesk';
+// - Inter (internal pages): the dashboard shell's text and headings, matching
+//   Pixel; scoped by `.dashboard-page` in globals.css.
+import '@fontsource-variable/inter';
 // Wordmark face only — Plus Jakarta Sans, by Indonesian foundry Tokotype.
 import '@fontsource/plus-jakarta-sans/800.css';
 import type { Metadata } from 'next';

@@ -115,7 +115,7 @@ export default function TalentBooking() {
 
   return (
     <AppShell>
-      <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6 lg:px-8">
+      <div className="page-container mx-auto max-w-2xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-4 flex items-center justify-between gap-2">
           <Button variant="ghost" onClick={() => router.back()} className="gap-2"><ArrowLeft className="h-4 w-4" /> {t('Back', 'Kembali')}</Button>
           <ShareButton
