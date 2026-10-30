@@ -116,13 +116,6 @@ const liveActivityLabels = [
   { en: 'Talent bookings this month', id: 'Booking talent bulan ini' },
 ];
 
-/* Turns the activity FOMO into a next step, one per audience. */
-const joinActions = [
-  { href: '/app/jobs/post', tone: 'blue' as Tone, forEn: 'For companies', forId: 'Untuk perusahaan', en: 'Post a job', id: 'Pasang lowongan', subEn: 'Reach vetted IT talent in days.', subId: 'Jangkau talent IT terverifikasi dalam hitungan hari.' },
-  { href: '/app/services', tone: 'amber' as Tone, forEn: 'For agencies & freelancers', forId: 'Untuk agency & freelancer', en: 'Offer your services', id: 'Tawarkan layanan', subEn: 'Get discovered by companies that need you.', subId: 'Ditemukan perusahaan yang butuh keahlianmu.' },
-  { href: '/register', tone: 'orange' as Tone, forEn: 'For IT professionals', forId: 'Untuk praktisi IT', en: 'Build your profile', id: 'Buat profil', subEn: 'Show real work, get booked.', subId: 'Tunjukkan karya nyata, dapatkan booking.' },
-];
-
 const testimonials = [
   { textEn: 'Every interaction feels intentional. This platform gave me clarity I’d been searching for since I started freelancing — from finding real clients to actually getting paid on time, every single step just makes sense.', textId: 'Setiap interaksi terasa intentional. Platform ini memberi kejelasan yang saya cari sejak mulai freelance — mulai dari menemukan klien sungguhan sampai dibayar tepat waktu, semuanya terasa masuk akal.', author: 'Rizky Pratama', role: 'Backend Dev · Jakarta', photo: px('5308640', 200, 200), photoTall: px('5308640', 480, 640) },
   { textEn: 'It goes beyond functionality — it offers direction. The authenticity is unmatched, and honestly it changed how I hire. I used to post jobs on five different sites; now I only need one place to find people who actually fit.', textId: 'Melampaui fungsionalitas — ia memberi arah. Keasliannya tak tertandingi, dan sejujurnya ini mengubah cara saya merekrut. Dulu saya posting lowongan di lima situs berbeda, sekarang cukup satu tempat untuk menemukan orang yang benar-benar cocok.', author: 'Sarah Wijaya', role: 'Founder · Bandung', photo: px('7752820', 200, 200), photoTall: px('7752820', 480, 640) },
@@ -1006,88 +999,64 @@ export default function HomePage() {
               cta={t('See all activity', 'Lihat semua aktivitas')}
             />
 
-            <div className="grid gap-4 lg:grid-cols-6">
-              <div className="wash wash-teal flex flex-col overflow-hidden rounded-xl lg:col-span-4">
-                <div className="flex items-center justify-between gap-3 border-b border-white/15 px-5 py-3.5">
-                  <span className="flex items-center gap-2 eyebrow text-muted-foreground">
-                    <span className="relative flex h-2 w-2">
-                      <span className="absolute inset-0 animate-ping rounded-full bg-white/60" />
-                      <span className="relative h-2 w-2 rounded-full bg-white" />
-                    </span>
-                    Live
+            <div className="wash-neutral flex flex-col overflow-hidden rounded-xl">
+              <div className="flex items-center justify-between gap-3 border-b border-foreground/10 px-5 py-3.5">
+                <span className="flex items-center gap-2 eyebrow text-muted-foreground">
+                  <span className="relative flex h-2 w-2">
+                    <span className="absolute inset-0 animate-ping rounded-full bg-eco-green/60" />
+                    <span className="relative h-2 w-2 rounded-full bg-eco-green" />
                   </span>
-                  <span className="text-xs text-muted-foreground">{t('Updated in real time', 'Diperbarui real time')}</span>
-                </div>
-
-                {showLiveStats && live && (
-                  <div className="grid grid-cols-2 gap-px border-b border-white/15 bg-white/15 sm:grid-cols-4">
-                    {liveActivityLabels.map((a, i) => (
-                      <div key={a.en} className="bg-black/10 px-5 py-4">
-                        <p className="tnum font-display text-2xl font-semibold">{live[i].toLocaleString('id-ID')}</p>
-                        <p className="mt-0.5 truncate text-xs text-muted-foreground">{t(a.en, a.id)}</p>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {activityFeed.length === 0 ? (
-                  <div className="flex h-[340px] flex-col items-center justify-center gap-2 px-6 text-center sm:h-[380px]">
-                    <p className="text-sm font-medium">
-                      {fetchFeedHome.isPending ? t('Loading activity…', 'Memuat aktivitas…') : t('Quiet for the moment.', 'Sedang sepi untuk saat ini.')}
-                    </p>
-                    {!fetchFeedHome.isPending && (
-                      <p className="text-xs text-muted-foreground">
-                        {t('New jobs, projects, builds and events show up here as they are posted.', 'Lowongan, proyek, build, dan event baru muncul di sini begitu diposting.')}
-                      </p>
-                    )}
-                  </div>
-                ) : (
-                <div className="group marquee-fade-y relative h-[340px] overflow-hidden sm:h-[380px]">
-                  <ul className="animate-marquee-y group-hover:[animation-play-state:paused]">
-                    {[...activityFeed, ...activityFeed].map((a, idx) => (
-                      <li key={`${a.id}-${idx}`} aria-hidden={idx >= activityFeed.length} className="border-b border-white/15">
-                        <Link href={a.href} tabIndex={idx >= activityFeed.length ? -1 : undefined} className="flex items-center gap-3.5 px-5 py-3.5 transition-colors hover:bg-black/10">
-                          {a.avatar ? (
-                            <img src={a.avatar} alt="" loading="lazy" className="h-9 w-9 shrink-0 rounded-full border-2 border-white/30 object-cover" />
-                          ) : (
-                            <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-xs font-semibold ${tones[a.tone].text}`}>
-                              {initials(a.who)}
-                            </span>
-                          )}
-                          <p className="min-w-0 flex-1 text-sm leading-snug text-muted-foreground">
-                            <span className="font-medium text-foreground">{a.who}</span> {a.verb}{' '}
-                            <span className="font-medium text-foreground">{a.what}</span>
-                          </p>
-                          <span className="tnum shrink-0 text-xs text-muted-foreground">{a.time}</span>
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                )}
+                  Live
+                </span>
+                <span className="text-xs text-muted-foreground">{t('Updated in real time', 'Diperbarui real time')}</span>
               </div>
 
-              <div className="wash wash-orange flex flex-col rounded-xl p-5 lg:col-span-2">
-                <p className="font-display text-xl leading-snug tracking-tight text-balance sm:text-2xl">
-                  <span className="font-normal text-muted-foreground">{t('Your move next,', 'Giliranmu berikutnya,')} </span>
-                  <span className="font-bold text-foreground">{t('start in a minute.', 'mulai dalam semenit.')}</span>
-                </p>
-                <div className="mt-5 flex flex-1 flex-col gap-2.5">
-                  {joinActions.map((a) => (
-                    <Link
-                      key={a.href}
-                      href={a.href}
-                      className="wash-deep group flex flex-1 items-center gap-3.5 rounded-lg p-3.5 transition-transform duration-200 hover:-translate-y-0.5"
-                    >
-                      <span className="min-w-0 flex-1">
-                        <span className="block eyebrow text-white/75">{t(a.forEn, a.forId)}</span>
-                        <span className="mt-1 block text-sm font-medium">{t(a.en, a.id)}</span>
-                        <span className="block text-xs leading-snug text-muted-foreground">{t(a.subEn, a.subId)}</span>
-                      </span>
-                    </Link>
+              {showLiveStats && live && (
+                <div className="grid grid-cols-2 gap-px border-b border-foreground/10 bg-foreground/10 sm:grid-cols-4">
+                  {liveActivityLabels.map((a, i) => (
+                    <div key={a.en} className="bg-white px-5 py-4">
+                      <p className="tnum font-display text-2xl font-semibold">{live[i].toLocaleString('id-ID')}</p>
+                      <p className="mt-0.5 truncate text-xs text-muted-foreground">{t(a.en, a.id)}</p>
+                    </div>
                   ))}
                 </div>
+              )}
+
+              {activityFeed.length === 0 ? (
+                <div className="flex h-[340px] flex-col items-center justify-center gap-2 px-6 text-center sm:h-[380px]">
+                  <p className="text-sm font-medium">
+                    {fetchFeedHome.isPending ? t('Loading activity…', 'Memuat aktivitas…') : t('Quiet for the moment.', 'Sedang sepi untuk saat ini.')}
+                  </p>
+                  {!fetchFeedHome.isPending && (
+                    <p className="text-xs text-muted-foreground">
+                      {t('New jobs, projects, builds and events show up here as they are posted.', 'Lowongan, proyek, build, dan event baru muncul di sini begitu diposting.')}
+                    </p>
+                  )}
+                </div>
+              ) : (
+              <div className="group marquee-fade-y relative h-[340px] overflow-hidden sm:h-[380px]">
+                <ul className="animate-marquee-y group-hover:[animation-play-state:paused]">
+                  {[...activityFeed, ...activityFeed].map((a, idx) => (
+                    <li key={`${a.id}-${idx}`} aria-hidden={idx >= activityFeed.length} className="border-b border-foreground/10">
+                      <Link href={a.href} tabIndex={idx >= activityFeed.length ? -1 : undefined} className="flex items-center gap-3.5 px-5 py-3.5 transition-colors hover:bg-foreground/[0.04]">
+                        {a.avatar ? (
+                          <img src={a.avatar} alt="" loading="lazy" className="h-9 w-9 shrink-0 rounded-full border-2 border-white object-cover" />
+                        ) : (
+                          <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-xs font-semibold ${tones[a.tone].text}`}>
+                            {initials(a.who)}
+                          </span>
+                        )}
+                        <p className="min-w-0 flex-1 text-sm leading-snug text-muted-foreground">
+                          <span className="font-medium text-foreground">{a.who}</span> {a.verb}{' '}
+                          <span className="font-medium text-foreground">{a.what}</span>
+                        </p>
+                        <span className="tnum shrink-0 text-xs text-muted-foreground">{a.time}</span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
               </div>
+              )}
             </div>
           </div>
         </section>
