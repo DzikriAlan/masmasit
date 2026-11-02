@@ -25,6 +25,7 @@ import {
   getAdminAuditLogs,
   getAdminUserActivity,
   getAdminOnboarding,
+  getAdminPlatformUsage,
   getAdminCaseStudies,
   getAdminTeamCollabs,
   getAdminRoleDistribution,
@@ -294,6 +295,16 @@ export const useAdminUserActivityControllers = (enabled: boolean) => {
   });
 
   return { fetchAdminUserActivity };
+};
+
+export const useAdminPlatformUsageControllers = (enabled: boolean) => {
+  const fetchAdminPlatformUsage = useQuery({
+    queryKey: ['adminPlatformUsage'],
+    queryFn: async () => unwrapApiResponse(await getAdminPlatformUsage()) ?? null,
+    enabled,
+  });
+
+  return { fetchAdminPlatformUsage };
 };
 
 export const useAdminOnboardingControllers = (enabled: boolean) => {

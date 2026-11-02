@@ -25,6 +25,7 @@ import AdminAuditLog from '@/features/admin/components/AdminAuditLog';
 import AdminUserActivity from '@/features/admin/components/AdminUserActivity';
 import AdminCatalog from '@/features/admin/components/AdminCatalog';
 import AdminOnboarding from '@/features/admin/components/AdminOnboarding';
+import AdminPlatformLimits from '@/features/admin/components/AdminPlatformLimits';
 import AdminReferralSources from '@/features/admin/components/AdminReferralSources';
 import AdminModeration from '@/features/admin/components/AdminModeration';
 import AdminApplications from '@/features/admin/components/AdminApplications';
@@ -300,6 +301,7 @@ export default function AdminDashboard() {
             <TabsTrigger value="catalog">{t('Catalog', 'Katalog')}</TabsTrigger>
             <TabsTrigger value="roles">{t('Roles', 'Peran')}</TabsTrigger>
             <TabsTrigger value="audit">{t('Audit Log', 'Catatan Audit')}</TabsTrigger>
+            {roles.includes('super_admin') && <TabsTrigger value="limits">{t('Service Limits', 'Batas Layanan')}</TabsTrigger>}
           </TabsList>
 
           {/* Approvals */}
@@ -676,6 +678,12 @@ export default function AdminDashboard() {
           <TabsContent value="onboarding">
             <AdminOnboarding enabled={authChecked} />
           </TabsContent>
+
+          {roles.includes('super_admin') && (
+            <TabsContent value="limits">
+              <AdminPlatformLimits enabled={authChecked} />
+            </TabsContent>
+          )}
 
           <TabsContent value="audit">
             <AdminAuditLog enabled={authChecked} />

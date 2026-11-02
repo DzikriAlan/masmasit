@@ -315,6 +315,16 @@ export interface DataAdminUserActivity {
 }
 
 /** One row per member from GET /admin/onboarding. */
+export interface DataAdminPlatformUsage {
+  database_bytes: number;
+  storage_bytes: number;
+  total_users: number;
+  monthly_active_users: number;
+  emails_last_hour: number;
+  emails_today: number;
+  emails_this_month: number;
+}
+
 export interface DataAdminOnboarding {
   id: string;
   full_name: string | null;

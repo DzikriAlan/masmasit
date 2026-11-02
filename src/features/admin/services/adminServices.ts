@@ -19,6 +19,7 @@ import type {
   DataAdminAuditLog,
   DataAdminCaseStudy,
   DataAdminOnboarding,
+  DataAdminPlatformUsage,
   DataAdminModeration,
   DataAdminPayments,
   DataAdminSettings,
@@ -242,6 +243,10 @@ export const getAdminAuditLogs = async () => {
 
 export const getAdminUserActivity = async () => {
   return apiGet<DataAdminUserActivity[]>('/admin/user-activity');
+};
+
+export const getAdminPlatformUsage = async () => {
+  return apiGet<DataAdminPlatformUsage | null>('/admin/platform-usage');
 };
 
 export const getAdminOnboarding = async () => {

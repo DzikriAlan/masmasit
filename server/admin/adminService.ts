@@ -238,6 +238,12 @@ export const getAdminUserActivity = async () => {
   return supabase.rpc('admin_user_activity');
 };
 
+/** Free-plan usage totals (migration 037). The function re-checks is_super_admin(). */
+export const getAdminPlatformUsage = async () => {
+  const supabase = getServerSupabase();
+  return supabase.rpc('admin_platform_usage');
+};
+
 /**
  * Onboarding popup answers per member (migration 025). profiles and
  * user_skills are readable by any signed-in user, so no RPC is needed.
