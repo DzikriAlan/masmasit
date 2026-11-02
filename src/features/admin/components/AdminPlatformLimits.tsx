@@ -114,7 +114,7 @@ export default function AdminPlatformLimits({ enabled }: Readonly<{ enabled: boo
         )}
 
         {!isPending && !isError && !usage && (
-          <p className="rounded-lg border border-warning/50 bg-warning/10 p-3 text-sm">
+          <p className="rounded-lg border border-warning/50 bg-warning/10 p-3 text-sm [overflow-wrap:anywhere]">
             {t(
               'Usage numbers need one setup step: run supabase/run/09_ADMIN_PLATFORM_USAGE.sql in the Supabase SQL Editor.',
               'Angka pemakaian butuh satu langkah: jalankan supabase/run/09_ADMIN_PLATFORM_USAGE.sql di Supabase SQL Editor.'
