@@ -130,7 +130,7 @@ export default function AdminPlatformLimits({ enabled }: Readonly<{ enabled: boo
           <div className="grid gap-3 md:grid-cols-2">
             <LimitMeter
               label={t('Emails today', 'Email hari ini')}
-              hint={t('Resets at 00:00 UTC (07:00 WIB).', 'Reset pukul 00.00 UTC (07.00 WIB).')}
+              hint={t('Resend resets at 00:00 UTC (07:00 WIB). Its number is the exact one.', 'Resend reset pukul 00.00 UTC (07.00 WIB). Angka pastinya ada di Resend.')}
               used={pick(usage, 'emails_today')}
               limit={100}
               format={formatCount}
@@ -138,7 +138,7 @@ export default function AdminPlatformLimits({ enabled }: Readonly<{ enabled: boo
             />
             <LimitMeter
               label={t('Emails this month', 'Email bulan ini')}
-              hint={t('Sign-up and password emails only. Repeats to one person count once.', 'Hanya email daftar dan password. Kiriman berulang ke orang yang sama terhitung sekali.')}
+              hint={t('From sign-up and password emails, so it can be higher or lower than Resend. Resend has the exact number.', 'Dihitung dari email daftar dan password, jadi bisa lebih tinggi atau lebih rendah dari Resend. Angka pasti ada di Resend.')}
               used={pick(usage, 'emails_this_month')}
               limit={3000}
               format={formatCount}

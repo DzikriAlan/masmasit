@@ -4,9 +4,9 @@
 -- Hanya membaca angka agregat dari database, tidak mengubah data apa pun dan
 -- tidak mengembalikan email atau identitas user. Khusus super_admin.
 --
--- emails_* adalah PERKIRAAN BATAS BAWAH: auth.users hanya menyimpan waktu
--- kirim terakhir per jenis email, jadi kiriman berulang ke user yang sama
--- terhitung sekali. Angka pasti ada di dashboard Resend.
+-- emails_* adalah PERKIRAAN, bisa lebih tinggi atau lebih rendah dari Resend:
+-- auth.users hanya menyimpan waktu kirim terakhir per jenis email, dan juga
+-- mencatat email yang tidak lewat Resend. Angka pasti ada di dashboard Resend.
 --
 -- Aman dijalankan ulang. Jalankan di Supabase > SQL Editor.
 -- =========================================================================
