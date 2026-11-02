@@ -7,6 +7,7 @@ import { Check, Copy, MessageCircle, Mail, ArrowUpRight } from 'lucide-react';
 import { AppShell } from '@/components/app-shell';
 import { PageHeader } from '@/components/page-header';
 import { useLang } from '@/components/language-provider';
+import { useAuth } from '@/components/auth-provider';
 import { Button } from '@/components/ui/button';
 import { CONTACT_EMAIL, waLink } from '@/shared/lib/external';
 import { toneOf } from '@/shared/lib/tones';
@@ -21,6 +22,7 @@ import { cn } from '@/shared/lib/utils';
  */
 export default function ContactList() {
   const { t } = useLang();
+  const { user } = useAuth();
   const [filters, setFilters] = useState({ isEmailCopied: false });
 
   const data = useMemo(() => {
@@ -119,9 +121,11 @@ export default function ContactList() {
             <Link href="/app/services">
               <Button variant="outline" size="sm">{t('Request a project', 'Minta proyek')}</Button>
             </Link>
-            <Link href="/register">
-              <Button variant="outline" size="sm">{t('Join as a member', 'Gabung jadi member')}</Button>
-            </Link>
+            {!user && (
+              <Link href="/register">
+                <Button variant="outline" size="sm">{t('Join as a member', 'Gabung jadi member')}</Button>
+              </Link>
+            )}
           </div>
         </section>
       </div>
