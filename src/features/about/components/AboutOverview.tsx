@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { AppShell } from '@/components/app-shell';
 import { PageDecor } from '@/components/page-decor';
 import { useLang } from '@/components/language-provider';
+import { useAuth } from '@/components/auth-provider';
 import { Button } from '@/components/ui/button';
 
 /**
@@ -107,6 +108,7 @@ const hiringRoutes: { route: Bilingual; source: Bilingual; discovery: Bilingual 
 
 export default function AboutOverview() {
   const { t } = useLang();
+  const { user } = useAuth();
   const [photoFailed, setPhotoFailed] = useState(false);
 
   return (
@@ -274,11 +276,13 @@ export default function AboutOverview() {
           </section>
 
           <div className="mt-14 flex flex-col items-stretch gap-3 border-t border-border pt-8 sm:flex-row sm:items-center">
-            <Link href="/register" className="w-full sm:w-auto">
-              <Button size="lg" className="h-11 w-full rounded-full px-6 text-base font-semibold shadow-sm sm:w-auto">
-                {t('Get Started', 'Daftar')}
-              </Button>
-            </Link>
+            {!user && (
+              <Link href="/register" className="w-full sm:w-auto">
+                <Button size="lg" className="h-11 w-full rounded-full px-6 text-base font-semibold shadow-sm sm:w-auto">
+                  {t('Get Started', 'Daftar')}
+                </Button>
+              </Link>
+            )}
             <Link href="/app/discover" className="w-full sm:w-auto">
               <Button size="lg" variant="outline" className="h-11 w-full rounded-full px-6 text-base font-semibold sm:w-auto">
                 {t('Read Discover', 'Baca Discover')}

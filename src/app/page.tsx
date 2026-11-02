@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { AppShell } from '@/components/app-shell';
 import { PageDecor } from '@/components/page-decor';
 import { useLang } from '@/components/language-provider';
+import { useAuth } from '@/components/auth-provider';
 import { supabase } from '@/shared/lib/supabase';
 import { CONTACT_EMAIL, waLink } from '@/shared/lib/external';
 import { useFeedHomeControllers } from '@/features/feed/controllers/feedControllers';
@@ -706,6 +707,7 @@ function TestimonialMarquee() {
 
 export default function HomePage() {
   const { t } = useLang();
+  const { user } = useAuth();
   const { fetchFeedHome, fetchFeedCourses, fetchFeedEvents } = useFeedHomeControllers();
   const { verbs, fallbackActors, area, getRelativeTime } = useFeedLabels();
 
@@ -815,9 +817,9 @@ export default function HomePage() {
             </p>
 
             <div className="mt-9 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
-              <Link href="/register" className="w-full sm:w-auto">
+              <Link href={user ? '/app/dashboard' : '/register'} className="w-full sm:w-auto">
                 <Button size="lg" className="btn-gradient h-14 w-full gap-1.5 rounded-full px-7 text-base font-semibold text-white sm:h-11 sm:w-auto sm:text-sm">
-                  {t('Start free', 'Mulai gratis')}
+                  {user ? t('Go to dashboard', 'Buka dashboard') : t('Start free', 'Mulai gratis')}
                 </Button>
               </Link>
               <Link href="/app/talents" className="w-full sm:w-auto">
@@ -975,11 +977,13 @@ export default function HomePage() {
                 'Ratusan praktisi IT Indonesia sudah membangun karier dan bisnis mereka bersama MasmasIT.'
               )}
             </p>
-            <Link href="/register" className="mt-8 inline-block">
-              <Button size="lg" className="gap-1.5 rounded-full px-8">
-                {t('Join now', 'Gabung sekarang')}
-              </Button>
-            </Link>
+            {!user && (
+              <Link href="/register" className="mt-8 inline-block">
+                <Button size="lg" className="gap-1.5 rounded-full px-8">
+                  {t('Join now', 'Gabung sekarang')}
+                </Button>
+              </Link>
+            )}
           </div>
 
           <div className="mt-14 sm:mt-16">
@@ -1081,7 +1085,7 @@ export default function HomePage() {
           <div className="relative mx-auto grid max-w-7xl items-center gap-10 px-4 py-14 sm:px-6 sm:py-16 md:grid-cols-[1.1fr_0.9fr] md:gap-10 lg:gap-16 lg:px-8">
             <div className="text-center md:text-left">
               <h2 className="font-display text-4xl font-bold leading-[1.05] text-balance sm:text-5xl">
-                {t('Ready to join?', 'Siap bergabung?')}
+                {user ? t('Need a hand?', 'Butuh bantuan?') : t('Ready to join?', 'Siap bergabung?')}
               </h2>
               <p className="mx-auto mt-4 max-w-md text-base leading-relaxed text-muted-foreground text-pretty md:mx-0">
                 {t(
@@ -1089,16 +1093,16 @@ export default function HomePage() {
                   'Baik merekrut, menawarkan layanan, atau mengembangkan karier — kami di sini.'
                 )}
               </p>
-              <Link href="/register" className="mx-auto mt-7 block w-full sm:w-fit md:mx-0">
+              <Link href={user ? '/app/dashboard' : '/register'} className="mx-auto mt-7 block w-full sm:w-fit md:mx-0">
                 <Button size="lg" className="btn-gradient h-14 w-full gap-1.5 rounded-full px-8 text-base font-semibold text-white sm:h-12 sm:w-auto">
-                  {t('Join now — it’s free', 'Gabung sekarang — gratis')}
+                  {user ? t('Go to dashboard', 'Buka dashboard') : t('Join now — it’s free', 'Gabung sekarang — gratis')}
                 </Button>
               </Link>
             </div>
 
             <div>
               <p className="mb-3 text-center eyebrow text-muted-foreground md:text-left">
-                {t('Prefer to talk first?', 'Mau ngobrol dulu?')}
+                {user ? t('Talk to us', 'Hubungi kami') : t('Prefer to talk first?', 'Mau ngobrol dulu?')}
               </p>
               <div className="grid gap-px overflow-hidden rounded-lg border border-border bg-border">
                 <a href={waLink(t("Hi MasmasIT, I'd like to know more.", 'Halo MasmasIT, saya ingin tahu lebih lanjut.'))} target="_blank" rel="noreferrer" className="group flex items-center gap-3 bg-card p-4 transition-colors hover:bg-secondary">
