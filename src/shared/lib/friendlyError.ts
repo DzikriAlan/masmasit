@@ -24,21 +24,22 @@ const RULES: Rule[] = [
   { match: /email not confirmed|email_not_confirmed/, en: 'Your email is not verified yet. Check your inbox for the verification link.', id: 'Email Anda belum diverifikasi. Cek inbox untuk link verifikasi.' },
   { match: /already (been )?registered|user_already_exists|email_exists/, en: 'This email is already registered. Sign in, or reset your password if you forgot it.', id: 'Email ini sudah terdaftar. Silakan masuk, atau reset kata sandi jika lupa.' },
   { match: /should be different from the old|same_password/, en: 'Your new password must be different from the old one.', id: 'Kata sandi baru harus berbeda dari yang lama.' },
-  { match: /password should (be|contain)|weak_password|weak password/, en: 'That password is too weak. Use at least 6 characters, mixing letters and numbers.', id: 'Kata sandi terlalu lemah. Gunakan minimal 6 karakter, campuran huruf dan angka.' },
+  { match: /password should (be|contain)|weak_password|weak password/, en: 'That password is too weak. Try a longer one with a mix of letters and numbers.', id: 'Kata sandi terlalu lemah. Coba yang lebih panjang dengan campuran huruf dan angka.' },
   { match: /unable to validate email|invalid email|email address .*invalid|email_address_invalid|invalid format/, en: 'That email address doesn\'t look right.', id: 'Alamat email sepertinya tidak valid.' },
   { match: /signups? not allowed|signup_disabled/, en: 'Registration is closed for now.', id: 'Pendaftaran sedang ditutup.' },
   { match: /user is banned|user_banned|is_suspended/, en: 'Your account is suspended. Please contact the MasmasIT team.', id: 'Akun Anda ditangguhkan. Silakan hubungi tim MasmasIT.' },
   { match: /access_denied|cancelled by the user|user denied/, en: 'Sign-in was cancelled.', id: 'Proses masuk dibatalkan.' },
   { match: /otp_expired|link is invalid or has expired|token has expired|code verifier|flow state|flow_state|invalid_grant|bad_code_verifier|auth code/, en: 'This link has expired or was opened in a different browser. Request a new one and open it in this browser.', id: 'Link ini sudah kedaluwarsa atau dibuka di browser lain. Minta link baru dan buka di browser ini.' },
+  { match: /for security purposes, you can only request/, en: 'Please wait about a minute before requesting another email.', id: 'Tunggu sekitar 1 menit sebelum meminta email lagi.' },
   // Project-wide quota on outgoing auth email, not this member's own attempts: retrying soon won't help.
-  { match: EMAIL_QUOTA, en: 'We can\'t send email right now because our sending limit was reached. Please try again in about an hour.', id: 'Email belum bisa dikirim karena batas pengiriman kami tercapai. Silakan coba lagi sekitar 1 jam lagi.' },
+  { match: EMAIL_QUOTA, en: 'Our email sending limit has been reached, so we can\'t send it right now. Please try again later.', id: 'Batas pengiriman email kami tercapai, jadi email belum bisa dikirim. Silakan coba lagi nanti.' },
   // The mail provider failed (auth, outage), so nothing the member typed is wrong.
-  { match: /error sending .*email/, en: 'We couldn\'t send the email right now. Please try again in a few minutes.', id: 'Email belum bisa dikirim saat ini. Silakan coba lagi beberapa menit lagi.' },
-  { match: /rate limit|too many requests|over_request_rate_limit|for security purposes, you can only request|\b429\b/, en: 'Too many attempts. Please wait a minute and try again.', id: 'Terlalu banyak percobaan. Tunggu sebentar lalu coba lagi.' },
+  { match: /error sending .*email/, en: 'We couldn\'t send the email. Please try again later.', id: 'Email gagal dikirim. Silakan coba lagi nanti.' },
+  { match: /rate limit|too many requests|over_request_rate_limit|\b429\b/, en: 'Too many attempts. Please wait a few minutes and try again.', id: 'Terlalu banyak percobaan. Tunggu beberapa menit lalu coba lagi.' },
   { match: /jwt|session (missing|not found|expired)|refresh token|not authenticated|must be signed in|missing user|no user|^unauthorized/, en: 'Your session has ended. Please sign in again.', id: 'Sesi Anda sudah berakhir. Silakan masuk lagi.' },
 
   // Network
-  { match: /failed to fetch|networkerror|network error|load failed|fetch failed|err_network|err_internet/, en: 'Can\'t reach the server. Check your internet connection and try again.', id: 'Tidak bisa terhubung ke server. Periksa koneksi internet lalu coba lagi.' },
+  { match: /failed to fetch|networkerror|network error|load failed|fetch failed|err_network|err_internet/, en: 'Can\'t reach the server. Check your internet connection or try again later.', id: 'Tidak bisa terhubung ke server. Periksa koneksi internet atau coba lagi nanti.' },
   { match: /aborted|aborterror|timeout|timed out/, en: 'This is taking too long. Please try again.', id: 'Prosesnya terlalu lama. Silakan coba lagi.' },
 
   // Files

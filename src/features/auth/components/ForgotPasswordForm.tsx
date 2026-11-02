@@ -39,7 +39,8 @@ export default function ForgotPasswordForm() {
     }
     setLoading(false);
     setSent(true);
-    toast.success(t('Reset link sent! Check your email.', 'Link reset dikirim! Cek email Anda.'));
+    // Supabase answers the same for unknown addresses, so success can't promise an email.
+    toast.success(t('Request received. Check your email.', 'Permintaan diterima. Cek email Anda.'));
   };
 
   return (
@@ -63,7 +64,7 @@ export default function ForgotPasswordForm() {
           {sent ? (
             <div className="text-center space-y-4">
               <Mail className="mx-auto h-12 w-12 text-primary" />
-              <p className="text-sm text-muted-foreground">{t('We\'ve sent a password reset link to your email. Check your inbox and follow the instructions.', 'Kami telah mengirim link reset kata sandi ke email Anda. Cek kotak masuk dan ikuti instruksinya.')}</p>
+              <p className="text-sm text-muted-foreground">{t('If this email is registered, we\'ve sent a reset link. Check your inbox and spam folder.', 'Jika email ini terdaftar, link reset sudah kami kirim. Cek inbox dan folder spam.')}</p>
               <Link href="/login"><Button className="w-full">{t('Back to Login', 'Kembali ke Login')}</Button></Link>
             </div>
           ) : (

@@ -46,7 +46,7 @@ export default function RegisterForm() {
     setLoading(false);
     if (error && isEmailQuotaError(error)) {
       // Google sign-up sends no email, so it still works while the quota is spent.
-      toast.error(t('Email sign-up is unavailable right now. Use Continue with Google, or try again in about an hour.', 'Daftar lewat email sedang tidak tersedia. Pakai Lanjut dengan Google, atau coba lagi sekitar 1 jam lagi.'));
+      toast.error(t('Email sign-up is unavailable right now. Use Continue with Google, or try again later.', 'Daftar lewat email sedang tidak tersedia. Pakai Lanjut dengan Google, atau coba lagi nanti.'));
     } else if (error) {
       toast.error(friendlyError(error, t, t('Could not create your account. Please try again.', 'Akun gagal dibuat. Silakan coba lagi.')));
     } else {
