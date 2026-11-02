@@ -102,6 +102,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signUp = async (email: string, password: string, fullName: string) => {
     const { data, error } = await postAuthSignUp(email, password, fullName);
     if (error) return { error: error.message };
+    // With email confirmation on, Supabase answers a taken address with a
+    // success and no identities, and sends nothing. Don't promise an email.
+    if (data.user?.identities?.length === 0) return { error: 'User already registered' };
 
     if (data.user) {
       await postAuthSignUpProfile({ id: data.user.id, email, full_name: fullName });

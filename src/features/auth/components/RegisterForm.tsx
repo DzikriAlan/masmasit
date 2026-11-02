@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { friendlyError } from '@/shared/lib/friendlyError';
+import { friendlyError, isEmailQuotaError } from '@/shared/lib/friendlyError';
 
 export default function RegisterForm() {
   const { signUp, signInWithGoogle } = useAuth();
@@ -44,7 +44,10 @@ export default function RegisterForm() {
     setLoading(true);
     const { error } = await signUp(email, password, fullName);
     setLoading(false);
-    if (error) {
+    if (error && isEmailQuotaError(error)) {
+      // Google sign-up sends no email, so it still works while the quota is spent.
+      toast.error(t('Email sign-up is unavailable right now. Use Continue with Google, or try again in about an hour.', 'Daftar lewat email sedang tidak tersedia. Pakai Lanjut dengan Google, atau coba lagi sekitar 1 jam lagi.'));
+    } else if (error) {
       toast.error(friendlyError(error, t, t('Could not create your account. Please try again.', 'Akun gagal dibuat. Silakan coba lagi.')));
     } else {
       toast.success(t('Account created! Please check your email to verify.', 'Akun dibuat! Silakan cek email untuk verifikasi.'));

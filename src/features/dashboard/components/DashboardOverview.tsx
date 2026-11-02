@@ -22,6 +22,7 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 
 import { useDashboardControllers } from '@/features/dashboard/controllers/dashboardControllers';
+import { friendlyError } from '@/shared/lib/friendlyError';
 import { loginHref } from '@/shared/lib/utils';
 
 const CHART_COLORS = [
@@ -174,7 +175,7 @@ export default function DashboardOverview() {
                 setSendingVerification(true);
                 const { error } = await resendVerification();
                 setSendingVerification(false);
-                if (error) toast.error(t('Failed to send verification', 'Gagal mengirim verifikasi'));
+                if (error) toast.error(friendlyError(error, t, t('Failed to send verification', 'Gagal mengirim verifikasi')));
                 else toast.success(t('Verification email sent!', 'Email verifikasi dikirim!'));
               }}
               className="gap-2 shrink-0"
