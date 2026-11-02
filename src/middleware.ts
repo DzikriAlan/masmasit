@@ -3,6 +3,13 @@ import type { NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 
 const protectedPaths = ['/app/dashboard', '/app/admin', '/app/coach', '/app/pesan', '/app/profile', '/app/onboarding', '/app/activity', '/app/jobs/applicants'];
+const signedOutOnlyPaths = ['/login', '/register'];
+
+// Same-origin paths only; a backslash is rejected because browsers read `/\x` as `//x`.
+const getSignedInLanding = (target: string | null) =>
+  target && target.startsWith('/') && !target.startsWith('//') && !target.includes('\\') && !signedOutOnlyPaths.includes(target.split(/[?#]/)[0])
+    ? target
+    : '/app/dashboard';
 
 export async function middleware(req: NextRequest) {
   const { pathname, searchParams } = req.nextUrl;
@@ -30,7 +37,8 @@ export async function middleware(req: NextRequest) {
   }
 
   const isProtected = protectedPaths.some((p) => pathname === p || pathname.startsWith(p + '/'));
-  if (!isProtected) return NextResponse.next();
+  const isSignedOutOnly = signedOutOnlyPaths.includes(pathname);
+  if (!isProtected && !isSignedOutOnly) return NextResponse.next();
 
   const res = NextResponse.next();
   const supabase = createServerClient(
@@ -44,6 +52,13 @@ export async function middleware(req: NextRequest) {
     }
   );
   const { data: { session } } = await supabase.auth.getSession();
+
+  if (isSignedOutOnly) {
+    if (!session) return res;
+    const landing = NextResponse.redirect(new URL(getSignedInLanding(searchParams.get('redirect')), req.url));
+    res.cookies.getAll().forEach((cookie) => landing.cookies.set(cookie));
+    return landing;
+  }
 
   if (!session) {
     const redirectUrl = new URL('/login', req.url);

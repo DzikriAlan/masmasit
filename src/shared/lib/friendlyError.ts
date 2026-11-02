@@ -12,6 +12,10 @@ type Translate = (en: string, id: string) => string;
 
 type Rule = { match: RegExp; en: string; id: string };
 
+const EMAIL_QUOTA = /over_email_send_rate_limit|email rate limit/;
+
+export const isEmailQuotaError = (message: string) => EMAIL_QUOTA.test(message.toLowerCase());
+
 // First match wins, so the more specific cases sit above the broad ones.
 // Patterns run against "<error code> <message>" in lower case.
 const RULES: Rule[] = [
@@ -21,12 +25,16 @@ const RULES: Rule[] = [
   { match: /already (been )?registered|user_already_exists|email_exists/, en: 'This email is already registered. Sign in, or reset your password if you forgot it.', id: 'Email ini sudah terdaftar. Silakan masuk, atau reset kata sandi jika lupa.' },
   { match: /should be different from the old|same_password/, en: 'Your new password must be different from the old one.', id: 'Kata sandi baru harus berbeda dari yang lama.' },
   { match: /password should (be|contain)|weak_password|weak password/, en: 'That password is too weak. Use at least 6 characters, mixing letters and numbers.', id: 'Kata sandi terlalu lemah. Gunakan minimal 6 karakter, campuran huruf dan angka.' },
-  { match: /unable to validate email|invalid email|email_address_invalid|invalid format/, en: 'That email address doesn\'t look right.', id: 'Alamat email sepertinya tidak valid.' },
+  { match: /unable to validate email|invalid email|email address .*invalid|email_address_invalid|invalid format/, en: 'That email address doesn\'t look right.', id: 'Alamat email sepertinya tidak valid.' },
   { match: /signups? not allowed|signup_disabled/, en: 'Registration is closed for now.', id: 'Pendaftaran sedang ditutup.' },
   { match: /user is banned|user_banned|is_suspended/, en: 'Your account is suspended. Please contact the MasmasIT team.', id: 'Akun Anda ditangguhkan. Silakan hubungi tim MasmasIT.' },
   { match: /access_denied|cancelled by the user|user denied/, en: 'Sign-in was cancelled.', id: 'Proses masuk dibatalkan.' },
   { match: /otp_expired|link is invalid or has expired|token has expired|code verifier|flow state|flow_state|invalid_grant|bad_code_verifier|auth code/, en: 'This link has expired or was opened in a different browser. Request a new one and open it in this browser.', id: 'Link ini sudah kedaluwarsa atau dibuka di browser lain. Minta link baru dan buka di browser ini.' },
-  { match: /rate limit|too many requests|over_request_rate_limit|over_email_send_rate_limit|for security purposes, you can only request|\b429\b/, en: 'Too many attempts. Please wait a minute and try again.', id: 'Terlalu banyak percobaan. Tunggu sebentar lalu coba lagi.' },
+  // Project-wide quota on outgoing auth email, not this member's own attempts: retrying soon won't help.
+  { match: EMAIL_QUOTA, en: 'We can\'t send email right now because our sending limit was reached. Please try again in about an hour.', id: 'Email belum bisa dikirim karena batas pengiriman kami tercapai. Silakan coba lagi sekitar 1 jam lagi.' },
+  // The mail provider failed (auth, outage), so nothing the member typed is wrong.
+  { match: /error sending .*email/, en: 'We couldn\'t send the email right now. Please try again in a few minutes.', id: 'Email belum bisa dikirim saat ini. Silakan coba lagi beberapa menit lagi.' },
+  { match: /rate limit|too many requests|over_request_rate_limit|for security purposes, you can only request|\b429\b/, en: 'Too many attempts. Please wait a minute and try again.', id: 'Terlalu banyak percobaan. Tunggu sebentar lalu coba lagi.' },
   { match: /jwt|session (missing|not found|expired)|refresh token|not authenticated|must be signed in|missing user|no user|^unauthorized/, en: 'Your session has ended. Please sign in again.', id: 'Sesi Anda sudah berakhir. Silakan masuk lagi.' },
 
   // Network
