@@ -6,6 +6,7 @@ import { ClipboardList, Loader2, Search } from 'lucide-react';
 import { useLang } from '@/components/language-provider';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { TableClamp } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { MobileCard, MobileCardList } from '@/components/mobile-card';
@@ -239,7 +240,7 @@ export default function AdminOnboarding({ enabled }: Props) {
                 </thead>
                 <tbody className="divide-y divide-border">
                   {paged.items.map((r) => (
-                    <tr key={r.id} className="align-top transition-colors hover:bg-muted/40">
+                    <tr key={r.id} className="h-[4.5rem] transition-colors hover:bg-muted/40">
                       <td className="sticky left-0 z-10 bg-card py-2.5 pr-4">
                         <div className="flex items-center gap-2.5">
                           <Avatar className="h-7 w-7 shrink-0">
@@ -248,41 +249,49 @@ export default function AdminOnboarding({ enabled }: Props) {
                               {(r.full_name ?? r.email).charAt(0).toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
-                          <div className="min-w-0">
+                          <div className="w-44 min-w-0" title={`${r.full_name ?? r.email}\n${r.email}`}>
                             <p className="truncate font-medium">{r.full_name ?? r.email}</p>
                             <p className="truncate text-xs text-muted-foreground">{r.email}</p>
                           </div>
                         </div>
                       </td>
                       <td className="px-3 py-2.5">
-                        <div className="flex min-w-[8rem] flex-wrap gap-1">
+                        <div
+                          className="flex max-h-[3.25rem] w-48 flex-wrap gap-1 overflow-hidden"
+                          title={r.fields.map((f) => label(ONBOARDING_FIELDS, f)).join(', ')}
+                        >
                           {r.fields.length
-                            ? r.fields.map((f) => (
+                            ? r.fields.slice(0, 2).map((f) => (
                                 <Badge key={f} variant="secondary">
                                   {label(ONBOARDING_FIELDS, f)}
                                 </Badge>
                               ))
                             : '—'}
+                          {r.fields.length > 2 && <Badge variant="outline">+{r.fields.length - 2}</Badge>}
                         </div>
                       </td>
                       <td className="px-3 py-2.5 whitespace-nowrap">{label(ONBOARDING_LEVELS, r.experience_level)}</td>
                       <td className="px-3 py-2.5 text-muted-foreground">
-                        <span className="block min-w-[10rem]">{skillNames(r).join(', ') || '—'}</span>
+                        <TableClamp className="w-52">{skillNames(r).join(', ') || '—'}</TableClamp>
                       </td>
-                      <td className="px-3 py-2.5 whitespace-nowrap">{r.location || '—'}</td>
+                      <td className="px-3 py-2.5">
+                        <TableClamp className="w-32">{r.location || '—'}</TableClamp>
+                      </td>
                       <td className="px-3 py-2.5 whitespace-nowrap tabular-nums">{r.whatsapp || '—'}</td>
                       <td className="px-3 py-2.5 whitespace-nowrap">
                         {label(ONBOARDING_JOB_STATUSES, r.current_job_status)}
                       </td>
                       <td className="px-3 py-2.5">
-                        <span className="block min-w-[10rem]">
+                        <TableClamp className="w-44">
                           {r.join_goals.map((g) => label(ONBOARDING_GOALS, g)).join(', ') || '—'}
-                        </span>
+                        </TableClamp>
                       </td>
-                      <td className="px-3 py-2.5 whitespace-nowrap">
-                        {r.referral_source === 'other' && r.referral_note
-                          ? `${label(ONBOARDING_REFERRALS, 'other')}: ${r.referral_note}`
-                          : label(ONBOARDING_REFERRALS, r.referral_source)}
+                      <td className="px-3 py-2.5">
+                        <TableClamp className="w-40">
+                          {r.referral_source === 'other' && r.referral_note
+                            ? `${label(ONBOARDING_REFERRALS, 'other')}: ${r.referral_note}`
+                            : label(ONBOARDING_REFERRALS, r.referral_source)}
+                        </TableClamp>
                       </td>
                       <td className="px-3 py-2.5 text-right text-xs text-muted-foreground whitespace-nowrap">
                         {r.onboarding_completed_at

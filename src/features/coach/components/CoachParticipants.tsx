@@ -130,15 +130,17 @@ export function CoachParticipants({
               </TableHeader>
               <TableBody>
                 {paged.items.map((p) => (
-                  <TableRow key={p.id}>
-                    <TableCell>
-                      <p className="font-medium">{p.name}</p>
-                      {p.email && <p className="text-xs text-muted-foreground">{p.email}</p>}
+                  <TableRow key={p.id} className="h-16">
+                    <TableCell className="py-2">
+                      <div className="w-56" title={p.email ? `${p.name}\n${p.email}` : p.name}>
+                        <p className="truncate font-medium">{p.name}</p>
+                        {p.email && <p className="truncate text-xs text-muted-foreground">{p.email}</p>}
+                      </div>
                     </TableCell>
-                    <TableCell className="whitespace-nowrap text-sm">{p.enrolledAt}</TableCell>
-                    <TableCell>{paymentBadge(p)}</TableCell>
-                    <TableCell>{progressBar(p)}</TableCell>
-                    <TableCell>{certificate(p)}</TableCell>
+                    <TableCell className="whitespace-nowrap py-2 text-sm">{p.enrolledAt}</TableCell>
+                    <TableCell className="py-2">{paymentBadge(p)}</TableCell>
+                    <TableCell className="py-2">{progressBar(p)}</TableCell>
+                    <TableCell className="py-2">{certificate(p)}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

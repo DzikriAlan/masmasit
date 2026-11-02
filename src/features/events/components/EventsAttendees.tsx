@@ -9,7 +9,7 @@ import { Pager, usePagination } from '@/components/pager';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Table, TableBody, TableCell, TableClamp, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 export interface EventsAttendeesItem {
   id: string;
@@ -108,11 +108,15 @@ export function EventsAttendees({
               </TableHeader>
               <TableBody>
                 {paged.items.map((a) => (
-                  <TableRow key={a.id}>
-                    <TableCell className="font-medium">{a.name}</TableCell>
-                    <TableCell className="text-sm text-muted-foreground">{a.email}</TableCell>
-                    <TableCell>{paymentBadge(a)}</TableCell>
-                    <TableCell className="whitespace-nowrap text-sm">{a.registeredAt}</TableCell>
+                  <TableRow key={a.id} className="h-16">
+                    <TableCell className="py-2 font-medium">
+                      <TableClamp className="w-48">{a.name}</TableClamp>
+                    </TableCell>
+                    <TableCell className="py-2 text-sm text-muted-foreground">
+                      <TableClamp className="w-56">{a.email}</TableClamp>
+                    </TableCell>
+                    <TableCell className="py-2">{paymentBadge(a)}</TableCell>
+                    <TableCell className="whitespace-nowrap py-2 text-sm">{a.registeredAt}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

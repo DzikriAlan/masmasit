@@ -286,7 +286,7 @@ export default function AdminDashboard() {
         <Tabs defaultValue="approvals">
           {/* 13 tabs never fit at 375px: one scrollable row instead of a
               wrapped h-10 strip that spills over the content (TC-14-08). */}
-          <TabsList className="mb-6 flex h-auto w-full justify-start overflow-x-auto overflow-y-hidden whitespace-nowrap [scrollbar-width:thin] [&>button]:shrink-0">
+          <TabsList className="mb-6 flex h-auto w-full justify-start overflow-x-auto overflow-y-hidden whitespace-nowrap [scrollbar-color:hsl(var(--muted-foreground)/0.25)_transparent] [scrollbar-width:thin] [&>button]:shrink-0">
             <TabsTrigger value="approvals">{t('Approvals', 'Approval')}</TabsTrigger>
             <TabsTrigger value="payments">{t('Payments', 'Pembayaran')}</TabsTrigger>
             <TabsTrigger value="applications">{t('Applications', 'Lamaran')}</TabsTrigger>

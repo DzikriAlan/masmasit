@@ -93,6 +93,13 @@ const TableCell = React.forwardRef<
 ));
 TableCell.displayName = 'TableCell';
 
+/** Cell text capped at two lines; `title` keeps the rest readable on hover. */
+const TableClamp = ({ title, className, children }: { title?: string; className?: string; children: React.ReactNode }) => (
+  <span title={title ?? (typeof children === 'string' ? children : undefined)} className={cn('line-clamp-2 break-words', className)}>
+    {children}
+  </span>
+);
+
 const TableCaption = React.forwardRef<
   HTMLTableCaptionElement,
   React.HTMLAttributes<HTMLTableCaptionElement>
@@ -113,5 +120,6 @@ export {
   TableHead,
   TableRow,
   TableCell,
+  TableClamp,
   TableCaption,
 };

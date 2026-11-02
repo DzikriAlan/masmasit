@@ -223,7 +223,7 @@ export default function AdminUserActivity({ enabled }: Props) {
                 </thead>
                 <tbody className="divide-y divide-border">
                   {paged.items.map((r) => (
-                    <tr key={r.user_id} className="transition-colors hover:bg-muted/40">
+                    <tr key={r.user_id} className="h-16 transition-colors hover:bg-muted/40">
                       <td className="sticky left-0 z-10 bg-card py-2.5 pr-4">
                         <div className="flex items-center gap-2.5">
                           <Avatar className="h-7 w-7 shrink-0">
@@ -232,7 +232,7 @@ export default function AdminUserActivity({ enabled }: Props) {
                               {(r.full_name ?? r.email).charAt(0).toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
-                          <div className="min-w-0">
+                          <div className="w-44 min-w-0" title={`${r.full_name ?? r.email}\n${r.location ?? '—'} · ${r.roles.join(', ') || 'member'}`}>
                             <p className="truncate font-medium">{r.full_name ?? r.email}</p>
                             <p className="truncate text-xs text-muted-foreground">
                               {r.location ?? '—'} · {r.roles.join(', ') || 'member'}
