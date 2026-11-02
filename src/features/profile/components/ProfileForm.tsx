@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2, Save, Upload, Plus, X } from 'lucide-react';
+import ChangePasswordCard from '@/features/profile/components/ChangePasswordCard';
 import { ProfileRolesStatus } from '@/features/profile/components/ProfileRolesStatus';
 import { AppShell } from '@/components/app-shell';
 import { useAuth } from '@/components/auth-provider';
@@ -384,6 +385,8 @@ export default function ProfileForm() {
             )}
           </CardContent>
         </Card>
+
+        <ChangePasswordCard />
       </div>
     </AppShell>
   );
