@@ -39,7 +39,9 @@ import type {
 import { useCoachControllers, useCoachParticipantsControllers } from '@/features/coach/controllers/coachControllers';
 import { CoachParticipants } from '@/features/coach/components/CoachParticipants';
 import { CoachCourseEditDialog, type CoachCourseFormValues } from '@/features/coach/components/CoachCourseEditDialog';
+import { CourseMaterialContent } from '@/components/course-material-content';
 import { loginHref } from '@/shared/lib/utils';
+import { getYoutubeEmbedUrl } from '@/shared/lib/youtube';
 
 export default function CoachDashboard() {
   const { user, profile, loading, refreshProfile } = useAuth();
@@ -58,21 +60,26 @@ export default function CoachDashboard() {
   // Module form
   const [showModuleDialog, setShowModuleDialog] = useState(false);
   const [moduleForm, setModuleForm] = useState({ title: '', description: '', is_free: true });
+  const [editingModuleId, setEditingModuleId] = useState<string | null>(null);
 
   // Material form
   const [showMaterialDialog, setShowMaterialDialog] = useState(false);
   const [materialModuleId, setMaterialModuleId] = useState<string | null>(null);
   const [materialForm, setMaterialForm] = useState({ title: '', content_type: 'text', content_url: '', text_content: '' });
+  const [editingMaterialId, setEditingMaterialId] = useState<string | null>(null);
+  const [activeMaterialId, setActiveMaterialId] = useState<string | null>(null);
 
   // Quiz form
   const [showQuizDialog, setShowQuizDialog] = useState(false);
   const [quizModuleId, setQuizModuleId] = useState<string | null>(null);
   const [quizForm, setQuizForm] = useState({ title: '', passing_grade: '70' });
+  const [editingQuizId, setEditingQuizId] = useState<string | null>(null);
 
   // Question form
   const [showQuestionDialog, setShowQuestionDialog] = useState(false);
   const [questionQuizId, setQuestionQuizId] = useState<string | null>(null);
   const [questionForm, setQuestionForm] = useState({ question: '', option_a: '', option_b: '', option_c: '', option_d: '', correct_answer: 'a' });
+  const [editingQuestionId, setEditingQuestionId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!loading && !user) router.push(loginHref());
@@ -85,12 +92,16 @@ export default function CoachDashboard() {
     modifyCoachCourses,
     removeCoachCourses,
     storeCoachModules,
+    modifyCoachModules,
     removeCoachModules,
     storeCoachMaterials,
+    modifyCoachMaterials,
     removeCoachMaterials,
     storeCoachQuizzes,
+    modifyCoachQuizzes,
     removeCoachQuizzes,
     storeCoachQuizQuestions,
+    modifyCoachQuizQuestions,
     removeCoachQuizQuestions,
   } = useCoachControllers(user?.id);
   const { fetchCoachCoursesParticipants, fetchCoachCoursesCertificates } =
@@ -108,10 +119,10 @@ export default function CoachDashboard() {
   const pagedCourses = usePagination(courses);
   const selectedCourse = courses.find((c) => c.id === selectedCourseId) ?? null;
   const saving = changeCoachApplication.isPending || storeCoachCourses.isPending;
-  const savingModule = storeCoachModules.isPending;
-  const savingMaterial = storeCoachMaterials.isPending;
-  const savingQuiz = storeCoachQuizzes.isPending;
-  const savingQuestion = storeCoachQuizQuestions.isPending;
+  const savingModule = storeCoachModules.isPending || modifyCoachModules.isPending;
+  const savingMaterial = storeCoachMaterials.isPending || modifyCoachMaterials.isPending;
+  const savingQuiz = storeCoachQuizzes.isPending || modifyCoachQuizzes.isPending;
+  const savingQuestion = storeCoachQuizQuestions.isPending || modifyCoachQuizQuestions.isPending;
 
   const participants = (() => {
     const getDate = (iso: string) => new Date(iso).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -240,8 +251,34 @@ export default function CoachDashboard() {
     setExpandedModules(next);
   };
 
+  const editModuleDialog = (mod?: Module) => {
+    setEditingModuleId(mod?.id ?? null);
+    setModuleForm(mod
+      ? { title: mod.title, description: mod.description ?? '', is_free: mod.is_free }
+      : { title: '', description: '', is_free: true });
+    setShowModuleDialog(true);
+  };
+
   const saveModule = async () => {
     if (!selectedCourse || !moduleForm.title) return;
+    if (editingModuleId) {
+      try {
+        await modifyCoachModules.mutateAsync({
+          moduleId: editingModuleId,
+          data: {
+            title: moduleForm.title.trim(),
+            description: moduleForm.description.trim() || null,
+            is_free: moduleForm.is_free,
+          },
+        });
+      } catch {
+        toast.error(t('Failed to update module', 'Gagal memperbarui modul'));
+        return;
+      }
+      toast.success(t('Module updated', 'Modul diperbarui'));
+      setShowModuleDialog(false);
+      return;
+    }
     try {
       await storeCoachModules.mutateAsync({
         course_id: selectedCourse.id,
@@ -269,8 +306,37 @@ export default function CoachDashboard() {
     toast.success('Module deleted');
   };
 
+  const editMaterialDialog = (moduleId: string, mat?: Material) => {
+    setMaterialModuleId(moduleId);
+    setEditingMaterialId(mat?.id ?? null);
+    setMaterialForm(mat
+      ? { title: mat.title, content_type: mat.content_type, content_url: mat.content_url ?? '', text_content: mat.text_content ?? '' }
+      : { title: '', content_type: 'text', content_url: '', text_content: '' });
+    setShowMaterialDialog(true);
+  };
+
   const saveMaterial = async () => {
     if (!materialModuleId || !materialForm.title) return;
+    if (editingMaterialId) {
+      const isText = materialForm.content_type === 'text';
+      try {
+        await modifyCoachMaterials.mutateAsync({
+          materialId: editingMaterialId,
+          data: {
+            title: materialForm.title.trim(),
+            content_type: materialForm.content_type,
+            content_url: isText ? null : materialForm.content_url.trim() || null,
+            text_content: isText ? materialForm.text_content || null : null,
+          },
+        });
+      } catch {
+        toast.error(t('Failed to update material', 'Gagal memperbarui materi'));
+        return;
+      }
+      toast.success(t('Material updated', 'Materi diperbarui'));
+      setShowMaterialDialog(false);
+      return;
+    }
     try {
       await storeCoachMaterials.mutateAsync({
         module_id: materialModuleId,
@@ -298,8 +364,29 @@ export default function CoachDashboard() {
     toast.success('Material deleted');
   };
 
+  const editQuizDialog = (moduleId: string, qz?: Quiz) => {
+    setQuizModuleId(moduleId);
+    setEditingQuizId(qz?.id ?? null);
+    setQuizForm(qz ? { title: qz.title, passing_grade: String(qz.passing_grade) } : { title: '', passing_grade: '70' });
+    setShowQuizDialog(true);
+  };
+
   const saveQuiz = async () => {
     if (!quizModuleId || !quizForm.title) return;
+    if (editingQuizId) {
+      try {
+        await modifyCoachQuizzes.mutateAsync({
+          quizId: editingQuizId,
+          data: { title: quizForm.title.trim(), passing_grade: parseInt(quizForm.passing_grade) || 70 },
+        });
+      } catch {
+        toast.error(t('Failed to update quiz', 'Gagal memperbarui kuis'));
+        return;
+      }
+      toast.success(t('Quiz updated', 'Kuis diperbarui'));
+      setShowQuizDialog(false);
+      return;
+    }
     try {
       await storeCoachQuizzes.mutateAsync({
         module_id: quizModuleId,
@@ -325,8 +412,45 @@ export default function CoachDashboard() {
     toast.success('Quiz deleted');
   };
 
+  const editQuestionDialog = (quizId: string, qq?: QuizQuestion) => {
+    setQuestionQuizId(quizId);
+    setEditingQuestionId(qq?.id ?? null);
+    setQuestionForm(qq
+      ? {
+        question: qq.question,
+        option_a: qq.option_a,
+        option_b: qq.option_b,
+        option_c: qq.option_c ?? '',
+        option_d: qq.option_d ?? '',
+        correct_answer: qq.correct_answer,
+      }
+      : { question: '', option_a: '', option_b: '', option_c: '', option_d: '', correct_answer: 'a' });
+    setShowQuestionDialog(true);
+  };
+
   const saveQuestion = async () => {
     if (!questionQuizId || !questionForm.question || !questionForm.option_a || !questionForm.option_b) return;
+    if (editingQuestionId) {
+      try {
+        await modifyCoachQuizQuestions.mutateAsync({
+          questionId: editingQuestionId,
+          data: {
+            question: questionForm.question.trim(),
+            option_a: questionForm.option_a,
+            option_b: questionForm.option_b,
+            option_c: questionForm.option_c || null,
+            option_d: questionForm.option_d || null,
+            correct_answer: questionForm.correct_answer,
+          },
+        });
+      } catch {
+        toast.error(t('Failed to update question', 'Gagal memperbarui pertanyaan'));
+        return;
+      }
+      toast.success(t('Question updated', 'Pertanyaan diperbarui'));
+      setShowQuestionDialog(false);
+      return;
+    }
     const payload: PayloadPostCoachQuizQuestions = {
       quiz_id: questionQuizId,
       question: questionForm.question,
@@ -406,7 +530,7 @@ export default function CoachDashboard() {
             <h2 className="font-display text-xl font-semibold flex items-center gap-2">
               <Layers className="h-5 w-5 text-primary" /> {t('Modules', 'Modul')}
             </h2>
-            <Button onClick={() => setShowModuleDialog(true)} size="sm" className="gap-2">
+            <Button onClick={() => editModuleDialog()} size="sm" className="gap-2">
               <Plus className="h-4 w-4" /> {t('Add Module', 'Tambah Modul')}
             </Button>
           </div>
@@ -434,9 +558,14 @@ export default function CoachDashboard() {
                           {mod.description && <p className="mt-1 text-sm text-muted-foreground">{mod.description}</p>}
                         </div>
                       </div>
-                      <Button size="sm" variant="ghost" onClick={() => destroyModule(mod.id)} className="text-destructive hover:text-destructive">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <div className="flex items-center">
+                        <Button size="sm" variant="ghost" onClick={() => editModuleDialog(mod)} aria-label={t('Edit module', 'Ubah modul')}>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={() => destroyModule(mod.id)} className="text-destructive hover:text-destructive">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
 
                     {expandedModules.has(mod.id) && (
@@ -445,7 +574,7 @@ export default function CoachDashboard() {
                         <div>
                           <div className="mb-2 flex items-center justify-between">
                             <h4 className="text-sm font-semibold text-muted-foreground">{t('Materials', 'Materi')}</h4>
-                            <Button size="sm" variant="outline" onClick={() => { setMaterialModuleId(mod.id); setShowMaterialDialog(true); }} className="gap-1 h-7 text-xs">
+                            <Button size="sm" variant="outline" onClick={() => editMaterialDialog(mod.id)} className="gap-1 h-7 text-xs">
                               <Plus className="h-3 w-3" /> Add
                             </Button>
                           </div>
@@ -454,12 +583,33 @@ export default function CoachDashboard() {
                           ) : (
                             <div className="space-y-2">
                               {mod.course_materials.map((mat) => (
-                                <div key={mat.id} className="flex items-center gap-2 rounded-lg border border-border/40 p-2">
-                                  {mat.content_type === 'video' ? <Video className="h-4 w-4 text-primary" /> : mat.content_type === 'file' ? <FileText className="h-4 w-4 text-primary" /> : <Type className="h-4 w-4 text-primary" />}
-                                  <span className="text-sm flex-1">{mat.title}</span>
-                                  <Button size="sm" variant="ghost" onClick={() => destroyMaterial(mat.id)} className="text-destructive hover:text-destructive h-7 w-7 p-0">
-                                    <Trash2 className="h-3 w-3" />
-                                  </Button>
+                                <div key={mat.id} className="rounded-lg border border-border/40">
+                                  <div className="flex items-center gap-2 p-2">
+                                    <button
+                                      onClick={() => setActiveMaterialId(activeMaterialId === mat.id ? null : mat.id)}
+                                      className="flex flex-1 items-center gap-2 text-left hover:text-primary transition-colors"
+                                    >
+                                      {activeMaterialId === mat.id ? <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />}
+                                      {mat.content_type === 'video' ? <Video className="h-4 w-4 text-primary" /> : mat.content_type === 'file' ? <FileText className="h-4 w-4 text-primary" /> : <Type className="h-4 w-4 text-primary" />}
+                                      <span className="text-sm flex-1">{mat.title}</span>
+                                    </button>
+                                    <Button size="sm" variant="ghost" onClick={() => editMaterialDialog(mod.id, mat)} className="h-7 w-7 p-0" aria-label={t('Edit material', 'Ubah materi')}>
+                                      <Pencil className="h-3 w-3" />
+                                    </Button>
+                                    <Button size="sm" variant="ghost" onClick={() => destroyMaterial(mat.id)} className="text-destructive hover:text-destructive h-7 w-7 p-0">
+                                      <Trash2 className="h-3 w-3" />
+                                    </Button>
+                                  </div>
+                                  {activeMaterialId === mat.id && (
+                                    <div className="border-t border-border/40 p-3">
+                                      <CourseMaterialContent
+                                        title={mat.title}
+                                        contentType={mat.content_type}
+                                        contentUrl={mat.content_url}
+                                        textContent={mat.text_content}
+                                      />
+                                    </div>
+                                  )}
                                 </div>
                               ))}
                             </div>
@@ -470,7 +620,7 @@ export default function CoachDashboard() {
                         <div>
                           <div className="mb-2 flex items-center justify-between">
                             <h4 className="text-sm font-semibold text-muted-foreground">{t('Quizzes', 'Kuis')}</h4>
-                            <Button size="sm" variant="outline" onClick={() => { setQuizModuleId(mod.id); setShowQuizDialog(true); }} className="gap-1 h-7 text-xs">
+                            <Button size="sm" variant="outline" onClick={() => editQuizDialog(mod.id)} className="gap-1 h-7 text-xs">
                               <Plus className="h-3 w-3" /> Add
                             </Button>
                           </div>
@@ -486,9 +636,14 @@ export default function CoachDashboard() {
                                       <span className="text-sm font-medium">{qz.title}</span>
                                       <Badge variant="outline" className="text-xs">Pass: {qz.passing_grade}%</Badge>
                                     </div>
-                                    <Button size="sm" variant="ghost" onClick={() => destroyQuiz(qz.id)} className="text-destructive hover:text-destructive h-7 w-7 p-0">
-                                      <Trash2 className="h-3 w-3" />
-                                    </Button>
+                                    <div className="flex items-center">
+                                      <Button size="sm" variant="ghost" onClick={() => editQuizDialog(mod.id, qz)} className="h-7 w-7 p-0" aria-label={t('Edit quiz', 'Ubah kuis')}>
+                                        <Pencil className="h-3 w-3" />
+                                      </Button>
+                                      <Button size="sm" variant="ghost" onClick={() => destroyQuiz(qz.id)} className="text-destructive hover:text-destructive h-7 w-7 p-0">
+                                        <Trash2 className="h-3 w-3" />
+                                      </Button>
+                                    </div>
                                   </div>
                                   <div className="mt-2 space-y-1">
                                     {qz.quiz_questions?.map((qq, qi) => (
@@ -496,6 +651,9 @@ export default function CoachDashboard() {
                                         <span className="font-mono font-bold">{qi + 1}.</span>
                                         <span className="flex-1">{qq.question}</span>
                                         <Badge variant="secondary" className="text-xs">Ans: {qq.correct_answer.toUpperCase()}</Badge>
+                                        <Button size="sm" variant="ghost" onClick={() => editQuestionDialog(qz.id, qq)} className="h-5 w-5 p-0" aria-label={t('Edit question', 'Ubah pertanyaan')}>
+                                          <Pencil className="h-3 w-3" />
+                                        </Button>
                                         <Button size="sm" variant="ghost" onClick={() => destroyQuestion(qq.id)} className="text-destructive hover:text-destructive h-5 w-5 p-0">
                                           <X className="h-3 w-3" />
                                         </Button>
@@ -503,7 +661,7 @@ export default function CoachDashboard() {
                                     ))}
                                     {qz.quiz_questions?.length === 0 && <p className="text-xs text-muted-foreground">{t('No questions yet.', 'Belum ada pertanyaan.')}</p>}
                                   </div>
-                                  <Button size="sm" variant="outline" onClick={() => { setQuestionQuizId(qz.id); setShowQuestionDialog(true); }} className="mt-2 gap-1 h-7 text-xs">
+                                  <Button size="sm" variant="outline" onClick={() => editQuestionDialog(qz.id)} className="mt-2 gap-1 h-7 text-xs">
                                     <Plus className="h-3 w-3" /> Add Question
                                   </Button>
                                 </div>
@@ -557,8 +715,8 @@ export default function CoachDashboard() {
         <Dialog open={showModuleDialog} onOpenChange={setShowModuleDialog}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>{t('Add Module', 'Tambah Modul')}</DialogTitle>
-              <DialogDescription>{t('Create a new module for this course.', 'Buat modul baru untuk kursus ini.')}</DialogDescription>
+              <DialogTitle>{editingModuleId ? t('Edit Module', 'Ubah Modul') : t('Add Module', 'Tambah Modul')}</DialogTitle>
+              <DialogDescription>{editingModuleId ? t('Changes are visible to students right away.', 'Perubahan langsung terlihat oleh siswa.') : t('Create a new module for this course.', 'Buat modul baru untuk kursus ini.')}</DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div className="space-y-2">
@@ -580,7 +738,7 @@ export default function CoachDashboard() {
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowModuleDialog(false)}>{t('Cancel', 'Batal')}</Button>
               <Button onClick={saveModule} disabled={savingModule || !moduleForm.title} className="gap-2">
-                {savingModule && <Loader2 className="h-4 w-4 animate-spin" />} {t('Add Module', 'Tambah Modul')}
+                {savingModule && <Loader2 className="h-4 w-4 animate-spin" />} {editingModuleId ? t('Save changes', 'Simpan perubahan') : t('Add Module', 'Tambah Modul')}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -590,8 +748,8 @@ export default function CoachDashboard() {
         <Dialog open={showMaterialDialog} onOpenChange={setShowMaterialDialog}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>{t('Add Material', 'Tambah Materi')}</DialogTitle>
-              <DialogDescription>{t('Add learning content to this module.', 'Tambahkan konten pembelajaran ke modul ini.')}</DialogDescription>
+              <DialogTitle>{editingMaterialId ? t('Edit Material', 'Ubah Materi') : t('Add Material', 'Tambah Materi')}</DialogTitle>
+              <DialogDescription>{editingMaterialId ? t('Changes are visible to students right away.', 'Perubahan langsung terlihat oleh siswa.') : t('Add learning content to this module.', 'Tambahkan konten pembelajaran ke modul ini.')}</DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div className="space-y-2">
@@ -617,14 +775,25 @@ export default function CoachDashboard() {
               ) : (
                 <div className="space-y-2">
                   <Label htmlFor="matUrl">{t('URL', 'URL')}</Label>
-                  <Input id="matUrl" value={materialForm.content_url} onChange={(e) => setMaterialForm({ ...materialForm, content_url: e.target.value })} placeholder="https://..." />
+                  <Input id="matUrl" value={materialForm.content_url} onChange={(e) => setMaterialForm({ ...materialForm, content_url: e.target.value })} placeholder={materialForm.content_type === 'video' ? 'https://www.youtube.com/watch?v=...' : 'https://...'} />
+                  {materialForm.content_type === 'video' && (
+                    <p className="text-xs text-muted-foreground">{t('YouTube links are shown as an embedded player.', 'Link YouTube akan tampil sebagai video yang bisa diputar langsung.')}</p>
+                  )}
                 </div>
+              )}
+              {materialForm.content_type === 'video' && getYoutubeEmbedUrl(materialForm.content_url) && (
+                <CourseMaterialContent
+                  title={materialForm.title}
+                  contentType="video"
+                  contentUrl={materialForm.content_url}
+                  textContent={null}
+                />
               )}
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowMaterialDialog(false)}>{t('Cancel', 'Batal')}</Button>
               <Button onClick={saveMaterial} disabled={savingMaterial || !materialForm.title} className="gap-2">
-                {savingMaterial && <Loader2 className="h-4 w-4 animate-spin" />} {t('Add Material', 'Tambah Materi')}
+                {savingMaterial && <Loader2 className="h-4 w-4 animate-spin" />} {editingMaterialId ? t('Save changes', 'Simpan perubahan') : t('Add Material', 'Tambah Materi')}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -634,8 +803,8 @@ export default function CoachDashboard() {
         <Dialog open={showQuizDialog} onOpenChange={setShowQuizDialog}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>{t('Create Quiz', 'Buat Kuis')}</DialogTitle>
-              <DialogDescription>{t('Add a quiz to test student understanding.', 'Tambahkan kuis untuk menguji pemahaman siswa.')}</DialogDescription>
+              <DialogTitle>{editingQuizId ? t('Edit Quiz', 'Ubah Kuis') : t('Create Quiz', 'Buat Kuis')}</DialogTitle>
+              <DialogDescription>{editingQuizId ? t('Changes are visible to students right away.', 'Perubahan langsung terlihat oleh siswa.') : t('Add a quiz to test student understanding.', 'Tambahkan kuis untuk menguji pemahaman siswa.')}</DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div className="space-y-2">
@@ -650,7 +819,7 @@ export default function CoachDashboard() {
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowQuizDialog(false)}>{t('Cancel', 'Batal')}</Button>
               <Button onClick={saveQuiz} disabled={savingQuiz || !quizForm.title} className="gap-2">
-                {savingQuiz && <Loader2 className="h-4 w-4 animate-spin" />} {t('Create Quiz', 'Buat Kuis')}
+                {savingQuiz && <Loader2 className="h-4 w-4 animate-spin" />} {editingQuizId ? t('Save changes', 'Simpan perubahan') : t('Create Quiz', 'Buat Kuis')}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -660,8 +829,8 @@ export default function CoachDashboard() {
         <Dialog open={showQuestionDialog} onOpenChange={setShowQuestionDialog}>
           <DialogContent className="sm:max-w-lg">
             <DialogHeader>
-              <DialogTitle>{t('Add Question', 'Tambah Pertanyaan')}</DialogTitle>
-              <DialogDescription>{t('Add a multiple-choice question to this quiz.', 'Tambahkan pertanyaan pilihan ganda ke kuis ini.')}</DialogDescription>
+              <DialogTitle>{editingQuestionId ? t('Edit Question', 'Ubah Pertanyaan') : t('Add Question', 'Tambah Pertanyaan')}</DialogTitle>
+              <DialogDescription>{editingQuestionId ? t('Changes are visible to students right away.', 'Perubahan langsung terlihat oleh siswa.') : t('Add a multiple-choice question to this quiz.', 'Tambahkan pertanyaan pilihan ganda ke kuis ini.')}</DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div className="space-y-2">
@@ -702,7 +871,7 @@ export default function CoachDashboard() {
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowQuestionDialog(false)}>{t('Cancel', 'Batal')}</Button>
               <Button onClick={saveQuestion} disabled={savingQuestion || !questionForm.question || !questionForm.option_a || !questionForm.option_b} className="gap-2">
-                {savingQuestion && <Loader2 className="h-4 w-4 animate-spin" />} {t('Add Question', 'Tambah Pertanyaan')}
+                {savingQuestion && <Loader2 className="h-4 w-4 animate-spin" />} {editingQuestionId ? t('Save changes', 'Simpan perubahan') : t('Add Question', 'Tambah Pertanyaan')}
               </Button>
             </DialogFooter>
           </DialogContent>

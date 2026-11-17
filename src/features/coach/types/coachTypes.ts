@@ -83,8 +83,21 @@ export interface PayloadPostCoachModules {
   is_free: boolean;
 }
 
+export interface PayloadUpdateCoachModules {
+  title: string;
+  description: string | null;
+  is_free: boolean;
+}
+
 export interface PayloadPostCoachMaterials {
   module_id: string;
+  title: string;
+  content_type: string;
+  content_url: string | null;
+  text_content: string | null;
+}
+
+export interface PayloadUpdateCoachMaterials {
   title: string;
   content_type: string;
   content_url: string | null;
@@ -97,6 +110,11 @@ export interface PayloadPostCoachQuizzes {
   passing_grade: number;
 }
 
+export interface PayloadUpdateCoachQuizzes {
+  title: string;
+  passing_grade: number;
+}
+
 export interface PayloadPostCoachQuizQuestions {
   quiz_id: string;
   question: string;
@@ -104,6 +122,15 @@ export interface PayloadPostCoachQuizQuestions {
   option_b: string;
   option_c?: string;
   option_d?: string;
+  correct_answer: string;
+}
+
+export interface PayloadUpdateCoachQuizQuestions {
+  question: string;
+  option_a: string;
+  option_b: string;
+  option_c: string | null;
+  option_d: string | null;
   correct_answer: string;
 }
 

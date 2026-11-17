@@ -11,6 +11,10 @@ import type {
   PayloadPostCoachModules,
   PayloadPostCoachQuizQuestions,
   PayloadPostCoachQuizzes,
+  PayloadUpdateCoachMaterials,
+  PayloadUpdateCoachModules,
+  PayloadUpdateCoachQuizQuestions,
+  PayloadUpdateCoachQuizzes,
 } from '../types/coachTypes';
 
 export const getCoachCourses = async (coachId: string) => {
@@ -78,6 +82,14 @@ export const postCoachModules = async (payload: PayloadPostCoachModules) => {
   );
 };
 
+/** `.select('id')` so an update RLS silently filtered out reads as an error, not success. */
+export const updateCoachModules = async (moduleId: string, payload: PayloadUpdateCoachModules) => {
+  return toApiResponse<{ id: string }>(
+    supabase.from('course_modules').update(payload).eq('id', moduleId).select('id').single(),
+    'Module updated successfully'
+  );
+};
+
 export const deleteCoachModules = async (moduleId: string) => {
   return toApiResponse<null>(
     supabase.from('course_modules').delete().eq('id', moduleId),
@@ -92,6 +104,13 @@ export const postCoachMaterials = async (payload: PayloadPostCoachMaterials) => 
   );
 };
 
+export const updateCoachMaterials = async (materialId: string, payload: PayloadUpdateCoachMaterials) => {
+  return toApiResponse<{ id: string }>(
+    supabase.from('course_materials').update(payload).eq('id', materialId).select('id').single(),
+    'Material updated successfully'
+  );
+};
+
 export const deleteCoachMaterials = async (materialId: string) => {
   return toApiResponse<null>(
     supabase.from('course_materials').delete().eq('id', materialId),
@@ -101,6 +120,13 @@ export const deleteCoachMaterials = async (materialId: string) => {
 
 export const postCoachQuizzes = async (payload: PayloadPostCoachQuizzes) => {
   return toApiResponse<null>(supabase.from('quizzes').insert(payload), 'Quiz created successfully');
+};
+
+export const updateCoachQuizzes = async (quizId: string, payload: PayloadUpdateCoachQuizzes) => {
+  return toApiResponse<{ id: string }>(
+    supabase.from('quizzes').update(payload).eq('id', quizId).select('id').single(),
+    'Quiz updated successfully'
+  );
 };
 
 export const deleteCoachQuizzes = async (quizId: string) => {
@@ -114,6 +140,14 @@ export const postCoachQuizQuestions = async (payload: PayloadPostCoachQuizQuesti
   return toApiResponse<null>(
     supabase.from('quiz_questions').insert(payload),
     'Question created successfully'
+  );
+};
+
+/** Needs the update_own_quiz_questions policy (migration 038). */
+export const updateCoachQuizQuestions = async (questionId: string, payload: PayloadUpdateCoachQuizQuestions) => {
+  return toApiResponse<{ id: string }>(
+    supabase.from('quiz_questions').update(payload).eq('id', questionId).select('id').single(),
+    'Question updated successfully'
   );
 };
 

@@ -18,6 +18,10 @@ import {
   postCoachQuizzes,
   updateCoachApplication,
   updateCoachCourses,
+  updateCoachMaterials,
+  updateCoachModules,
+  updateCoachQuizQuestions,
+  updateCoachQuizzes,
 } from '../services/coachServices';
 import type {
   PayloadPostCoachCourses,
@@ -26,6 +30,10 @@ import type {
   PayloadPostCoachQuizQuestions,
   PayloadPostCoachQuizzes,
   PayloadUpdateCoachCourses,
+  PayloadUpdateCoachMaterials,
+  PayloadUpdateCoachModules,
+  PayloadUpdateCoachQuizQuestions,
+  PayloadUpdateCoachQuizzes,
 } from '../types/coachTypes';
 
 export const useCoachControllers = (userId: string | undefined) => {
@@ -73,6 +81,12 @@ export const useCoachControllers = (userId: string | undefined) => {
       unwrapApiResponse(await postCoachModules(payload)),
     onSuccess: invalidateCoachCourses,
   });
+  const modifyCoachModules = useMutation({
+    mutationFn: async (payload: { moduleId: string; data: PayloadUpdateCoachModules }) =>
+      unwrapApiResponse(await updateCoachModules(payload.moduleId, payload.data)),
+    onSuccess: invalidateCoachCourses,
+  });
+
 
   const removeCoachModules = useMutation({
     mutationFn: async (moduleId: string) => unwrapApiResponse(await deleteCoachModules(moduleId)),
@@ -84,6 +98,12 @@ export const useCoachControllers = (userId: string | undefined) => {
       unwrapApiResponse(await postCoachMaterials(payload)),
     onSuccess: invalidateCoachCourses,
   });
+  const modifyCoachMaterials = useMutation({
+    mutationFn: async (payload: { materialId: string; data: PayloadUpdateCoachMaterials }) =>
+      unwrapApiResponse(await updateCoachMaterials(payload.materialId, payload.data)),
+    onSuccess: invalidateCoachCourses,
+  });
+
 
   const removeCoachMaterials = useMutation({
     mutationFn: async (materialId: string) => unwrapApiResponse(await deleteCoachMaterials(materialId)),
@@ -95,6 +115,12 @@ export const useCoachControllers = (userId: string | undefined) => {
       unwrapApiResponse(await postCoachQuizzes(payload)),
     onSuccess: invalidateCoachCourses,
   });
+  const modifyCoachQuizzes = useMutation({
+    mutationFn: async (payload: { quizId: string; data: PayloadUpdateCoachQuizzes }) =>
+      unwrapApiResponse(await updateCoachQuizzes(payload.quizId, payload.data)),
+    onSuccess: invalidateCoachCourses,
+  });
+
 
   const removeCoachQuizzes = useMutation({
     mutationFn: async (quizId: string) => unwrapApiResponse(await deleteCoachQuizzes(quizId)),
@@ -106,6 +132,12 @@ export const useCoachControllers = (userId: string | undefined) => {
       unwrapApiResponse(await postCoachQuizQuestions(payload)),
     onSuccess: invalidateCoachCourses,
   });
+  const modifyCoachQuizQuestions = useMutation({
+    mutationFn: async (payload: { questionId: string; data: PayloadUpdateCoachQuizQuestions }) =>
+      unwrapApiResponse(await updateCoachQuizQuestions(payload.questionId, payload.data)),
+    onSuccess: invalidateCoachCourses,
+  });
+
 
   const removeCoachQuizQuestions = useMutation({
     mutationFn: async (questionId: string) =>
@@ -120,12 +152,16 @@ export const useCoachControllers = (userId: string | undefined) => {
     modifyCoachCourses,
     removeCoachCourses,
     storeCoachModules,
+    modifyCoachModules,
     removeCoachModules,
     storeCoachMaterials,
+    modifyCoachMaterials,
     removeCoachMaterials,
     storeCoachQuizzes,
+    modifyCoachQuizzes,
     removeCoachQuizzes,
     storeCoachQuizQuestions,
+    modifyCoachQuizQuestions,
     removeCoachQuizQuestions,
   };
 };

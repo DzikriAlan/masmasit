@@ -5,10 +5,11 @@ import { useParams, useRouter } from 'next/navigation';
 import {
   ArrowLeft, Loader2, GraduationCap, Lock, Play, CheckCircle2,
   FileText, Video, Award, Type, HelpCircle, ChevronDown, ChevronRight,
-  ExternalLink, Check, X, Circle
+  Check, X, Circle
 } from 'lucide-react';
 import { AppShell } from '@/components/app-shell';
 import { LoadData } from '@/components/load-data';
+import { CourseMaterialContent } from '@/components/course-material-content';
 import { API_ERROR_CODE } from '@/shared/lib/apiResponse';
 import type {
   DataCoursesMaterial as Material,
@@ -380,36 +381,12 @@ export default function CourseDetail() {
                                   </button>
                                   {isActive && (
                                     <div className="border-t border-border/40 p-4">
-                                      {mat.content_type === 'video' && mat.content_url ? (
-                                        <div className="aspect-video w-full overflow-hidden rounded-lg bg-black">
-                                          {mat.content_url.includes('youtube.com') || mat.content_url.includes('youtu.be') ? (
-                                            <iframe
-                                              src={mat.content_url.includes('youtu.be')
-                                                ? mat.content_url.replace('youtu.be/', 'youtube.com/embed/')
-                                                : mat.content_url.replace('watch?v=', 'embed/')}
-                                              className="h-full w-full"
-                                              allowFullScreen
-                                              title={mat.title}
-                                            />
-                                          ) : (
-                                            <video src={mat.content_url} controls className="h-full w-full">
-                                              <source src={mat.content_url} />
-                                            </video>
-                                          )}
-                                        </div>
-                                      ) : mat.content_type === 'file' && mat.content_url ? (
-                                        <a href={mat.content_url} target="_blank" rel="noreferrer">
-                                          <Button variant="outline" size="sm" className="gap-2">
-                                            <ExternalLink className="h-3.5 w-3.5" /> {t('Open File', 'Buka File')}
-                                          </Button>
-                                        </a>
-                                      ) : mat.content_type === 'text' ? (
-                                        <div className="whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">
-                                          {mat.text_content || t('No content available.', 'Tidak ada konten.')}
-                                        </div>
-                                      ) : (
-                                        <p className="text-sm text-muted-foreground">{t('No content available.', 'Tidak ada konten.')}</p>
-                                      )}
+                                      <CourseMaterialContent
+                                        title={mat.title}
+                                        contentType={mat.content_type}
+                                        contentUrl={mat.content_url}
+                                        textContent={mat.text_content}
+                                      />
                                     </div>
                                   )}
                                 </div>
